@@ -12,9 +12,11 @@ export default function AdminLoginPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-3 font-display text-2xl font-semibold tracking-wide">
+        <div className="flex items-center gap-3">
           <LogoMark className="size-10" />
-          {SITE_NAME}
+          <span className="font-wordmark text-3xl leading-none font-bold tracking-wide text-marigold uppercase">
+            {SITE_NAME}
+          </span>
         </div>
         <p className="mt-10 text-xs font-semibold tracking-[0.3em] text-gold uppercase">
           Admin
