@@ -34,7 +34,10 @@ export async function createSession(
 
     (await cookies()).set(SESSION_COOKIE, sessionCookie, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      // ADMIN_COOKIE_SECURE=false lets admin work over plain http (bare-IP demo).
+      secure:
+        process.env.NODE_ENV === "production" &&
+        process.env.ADMIN_COOKIE_SECURE !== "false",
       sameSite: "lax",
       path: "/",
       maxAge: SESSION_MAX_AGE_SECONDS,
