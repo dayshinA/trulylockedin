@@ -1,0 +1,52 @@
+import Link from "next/link";
+
+import { CldImage } from "@/components/media/cld";
+import { formatDuration, formatPriceFrom } from "@/lib/format";
+import type { Service } from "@/types/booking";
+
+// One entry of the full price list on /services.
+export function ServiceRow({ service }: { service: Service }) {
+  return (
+    <article className="flex gap-5 border-b border-brown py-8 sm:gap-8">
+      {service.imagePublicId && (
+        <CldImage
+          src={service.imagePublicId}
+          width={400}
+          height={400}
+          crop="fill"
+          gravity="auto"
+          sizes="(max-width: 640px) 6rem, 10rem"
+          // Decorative: the service name follows as the heading.
+          alt=""
+          className="size-24 shrink-0 rounded-sm object-cover sm:size-40"
+        />
+      )}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-baseline justify-between gap-4">
+          <h3 className="font-display text-2xl font-semibold sm:text-3xl">
+            {service.name}
+          </h3>
+          <p className="shrink-0 text-gold">
+            {formatPriceFrom(service.priceFromPence)}
+          </p>
+        </div>
+        <p className="mt-1 text-sm text-sand">
+          {formatDuration(service.durationMin)}
+        </p>
+        {service.description && (
+          <p className="mt-3 max-w-prose text-sand">{service.description}</p>
+        )}
+        {service.depositNote && (
+          <p className="mt-2 text-sm text-cream">{service.depositNote}</p>
+        )}
+        <Link
+          href={`/book?service=${encodeURIComponent(service.id)}`}
+          className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+        >
+          Book this<span className="sr-only">: {service.name}</span>
+          <span aria-hidden>&nbsp;→</span>
+        </Link>
+      </div>
+    </article>
+  );
+}

@@ -1,0 +1,66 @@
+import "server-only";
+
+import type { DocumentSnapshot, Firestore } from "firebase-admin/firestore";
+
+import type { Product } from "@/types/shop";
+import {
+  sortProducts,
+  type ProductRepository,
+  type ProductSaveResult,
+} from "./repository";
+import { productIdSchema, productSchema } from "./schemas";
+
+// products/{id}: Product without id.
+
+const stripUndefined = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+
+function parse(snap: DocumentSnapshot): Product {
+  return productSchema.parse({ ...snap.data(), id: snap.id });
+}
+
+export class FirestoreProductRepository implements ProductRepository {
+  constructor(private readonly db: Firestore) {}
+
+  private get col() {
+    return this.db.collection("products");
+  }
+
+  async list({ publishedOnly = false } = {}) {
+    const query = publishedOnly
+      ? this.col.where("published", "==", true)
+      : this.col;
+    return sortProducts((await query.get()).docs.map(parse));
+  }
+
+  async get(id: string) {
+    if (!productIdSchema.safeParse(id).success) return null;
+    const snap = await this.col.doc(id).get();
+    return snap.exists ? parse(snap) : null;
+  }
+
+  save(product: Product, mode: "create" | "update"): Promise<ProductSaveResult> {
+    const { id, ...data } = productSchema.parse(product);
+    const ref = this.col.doc(id);
+    return this.db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (mode === "create" && snap.exists)
+        return { ok: false, reason: "exists" };
+      if (mode === "update" && !snap.exists) {
+        return { ok: false, reason: "not_found" };
+      }
+      tx.set(ref, stripUndefined(data));
+      return { ok: true, previous: snap.exists ? parse(snap) : null };
+    });
+  }
+
+  delete(id: string): Promise<Product | null> {
+    if (!productIdSchema.safeParse(id).success) return Promise.resolve(null);
+    const ref = this.col.doc(id);
+    return this.db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return null;
+      tx.delete(ref);
+      return parse(snap);
+    });
+  }
+}

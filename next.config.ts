@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+  images: {
+    remotePatterns: [new URL("https://res.cloudinary.com/anhdcnn7/**")],
+  },
   turbopack: {
     rules: {
       "*.css": {

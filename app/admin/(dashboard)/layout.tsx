@@ -1,0 +1,89 @@
+import Link from "next/link";
+import { Suspense } from "react";
+
+import { LogoMark } from "@/components/site/logo";
+import { verifyAdmin } from "@/lib/auth/dal";
+import { SITE_NAME } from "@/lib/site";
+import { AdminNavItems, CurrentAdminNavItems } from "./_components/admin-nav";
+import { AdminMobileMenu } from "./_components/mobile-menu";
+import { signOut } from "./actions";
+
+// The session read is request-time, so the gate streams in behind Suspense
+// (Cache Components) and the static chrome stays in the prerendered shell.
+export default function DashboardLayout({ children }: LayoutProps<"/admin">) {
+  return (
+    <div className="flex flex-1 flex-col">
+      <header className="sticky top-0 z-30 border-b border-brown bg-espresso">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex h-16 items-center justify-between gap-4">
+            <Link
+              href="/admin"
+              className="flex min-w-0 items-center gap-3 text-cream"
+            >
+              <LogoMark className="size-10 shrink-0" />
+              <span className="truncate font-wordmark text-3xl leading-none font-bold tracking-wide text-marigold uppercase">
+                {SITE_NAME}
+              </span>
+              <span className="hidden font-sans text-xs font-semibold tracking-[0.3em] text-gold uppercase sm:inline">
+                Admin
+              </span>
+            </Link>
+            <Suspense fallback={<AdminMobileMenu />}>
+              <AccountMenu />
+            </Suspense>
+          </div>
+          <nav aria-label="Admin" className="hidden gap-7 md:flex">
+            <Suspense fallback={<AdminNavItems pathname={null} />}>
+              <CurrentAdminNavItems />
+            </Suspense>
+          </nav>
+        </div>
+      </header>
+      <Suspense
+        fallback={
+          <p className="mx-auto w-full max-w-6xl px-4 py-10 text-sand sm:px-6">
+            Loading…
+          </p>
+        }
+      >
+        <AdminGate>{children}</AdminGate>
+      </Suspense>
+    </div>
+  );
+}
+
+async function AdminGate({ children }: { children: React.ReactNode }) {
+  await verifyAdmin();
+  return (
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-10 pb-20 sm:px-6 sm:pt-14">
+      {children}
+    </main>
+  );
+}
+
+async function AccountMenu() {
+  const admin = await verifyAdmin();
+  return (
+    <div className="flex shrink-0 items-center gap-4 text-sm">
+      <AdminMobileMenu email={admin.email} />
+      <Link
+        href="/"
+        target="_blank"
+        className="hidden text-sand transition-colors hover:text-cream md:inline"
+      >
+        View site ↗
+      </Link>
+      <span className="hidden max-w-48 truncate text-sand lg:inline">
+        {admin.email}
+      </span>
+      <form action={signOut} className="hidden md:block">
+        <button
+          type="submit"
+          className="min-h-11 rounded-full border border-caramel px-4 text-cream transition-colors hover:border-gold hover:text-gold-light"
+        >
+          Sign out
+        </button>
+      </form>
+    </div>
+  );
+}
