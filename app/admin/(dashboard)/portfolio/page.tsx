@@ -35,7 +35,7 @@ export default async function PortfolioAdminPage() {
       />
 
       {items.length === 0 ? (
-        <p className="text-sand">
+        <p className="text-muted">
           No looks yet. Add your first one to start the Work gallery.
         </p>
       ) : (
@@ -59,11 +59,11 @@ export default async function PortfolioAdminPage() {
                       className="size-16 shrink-0 rounded-sm object-cover"
                     />
                   ) : (
-                    <span className="size-16 shrink-0 rounded-sm bg-cocoa" />
+                    <span className="size-16 shrink-0 rounded-sm bg-surface" />
                   )}
                   <span className="min-w-0 flex-1">
                     <span className={rowTitle}>{item.title}</span>
-                    <span className="block truncate text-sm text-sand">
+                    <span className="block truncate text-sm text-muted">
                       {item.category || "No category"} · {item.media.length}{" "}
                       {item.media.length === 1 ? "item" : "items"}
                     </span>

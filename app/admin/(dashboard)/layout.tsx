@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { LogoMark } from "@/components/site/logo";
+import { Logo } from "@/components/site/logo";
 import { verifyAdmin } from "@/lib/auth/dal";
-import { SITE_NAME } from "@/lib/site";
 import { AdminNavItems, CurrentAdminNavItems } from "./_components/admin-nav";
 import { AdminMobileMenu } from "./_components/mobile-menu";
 import { signOut } from "./actions";
@@ -13,18 +12,15 @@ import { signOut } from "./actions";
 export default function DashboardLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-30 border-b border-brown bg-espresso">
+      <header className="surface-burgundy sticky top-0 z-30">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-4">
             <Link
               href="/admin"
-              className="flex min-w-0 items-center gap-3 text-cream"
+              className="flex min-w-0 items-center gap-3"
             >
-              <LogoMark className="size-10 shrink-0" />
-              <span className="truncate font-wordmark text-3xl leading-none font-bold tracking-wide text-marigold uppercase">
-                {SITE_NAME}
-              </span>
-              <span className="hidden font-sans text-xs font-semibold tracking-[0.3em] text-gold uppercase sm:inline">
+              <Logo className="h-12 w-auto shrink-0" />
+              <span className="hidden font-sans text-xs font-semibold tracking-[0.3em] text-brand uppercase sm:inline">
                 Admin
               </span>
             </Link>
@@ -41,7 +37,7 @@ export default function DashboardLayout({ children }: LayoutProps<"/admin">) {
       </header>
       <Suspense
         fallback={
-          <p className="mx-auto w-full max-w-6xl px-4 py-10 text-sand sm:px-6">
+          <p className="mx-auto w-full max-w-6xl px-4 py-10 text-muted sm:px-6">
             Loading…
           </p>
         }
@@ -69,17 +65,17 @@ async function AccountMenu() {
       <Link
         href="/"
         target="_blank"
-        className="hidden text-sand transition-colors hover:text-cream md:inline"
+        className="hidden text-muted transition-colors hover:text-ink md:inline"
       >
         View site ↗
       </Link>
-      <span className="hidden max-w-48 truncate text-sand lg:inline">
+      <span className="hidden max-w-48 truncate text-muted lg:inline">
         {admin.email}
       </span>
       <form action={signOut} className="hidden md:block">
         <button
           type="submit"
-          className="min-h-11 rounded-full border border-caramel px-4 text-cream transition-colors hover:border-gold hover:text-gold-light"
+          className="min-h-11 rounded-full border border-brand px-4 text-ink transition-colors hover:border-brand hover:text-brand-hover"
         >
           Sign out
         </button>

@@ -40,25 +40,25 @@ export function StorageCleanup() {
   }
 
   return (
-    <section className="mt-6 flex flex-col gap-4 border-t border-brown pt-8">
+    <section className="mt-6 flex flex-col gap-4 border-t border-line pt-8">
       <h2 className="font-display text-3xl font-semibold">Storage clean-up</h2>
-      <p className="text-sm text-sand">
+      <p className="text-sm text-muted">
         Finds photos and videos that were uploaded but never saved to a look or
         service. Uploads from the last {ORPHAN_GRACE_HOURS} hours are left
         alone.
       </p>
       {found?.status === "ok" && found.count === 0 && (
-        <p role="status" className="text-sm text-gold">
+        <p role="status" className="text-sm text-brand">
           Nothing to clean up.
         </p>
       )}
       {found?.status === "error" && (
-        <p role="alert" className="text-sm text-gold-light">
+        <p role="alert" className="text-sm font-semibold text-brand">
           {found.message}
         </p>
       )}
       {message && (
-        <p role="status" className="text-sm text-gold">
+        <p role="status" className="text-sm text-brand">
           {message}
         </p>
       )}

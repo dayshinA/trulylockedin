@@ -136,7 +136,7 @@ export default async function BookingDetailPage({
 
       <form action={saveAdminNotesAction} className="flex flex-col gap-3">
         <input type="hidden" name="id" value={booking.id} />
-        <label htmlFor="adminNotes" className="text-sm text-sand">
+        <label htmlFor="adminNotes" className="text-sm text-muted">
           Private notes (only you can see these)
         </label>
         <textarea

@@ -1,31 +1,51 @@
 @import "tailwindcss";
 
-@theme {
-  --color-espresso: #1a110c;
-  --color-cocoa: #2b1b13;
-  --color-brown: #5c3a23;
-  --color-caramel: #9c6b43;
-  --color-gold: #c9a15a;
-  --color-gold-light: #e6c98a;
+/* Brand: burgundy and white. Components use the role tokens below, never the
+   raw colours, so they work on white and inside .surface-burgundy alike. */
+@theme static {
   --color-burgundy: #6e1a2c;
-  --color-wine: #4a0f1d;
-  --color-cream: #f4ebdd;
-  --color-sand: #d9c7ae;
-  --color-marigold: #f4b046;
+  --color-burgundy-deep: #4a0f1d;
+
+  --color-page: #ffffff;
+  --color-ink: var(--color-burgundy-deep); /* main text */
+  --color-muted: #75505a; /* secondary text */
+  --color-faint: #b39ca2; /* disabled text only: below AA on purpose */
+  --color-line: #ecdfe2; /* hairline dividers */
+  --color-field: #a5828c; /* form field borders: 3:1 on white */
+  --color-surface: #f8f1f3; /* image placeholders */
+  --color-brand: var(--color-burgundy); /* buttons, links, eyebrows */
+  --color-brand-hover: var(--color-burgundy-deep);
+  --color-on-brand: #ffffff; /* text on bg-brand */
 }
 
 @theme inline {
   --font-display: var(--font-cormorant);
   --font-sans: var(--font-manrope);
-  --font-wordmark: var(--font-bebas);
+}
+
+/* White on burgundy: flips the role tokens for everything inside. The white
+   logo only works on this surface. */
+@utility surface-burgundy {
+  --color-page: var(--color-burgundy);
+  --color-ink: #ffffff;
+  --color-muted: #f1e2e6;
+  --color-faint: #bd939e;
+  --color-line: #8f4455;
+  --color-field: #bd939e;
+  --color-surface: var(--color-burgundy-deep);
+  --color-brand: #ffffff;
+  --color-brand-hover: #f1e2e6;
+  --color-on-brand: var(--color-burgundy);
+  background-color: var(--color-page);
+  color: var(--color-ink);
 }
 
 body {
-  background: var(--color-espresso);
-  color: var(--color-cream);
+  background: var(--color-page);
+  color: var(--color-ink);
 }
 
 ::selection {
-  background: var(--color-gold);
-  color: var(--color-espresso);
+  background: var(--color-burgundy);
+  color: #ffffff;
 }

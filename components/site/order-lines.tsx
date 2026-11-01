@@ -12,11 +12,11 @@ export function OrderLines({
   totalPence: number;
 }) {
   return (
-    <ul className="border-t border-brown">
+    <ul className="border-t border-line">
       {items.map((item) => (
         <li
           key={item.productId}
-          className="flex justify-between gap-4 border-b border-brown py-4"
+          className="flex justify-between gap-4 border-b border-line py-4"
         >
           <span>
             {item.quantity} × {item.name}
@@ -26,9 +26,9 @@ export function OrderLines({
           </span>
         </li>
       ))}
-      <li className="flex justify-between gap-4 border-b border-brown py-4 text-lg">
+      <li className="flex justify-between gap-4 border-b border-line py-4 text-lg">
         <span>{totalLabel}</span>
-        <span className="shrink-0 font-semibold text-gold">
+        <span className="shrink-0 font-semibold text-brand">
           {formatPrice(totalPence)}
         </span>
       </li>

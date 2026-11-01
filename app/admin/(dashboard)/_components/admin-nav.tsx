@@ -29,8 +29,8 @@ export function AdminNavItems({ pathname }: { pathname: string | null }) {
         aria-current={active ? "page" : undefined}
         className={`-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 text-sm tracking-wide transition-colors ${
           active
-            ? "border-gold text-cream"
-            : "border-transparent text-sand hover:text-cream"
+            ? "border-brand text-ink"
+            : "border-transparent text-muted hover:text-ink"
         }`}
       >
         {label}

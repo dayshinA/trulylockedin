@@ -36,7 +36,7 @@ export function AdminMobileMenu({ email }: { email?: string | null }) {
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className="relative inline-flex min-h-11 min-w-11 items-center justify-center text-cream"
+        className="relative inline-flex min-h-11 min-w-11 items-center justify-center text-ink"
       >
         <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
         <span aria-hidden className="relative block h-3 w-6">
@@ -55,23 +55,23 @@ export function AdminMobileMenu({ email }: { email?: string | null }) {
         createPortal(
           <div
             id={menuId}
-            className="fixed inset-0 z-[25] flex flex-col overflow-y-auto bg-espresso px-6 pt-24 pb-4 md:hidden"
+            className="surface-burgundy fixed inset-0 z-[25] flex flex-col overflow-y-auto px-6 pt-24 pb-4 md:hidden"
           >
             <MobileNavItems firstLink={firstLink} onNavigate={close} />
-            <div className="mt-auto flex items-center gap-4 border-t border-brown pt-3 text-xs">
-              <p className="min-w-0 flex-1 truncate text-sand">{email}</p>
+            <div className="mt-auto flex items-center gap-4 border-t border-line pt-3 text-xs">
+              <p className="min-w-0 flex-1 truncate text-muted">{email}</p>
               <Link
                 href="/"
                 target="_blank"
                 onClick={close}
-                className="inline-flex min-h-11 shrink-0 items-center text-sand transition-colors hover:text-cream"
+                className="inline-flex min-h-11 shrink-0 items-center text-muted transition-colors hover:text-ink"
               >
                 View site ↗
               </Link>
               <form action={signOut} className="shrink-0">
                 <button
                   type="submit"
-                  className="min-h-11 font-semibold text-gold transition-colors hover:text-gold-light"
+                  className="min-h-11 font-semibold text-brand transition-colors hover:text-brand-hover"
                 >
                   Sign out
                 </button>
@@ -105,8 +105,8 @@ function MobileNavItems({
             ref={i === 0 ? firstLink : undefined}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`font-display text-4xl leading-tight transition-colors hover:text-gold ${
-              active ? "text-gold" : "text-cream"
+            className={`font-display text-4xl leading-tight transition-colors hover:text-brand ${
+              active ? "text-brand" : "text-ink"
             }`}
           >
             {label}

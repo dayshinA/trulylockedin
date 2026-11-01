@@ -14,7 +14,7 @@ export function PageIntro({
     <section className="px-4 pt-32 pb-12 sm:px-6 sm:pt-40 sm:pb-16">
       <div className="mx-auto max-w-6xl">
         {eyebrow && (
-          <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+          <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-brand uppercase">
             {eyebrow}
           </p>
         )}
@@ -25,7 +25,7 @@ export function PageIntro({
           {title}
         </SplitHeading>
         {children && (
-          <div className="mt-6 max-w-xl text-lg text-sand">{children}</div>
+          <div className="mt-6 max-w-xl text-lg text-muted">{children}</div>
         )}
       </div>
     </section>

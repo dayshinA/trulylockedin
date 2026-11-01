@@ -30,7 +30,7 @@ export function ServiceImageField({
 
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-2 text-sm text-sand">Photo (optional)</legend>
+      <legend className="mb-2 text-sm text-muted">Photo (optional)</legend>
       <input type="hidden" name="imagePublicId" value={publicId ?? ""} />
       {publicId ? (
         <CldImage
@@ -43,16 +43,16 @@ export function ServiceImageField({
           className="aspect-4/3 w-full max-w-xs rounded-sm object-cover"
         />
       ) : (
-        <p className="text-sm text-sand">
+        <p className="text-sm text-muted">
           No photo. The service shows as text only.
         </p>
       )}
-      {error?.[0] && <p className="text-sm text-gold-light">{error[0]}</p>}
+      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
       {publicId && (
         <button
           type="button"
           onClick={() => change(undefined)}
-          className={`${outlineButton} hover:border-burgundy hover:text-cream`}
+          className={`${outlineButton} hover:border-ink hover:text-ink`}
         >
           Remove photo
         </button>

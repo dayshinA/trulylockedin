@@ -6,7 +6,7 @@ import { primaryButton } from "./admin-ui";
 import { IDLE, type FormState } from "./form-state";
 
 export const inputClass =
-  "min-h-12 w-full rounded-sm border border-brown bg-espresso px-3 text-base text-cream outline-none focus:border-gold";
+  "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
 
 // Submits through onSubmit rather than <form action>, so React doesn't reset
 // the fields after a failed save and the owner keeps what they typed.
@@ -37,10 +37,10 @@ export function Field({
 }) {
   return (
     <label className={`flex flex-col gap-2 text-sm ${className}`}>
-      <span className="text-sand">{label}</span>
+      <span className="text-muted">{label}</span>
       {children}
-      {hint && !error?.[0] && <span className="text-xs text-sand">{hint}</span>}
-      {error?.[0] && <span className="text-gold-light">{error[0]}</span>}
+      {hint && !error?.[0] && <span className="text-xs text-muted">{hint}</span>}
+      {error?.[0] && <span className="font-semibold text-brand">{error[0]}</span>}
     </label>
   );
 }
@@ -60,7 +60,7 @@ export function Checkbox({
         type="checkbox"
         name={name}
         defaultChecked={defaultChecked}
-        className="size-5 accent-gold"
+        className="size-5 accent-brand"
       />
       {label}
     </label>
@@ -74,8 +74,8 @@ export function FormMessage({ state }: { state: FormState }) {
       role={state.status === "error" ? "alert" : "status"}
       className={
         state.status === "error"
-          ? "text-sm text-gold-light"
-          : "text-sm text-gold"
+          ? "text-sm font-semibold text-brand"
+          : "text-sm text-brand"
       }
     >
       {state.message}

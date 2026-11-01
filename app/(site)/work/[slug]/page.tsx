@@ -51,7 +51,7 @@ async function WorkItem({
         <div className="mx-auto max-w-6xl">
           <Link
             href="/work"
-            className="-ml-1 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold text-gold transition-colors hover:text-gold-light"
+            className="-ml-1 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
           >
             <ArrowLeft aria-hidden className="size-4" />
             Back to work
@@ -60,10 +60,10 @@ async function WorkItem({
             {item.title}
           </h1>
           {item.category && (
-            <p className="mt-3 text-sand">{item.category}</p>
+            <p className="mt-3 text-muted">{item.category}</p>
           )}
           {item.description && (
-            <p className="mt-6 max-w-xl text-lg whitespace-pre-line text-sand">
+            <p className="mt-6 max-w-xl text-lg whitespace-pre-line text-muted">
               {item.description}
             </p>
           )}

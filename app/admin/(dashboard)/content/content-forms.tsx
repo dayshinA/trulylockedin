@@ -29,7 +29,7 @@ const textareaClass = `${inputClass} py-2`;
 const smallButton = outlineButton;
 
 // One repeated entry (a highlight or a review), marked by a rule on the left.
-const rowGroup = "flex flex-col gap-3 border-l-2 border-brown pl-4";
+const rowGroup = "flex flex-col gap-3 border-l-2 border-line pl-4";
 
 type Action = (previous: FormState, formData: FormData) => Promise<FormState>;
 
@@ -46,7 +46,7 @@ function SectionForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       {children(errors)}
       {errors.form?.[0] && (
-        <p className="text-sm text-gold-light">{errors.form[0]}</p>
+        <p className="text-sm font-semibold text-brand">{errors.form[0]}</p>
       )}
       <FormMessage state={state} />
       <SubmitButton pending={pending}>Save</SubmitButton>
@@ -134,7 +134,7 @@ export function AboutForm({ about }: { about: SiteContent["about"] }) {
             />
           </Field>
           <fieldset className="flex flex-col gap-3">
-            <legend className="mb-2 text-sm text-sand">
+            <legend className="mb-2 text-sm text-muted">
               Highlights (up to 6)
             </legend>
             {highlights.rows.map(({ key, value }, i) => (
@@ -164,7 +164,7 @@ export function AboutForm({ about }: { about: SiteContent["about"] }) {
               </div>
             ))}
             {errors.highlights?.[0] && (
-              <p className="text-sm text-gold-light">{errors.highlights[0]}</p>
+              <p className="text-sm font-semibold text-brand">{errors.highlights[0]}</p>
             )}
             {highlights.rows.length < 6 && (
               <button
@@ -195,7 +195,7 @@ export function TestimonialsForm({
       {(errors) => (
         <>
           {reviews.rows.length === 0 && (
-            <p className="text-sm text-sand">
+            <p className="text-sm text-muted">
               No reviews. The reviews section is hidden on the website.
             </p>
           )}
@@ -251,7 +251,7 @@ export function TestimonialsForm({
               + Add a review
             </button>
           )}
-          <p className="text-xs text-sand">
+          <p className="text-xs text-muted">
             Only post reviews clients have agreed to share.
           </p>
         </>

@@ -60,7 +60,7 @@ function TimePair({
         aria-label={`${label} opens`}
         className={timeClass}
       />
-      <span className="text-sand">to</span>
+      <span className="text-muted">to</span>
       <input
         type="time"
         name={`${prefix}end${n}`}
@@ -79,7 +79,7 @@ export function WeeklyHoursForm({ weekly }: { weekly: WeeklyHours }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <div className="border-t border-brown">
+      <div className="border-t border-line">
         {WEEK_ORDER.map((day) => (
           <DayRow
             key={day}
@@ -89,7 +89,7 @@ export function WeeklyHoursForm({ weekly }: { weekly: WeeklyHours }) {
           />
         ))}
       </div>
-      <p className="text-xs text-sand">
+      <p className="text-xs text-muted">
         Add a second time range for a break (e.g. 09:00–13:00 and 14:00–18:00).
       </p>
       <FormMessage state={state} />
@@ -112,7 +112,7 @@ function DayRow({
   const prefix = `${day}.`;
 
   return (
-    <fieldset className="flex flex-col gap-2 border-b border-brown py-3">
+    <fieldset className="flex flex-col gap-2 border-b border-line py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <legend className="sr-only">{DAY_NAMES[day]}</legend>
         <label className="flex min-h-11 items-center gap-3 font-display text-xl font-semibold">
@@ -121,11 +121,11 @@ function DayRow({
             name={`${day}.open`}
             checked={open}
             onChange={(e) => setOpen(e.target.checked)}
-            className="size-5 accent-gold"
+            className="size-5 accent-brand"
           />
           {DAY_NAMES[day]}
         </label>
-        {!open && <span className="text-sm text-sand">Closed</span>}
+        {!open && <span className="text-sm text-muted">Closed</span>}
       </div>
       {open && (
         <div className="flex flex-col gap-2">
@@ -148,14 +148,14 @@ function DayRow({
             <button
               type="button"
               onClick={() => setSplit(true)}
-              className="min-h-11 w-fit text-sm text-gold underline-offset-4 hover:underline"
+              className="min-h-11 w-fit text-sm text-brand underline-offset-4 hover:underline"
             >
               + Add a break
             </button>
           )}
         </div>
       )}
-      {error?.[0] && <p className="text-sm text-gold-light">{error[0]}</p>}
+      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
     </fieldset>
   );
 }
@@ -252,7 +252,7 @@ export function OverrideForm({ today }: { today: string }) {
       </Field>
 
       <fieldset className="flex flex-col gap-1 text-sm">
-        <legend className="mb-1 text-sand">What&rsquo;s different?</legend>
+        <legend className="mb-1 text-muted">What&rsquo;s different?</legend>
         {(
           [
             ["closed", "Closed all day"],
@@ -267,7 +267,7 @@ export function OverrideForm({ today }: { today: string }) {
               value={value}
               checked={kind === value}
               onChange={() => setKind(value)}
-              className="size-5 accent-gold"
+              className="size-5 accent-brand"
             />
             {label}
           </label>
@@ -302,7 +302,7 @@ export function OverrideForm({ today }: { today: string }) {
         </>
       )}
 
-      <p className="text-xs text-sand">
+      <p className="text-xs text-muted">
         Saving replaces anything already set for that date. Existing bookings
         are not affected.
       </p>

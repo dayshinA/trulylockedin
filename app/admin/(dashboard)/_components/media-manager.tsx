@@ -80,17 +80,17 @@ export function MediaManager({
 
   return (
     <fieldset className="flex flex-col gap-4">
-      <legend className="mb-2 text-sm text-sand">{legend}</legend>
+      <legend className="mb-2 text-sm text-muted">{legend}</legend>
       <input type="hidden" name="media" value={JSON.stringify(media)} />
       <input type="hidden" name="coverPublicId" value={coverId ?? ""} />
       {media.length === 0 ? (
-        <p className="text-sm text-sand">Nothing uploaded yet.</p>
+        <p className="text-sm text-muted">Nothing uploaded yet.</p>
       ) : (
-        <ul className="border-t border-brown">
+        <ul className="border-t border-line">
           {media.map((m, i) => (
             <li
               key={m.publicId}
-              className="flex flex-wrap items-start gap-4 border-b border-brown py-4"
+              className="flex flex-wrap items-start gap-4 border-b border-line py-4"
             >
               <CldImage
                 src={m.publicId}
@@ -102,7 +102,7 @@ export function MediaManager({
                 className="size-24 shrink-0 rounded-sm object-cover"
               />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <p className="flex items-center gap-2 text-xs text-sand">
+                <p className="flex items-center gap-2 text-xs text-muted">
                   {m.type === "video" ? "Video" : "Photo"}
                   {coverId === m.publicId && <Badge tone="accent">Cover</Badge>}
                 </p>
@@ -144,7 +144,7 @@ export function MediaManager({
                   <button
                     type="button"
                     onClick={() => remove(m)}
-                    className={`${smallButton} hover:border-burgundy hover:text-cream`}
+                    className={`${smallButton} hover:border-ink hover:text-ink`}
                   >
                     Remove
                   </button>
@@ -154,14 +154,14 @@ export function MediaManager({
           ))}
         </ul>
       )}
-      {error?.[0] && <p className="text-sm text-gold-light">{error[0]}</p>}
+      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
       <UploadButton
         label={videos ? "Upload photos or videos" : "Upload photos"}
         videos={videos}
         multiple
         onUploaded={addUpload}
       />
-      <p className="text-xs text-sand">
+      <p className="text-xs text-muted">
         Removed photos are deleted from storage when you save.
       </p>
     </fieldset>

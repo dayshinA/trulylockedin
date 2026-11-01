@@ -14,10 +14,10 @@ export function BookBar() {
     return null;
   }
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-brown bg-espresso p-3 md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-page p-3 md:hidden">
       <Link
         href="/book"
-        className="flex min-h-12 items-center justify-center rounded-full bg-gold text-sm font-semibold tracking-widest text-espresso uppercase"
+        className="flex min-h-12 items-center justify-center rounded-full bg-brand text-sm font-semibold tracking-widest text-on-brand uppercase"
       >
         Book now
       </Link>

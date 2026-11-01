@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Cormorant_Garamond, Manrope } from "next/font/google";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import { SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
@@ -8,13 +8,6 @@ const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
-});
-
-// Wordmark only (header). Bebas Neue ships a single weight.
-const bebas = Bebas_Neue({
-  variable: "--font-bebas",
-  subsets: ["latin"],
-  weight: "400",
 });
 
 const manrope = Manrope({
@@ -35,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-GB"
-      className={`${cormorant.variable} ${manrope.variable} ${bebas.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>

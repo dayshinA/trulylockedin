@@ -37,7 +37,7 @@ export function MobileMenu() {
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className="relative inline-flex min-h-11 min-w-11 items-center justify-center text-cream"
+        className="relative inline-flex min-h-11 min-w-11 items-center justify-center text-ink"
       >
         <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
         <span aria-hidden className="relative block h-3 w-6">
@@ -57,13 +57,13 @@ export function MobileMenu() {
         createPortal(
           <div
             id={menuId}
-            className="fixed inset-0 z-[25] flex flex-col bg-espresso px-6 pt-28 pb-10 md:hidden"
+            className="surface-burgundy fixed inset-0 z-[25] flex flex-col px-6 pt-28 pb-10 md:hidden"
           >
             <MobileNavItems firstLink={firstLink} onNavigate={close} />
             <Link
               href="/book"
               onClick={close}
-              className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full bg-gold text-sm font-semibold tracking-widest text-espresso uppercase"
+              className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full bg-brand text-sm font-semibold tracking-widest text-on-brand uppercase"
             >
               Book an appointment
             </Link>
@@ -95,8 +95,8 @@ function MobileNavItems({
             ref={i === 0 ? firstLink : undefined}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`font-display text-5xl leading-tight transition-colors hover:text-gold ${
-              active ? "text-gold" : "text-cream"
+            className={`font-display text-5xl leading-tight transition-colors hover:text-brand ${
+              active ? "text-brand" : "text-ink"
             }`}
           >
             {label}

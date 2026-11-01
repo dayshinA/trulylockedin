@@ -30,7 +30,7 @@ export type BasketProduct = {
 type FieldErrors = Partial<Record<string, string[]>>;
 
 const inputClass =
-  "min-h-12 w-full rounded-sm border border-brown bg-espresso px-3 text-base text-cream outline-none focus:border-gold";
+  "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
 
 type Placed = {
   ref: string;
@@ -114,7 +114,7 @@ export function Basket({
         >
           Order received
         </h2>
-        <p className="mt-3 text-lg text-sand">
+        <p className="mt-3 text-lg text-muted">
           We&rsquo;ll get it ready and let you know when you can collect it. You
           pay when you collect.
         </p>
@@ -137,13 +137,13 @@ export function Basket({
             ]}
           />
         </div>
-        <p className="mt-8 text-sand">
+        <p className="mt-8 text-muted">
           Save or bookmark this link to check or cancel your order. It&rsquo;s
           private to you.
         </p>
         <Link
           href={placed.manageUrl}
-          className="mt-4 inline-flex min-h-12 items-center rounded-full bg-gold px-8 text-sm font-semibold tracking-widest text-espresso uppercase transition-colors hover:bg-gold-light"
+          className="mt-4 inline-flex min-h-12 items-center rounded-full bg-brand px-8 text-sm font-semibold tracking-widest text-on-brand uppercase transition-colors hover:bg-brand-hover"
         >
           View my order
         </Link>
@@ -153,11 +153,11 @@ export function Basket({
 
   if (lines.length === 0) {
     return (
-      <div className="mt-10 max-w-xl border-t border-brown pt-6">
+      <div className="mt-10 max-w-xl border-t border-line pt-6">
         <p className="text-lg">Your basket is empty.</p>
         <Link
           href="/shop"
-          className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
         >
           Browse the shop <span aria-hidden>&nbsp;→</span>
         </Link>
@@ -168,11 +168,11 @@ export function Basket({
   return (
     <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_24rem] lg:gap-16">
       <div className="flex flex-col gap-8">
-        <ul className="border-t border-brown">
+        <ul className="border-t border-line">
           {rows.map(({ productId, quantity, product, available }) => (
             <li
               key={productId}
-              className="flex gap-4 border-b border-brown py-5 sm:gap-6"
+              className="flex gap-4 border-b border-line py-5 sm:gap-6"
             >
               {product?.coverPublicId ? (
                 <CldImage
@@ -184,14 +184,14 @@ export function Basket({
                   className="size-20 shrink-0 rounded-sm object-cover sm:size-24"
                 />
               ) : (
-                <span className="size-20 shrink-0 rounded-sm bg-cocoa sm:size-24" />
+                <span className="size-20 shrink-0 rounded-sm bg-surface sm:size-24" />
               )}
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <div className="flex items-baseline justify-between gap-4">
                   {product ? (
                     <Link
                       href={`/shop/${productId}`}
-                      className="min-w-0 truncate font-display text-xl font-semibold transition-colors hover:text-gold-light sm:text-2xl"
+                      className="min-w-0 truncate font-display text-xl font-semibold transition-colors hover:text-brand-hover sm:text-2xl"
                     >
                       {product.name}
                     </Link>
@@ -201,13 +201,13 @@ export function Basket({
                     </p>
                   )}
                   {available && (
-                    <p className="shrink-0 text-gold">
+                    <p className="shrink-0 text-brand">
                       {formatPrice(product!.pricePence * quantity)}
                     </p>
                   )}
                 </div>
                 {!available && (
-                  <p className="text-sm text-gold-light">
+                  <p className="text-sm font-semibold text-brand">
                     {product ? "Sold out — please remove" : "Please remove"}
                   </p>
                 )}
@@ -221,7 +221,7 @@ export function Basket({
                   <button
                     type="button"
                     onClick={() => removeFromBasket(productId)}
-                    className="min-h-11 px-2 text-sm text-sand underline-offset-4 hover:text-cream hover:underline"
+                    className="min-h-11 px-2 text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
                   >
                     Remove
                   </button>
@@ -233,7 +233,7 @@ export function Basket({
 
         <div className="flex items-baseline justify-between text-lg">
           <span>Total, paid on collection</span>
-          <span className="font-semibold text-gold">{formatPrice(total)}</span>
+          <span className="font-semibold text-brand">{formatPrice(total)}</span>
         </div>
 
         <ShopNotes notes={notes} />
@@ -286,19 +286,19 @@ export function Basket({
         </div>
 
         {formError && (
-          <p role="alert" className="text-sm text-gold-light">
+          <p role="alert" className="text-sm font-semibold text-brand">
             {formError}
           </p>
         )}
         {blocked && (
-          <p className="text-sm text-gold-light">
+          <p className="text-sm font-semibold text-brand">
             Remove the unavailable items to place your order.
           </p>
         )}
         <button
           type="submit"
           disabled={submitting || blocked}
-          className="min-h-12 rounded-full bg-gold px-8 font-semibold text-espresso transition-colors hover:bg-gold-light disabled:bg-brown disabled:text-sand"
+          className="min-h-12 rounded-full bg-brand px-8 font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
         >
           {submitting ? "Placing order…" : "Place order · pay on collection"}
         </button>
@@ -318,9 +318,9 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2 text-sm">
-      <span className="text-sand">{label}</span>
+      <span className="text-muted">{label}</span>
       {children}
-      {error?.[0] && <span className="text-gold-light">{error[0]}</span>}
+      {error?.[0] && <span className="font-semibold text-brand">{error[0]}</span>}
     </label>
   );
 }

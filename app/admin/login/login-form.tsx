@@ -67,29 +67,29 @@ export function LoginForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <label className="flex flex-col gap-2 text-sm">
-        <span className="text-sand">Email</span>
+        <span className="text-muted">Email</span>
         <input
           name="email"
           type="email"
           autoComplete="email"
           inputMode="email"
           required
-          className="min-h-12 rounded-sm border border-brown bg-espresso px-3 text-base text-cream outline-none focus:border-gold"
+          className="min-h-12 rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand"
         />
       </label>
       <label className="flex flex-col gap-2 text-sm">
-        <span className="text-sand">Password</span>
+        <span className="text-muted">Password</span>
         <input
           name="password"
           type="password"
           autoComplete="current-password"
           required
-          className="min-h-12 rounded-sm border border-brown bg-espresso px-3 text-base text-cream outline-none focus:border-gold"
+          className="min-h-12 rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand"
         />
       </label>
 
       {error && (
-        <p role="alert" className="text-sm text-gold-light">
+        <p role="alert" className="text-sm font-semibold text-brand">
           {error}
         </p>
       )}
@@ -97,7 +97,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-12 rounded-full bg-gold font-semibold text-espresso transition-colors hover:bg-gold-light disabled:bg-brown disabled:text-sand"
+        className="min-h-12 rounded-full bg-brand font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

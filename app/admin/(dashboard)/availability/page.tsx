@@ -47,17 +47,17 @@ export default async function AvailabilityPage() {
         description="Holidays, days off, shorter days, or one-off extra times."
       >
         {overrides.length > 0 ? (
-          <ul className="border-t border-brown">
+          <ul className="border-t border-line">
             {overrides.map((override) => (
               <li
                 key={override.date}
-                className="flex items-center gap-4 border-b border-brown py-4"
+                className="flex items-center gap-4 border-b border-line py-4"
               >
                 <span className="min-w-0 flex-1">
                   <span className="block font-display text-xl font-semibold">
                     {formatLocalDate(override.date, "long")}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-2 text-sm text-sand">
+                  <span className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
                     {override.closed && <Badge tone="alert">Closed</Badge>}
                     {!override.closed && describeOverride(override)}
                   </span>
@@ -72,10 +72,10 @@ export default async function AvailabilityPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-sand">No special dates coming up.</p>
+          <p className="text-sm text-muted">No special dates coming up.</p>
         )}
-        <details className="group border-b border-brown">
-          <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-4 font-semibold text-gold transition-colors hover:text-gold-light">
+        <details className="group border-b border-line">
+          <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-4 font-semibold text-brand transition-colors hover:text-brand-hover">
             Add a special date
             <span aria-hidden className="group-open:rotate-90">
               ›

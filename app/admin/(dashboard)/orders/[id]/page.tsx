@@ -88,15 +88,15 @@ export default async function OrderDetailPage({
         )}
       </div>
 
-      <ul className="border-t border-brown">
+      <ul className="border-t border-line">
         {order.items.map((item) => (
           <li
             key={item.productId}
-            className="flex justify-between gap-4 border-b border-brown py-4"
+            className="flex justify-between gap-4 border-b border-line py-4"
           >
             <span>
               {item.quantity} × {item.name}
-              <span className="text-sm text-sand">
+              <span className="text-sm text-muted">
                 {" "}
                 ({formatPrice(item.pricePence)} each)
               </span>
@@ -106,9 +106,9 @@ export default async function OrderDetailPage({
             </span>
           </li>
         ))}
-        <li className="flex justify-between gap-4 border-b border-brown py-4 text-lg">
+        <li className="flex justify-between gap-4 border-b border-line py-4 text-lg">
           <span>Total to take</span>
-          <span className="shrink-0 font-semibold text-gold">
+          <span className="shrink-0 font-semibold text-brand">
             {formatPrice(order.totalPence)}
           </span>
         </li>
@@ -159,7 +159,7 @@ export default async function OrderDetailPage({
 
       <form action={saveOrderNotesAction} className="flex flex-col gap-3">
         <input type="hidden" name="id" value={order.id} />
-        <label htmlFor="adminNotes" className="text-sm text-sand">
+        <label htmlFor="adminNotes" className="text-sm text-muted">
           Private notes (only you can see these)
         </label>
         <textarea

@@ -31,12 +31,12 @@ export function BookingRows({ bookings }: { bookings: Booking[] }) {
       {bookings.map((booking) => (
         <li key={booking.id}>
           <Link href={`/admin/bookings/${booking.id}`} className={rowLink}>
-            <span className="w-24 shrink-0 text-sm text-gold tabular-nums">
+            <span className="w-24 shrink-0 text-sm text-brand tabular-nums">
               {booking.start}–{booking.end}
             </span>
             <span className="min-w-0 flex-1">
               <span className={rowTitle}>{booking.client.name}</span>
-              <span className="block truncate text-sm text-sand">
+              <span className="block truncate text-sm text-muted">
                 {booking.service.name}
               </span>
             </span>
@@ -57,7 +57,7 @@ export function BookingsByDate({
   today: string;
   empty: string;
 }) {
-  if (bookings.length === 0) return <p className="text-sand">{empty}</p>;
+  if (bookings.length === 0) return <p className="text-muted">{empty}</p>;
   return (
     <div className="flex flex-col gap-8">
       {groupByDate(bookings).map(([date, group]) => (

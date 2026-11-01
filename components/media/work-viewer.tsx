@@ -17,7 +17,7 @@ import { WorkThumb } from "./work-media";
 const SWIPE_THRESHOLD = 50;
 
 const navButton =
-  "absolute top-1/2 z-10 hidden size-12 -translate-y-1/2 items-center justify-center rounded-sm border border-brown bg-espresso text-cream transition-colors hover:border-gold hover:bg-gold hover:text-espresso disabled:invisible sm:flex";
+  "absolute top-1/2 z-10 hidden size-12 -translate-y-1/2 items-center justify-center rounded-sm border border-line bg-page text-ink transition-colors hover:border-brand hover:bg-brand hover:text-on-brand disabled:invisible sm:flex";
 
 export function WorkViewer({
   media,
@@ -73,7 +73,7 @@ export function WorkViewer({
                 type="button"
                 onClick={(e) => open(i, e.currentTarget)}
                 aria-label={`View ${m.type === "video" ? "video" : "photo"} ${i + 1} of ${media.length} full screen`}
-                className="group relative block w-full cursor-zoom-in overflow-hidden rounded-sm bg-cocoa"
+                className="group relative block w-full cursor-zoom-in overflow-hidden rounded-sm bg-surface"
               >
                 <WorkThumb
                   media={m}
@@ -83,7 +83,7 @@ export function WorkViewer({
                 />
                 {m.type === "video" && (
                   <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="flex size-16 items-center justify-center rounded-full bg-espresso text-cream">
+                    <span className="flex size-16 items-center justify-center rounded-full bg-page text-ink">
                       <Play aria-hidden className="size-7 translate-x-0.5" />
                     </span>
                   </span>
@@ -102,7 +102,7 @@ export function WorkViewer({
           trigger.current?.focus();
         }}
         aria-label={`${title}: photos and videos`}
-        className="m-0 h-dvh max-h-none w-screen max-w-none bg-espresso p-0 text-cream backdrop:bg-espresso"
+        className="m-0 h-dvh max-h-none w-screen max-w-none bg-page p-0 text-ink backdrop:bg-page"
       >
         {index !== null && (
           <Slides
@@ -181,7 +181,7 @@ function Slides({
   return (
     <div className="relative flex h-full flex-col" onKeyDown={onKeyDown}>
       <div className="flex items-center justify-between px-4 py-3">
-        <p className="text-sm text-sand" aria-live="polite">
+        <p className="text-sm text-muted" aria-live="polite">
           {index + 1} / {media.length}
         </p>
         <button
@@ -190,7 +190,7 @@ function Slides({
           // First focusable element, so it gets focus when the dialog opens.
           autoFocus
           aria-label="Close"
-          className="flex size-11 items-center justify-center rounded-full text-cream transition-colors hover:bg-cocoa"
+          className="flex size-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface"
         >
           <X aria-hidden className="size-6" />
         </button>
@@ -254,7 +254,7 @@ function Slides({
       </div>
 
       {media[index].alt && (
-        <p className="px-4 pb-4 text-center text-sm text-sand">
+        <p className="px-4 pb-4 text-center text-sm text-muted">
           {media[index].alt}
         </p>
       )}

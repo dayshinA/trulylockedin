@@ -9,7 +9,7 @@ import { Header } from "@/components/site/header";
 
 export default function SiteLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="flex flex-1 flex-col bg-espresso pb-20 text-cream md:pb-0">
+    <div className="flex flex-1 flex-col bg-page pb-20 text-ink md:pb-0">
       <SmoothScroll />
       <Header />
       {children}

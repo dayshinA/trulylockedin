@@ -45,7 +45,7 @@ export default async function EditProductPage({
       <ProductForm product={product} categories={categories} />
 
       <DangerZone summary="Delete this product">
-        <p className="text-sand">
+        <p className="text-muted">
           This removes the product and deletes its photos from storage. To just
           hide it, untick &ldquo;Show on the website&rdquo;; for a short gap,
           untick &ldquo;In stock&rdquo;.

@@ -68,7 +68,7 @@ export default async function AdminOverviewPage() {
         {todays.length > 0 ? (
           <BookingRows bookings={todays} />
         ) : (
-          <p className="text-sand">No appointments today.</p>
+          <p className="text-muted">No appointments today.</p>
         )}
       </Section>
 

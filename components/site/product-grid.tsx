@@ -33,7 +33,7 @@ export function ProductGrid({
         <div
           role="group"
           aria-label="Filter by category"
-          className="-mx-4 flex gap-8 overflow-x-auto border-b border-brown px-4 sm:mx-0 sm:px-0"
+          className="-mx-4 flex gap-8 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0"
         >
           {[null, ...categories].map((c) => (
             <button
@@ -43,8 +43,8 @@ export function ProductGrid({
               onClick={() => setFilter(c)}
               className={`-mb-px min-h-11 shrink-0 border-b-2 text-sm transition-colors ${
                 filter === c
-                  ? "border-gold text-cream"
-                  : "border-transparent text-sand hover:text-cream"
+                  ? "border-brand text-ink"
+                  : "border-transparent text-muted hover:text-ink"
               }`}
             >
               {c ?? "All products"}
@@ -59,7 +59,7 @@ export function ProductGrid({
           return (
             <li key={product.id}>
               <Link href={`/shop/${product.id}`} className="group block">
-                <span className="block aspect-square overflow-hidden rounded-sm bg-cocoa">
+                <span className="block aspect-square overflow-hidden rounded-sm bg-surface">
                   {cover && (
                     <CldImage
                       src={cover.publicId}
@@ -73,15 +73,15 @@ export function ProductGrid({
                     />
                   )}
                 </span>
-                <span className="mt-3 block font-display text-xl leading-tight font-semibold text-cream group-hover:text-gold-light">
+                <span className="mt-3 block font-display text-xl leading-tight font-semibold text-ink group-hover:text-brand-hover">
                   {product.name}
                 </span>
                 <span className="mt-1 block text-sm">
-                  <span className="text-gold">
+                  <span className="text-brand">
                     {formatPrice(product.pricePence)}
                   </span>
                   {!product.inStock && (
-                    <span className="text-sand"> · Sold out</span>
+                    <span className="text-muted"> · Sold out</span>
                   )}
                 </span>
               </Link>

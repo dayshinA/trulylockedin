@@ -38,7 +38,7 @@ export function OrderRows({
   orders: Order[];
   empty: string;
 }) {
-  if (orders.length === 0) return <p className="text-sand">{empty}</p>;
+  if (orders.length === 0) return <p className="text-muted">{empty}</p>;
   return (
     <ul className={rowList}>
       {orders.map((order) => {
@@ -48,7 +48,7 @@ export function OrderRows({
             <Link href={`/admin/orders/${order.id}`} className={rowLink}>
               <span className="min-w-0 flex-1">
                 <span className={rowTitle}>{order.client.name}</span>
-                <span className="block truncate text-sm text-sand">
+                <span className="block truncate text-sm text-muted">
                   {count} {count === 1 ? "item" : "items"} ·{" "}
                   {formatPrice(order.totalPence)} ·{" "}
                   {placedAt.format(new Date(order.createdAt))}

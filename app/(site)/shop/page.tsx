@@ -27,16 +27,16 @@ export default async function ShopPage() {
           {products.length > 0 ? (
             <ProductGrid products={products} />
           ) : (
-            <div className="border-t border-brown pt-8">
+            <div className="border-t border-line pt-8">
               <p className="font-display text-3xl font-semibold">
                 Products coming soon
               </p>
-              <p className="mt-2 text-sand">
+              <p className="mt-2 text-muted">
                 In the meantime, ask about aftercare at your next appointment.
               </p>
               <Link
                 href="/services"
-                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
               >
                 View services <span aria-hidden>&nbsp;→</span>
               </Link>

@@ -67,7 +67,7 @@ async function ProductDetail({
         <div className="mx-auto max-w-6xl">
           <Link
             href="/shop"
-            className="-ml-1 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold text-gold transition-colors hover:text-gold-light"
+            className="-ml-1 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
           >
             <ArrowLeft aria-hidden className="size-4" />
             Back to shop
@@ -86,21 +86,21 @@ async function ProductDetail({
               <h1 className="font-display text-4xl leading-[1.05] font-semibold sm:text-6xl">
                 {product.name}
               </h1>
-              <p className="mt-4 text-2xl text-gold">
+              <p className="mt-4 text-2xl text-brand">
                 {formatPrice(product.pricePence)}
               </p>
               {product.category && (
-                <p className="mt-1 text-sm text-sand">{product.category}</p>
+                <p className="mt-1 text-sm text-muted">{product.category}</p>
               )}
               {product.inStock ? (
                 <AddToBasket productId={product.id} />
               ) : (
-                <p className="mt-8 border-y border-brown py-4 text-sand">
+                <p className="mt-8 border-y border-line py-4 text-muted">
                   Sold out for now.
                 </p>
               )}
               {product.description && (
-                <p className="mt-6 text-lg whitespace-pre-line text-sand">
+                <p className="mt-6 text-lg whitespace-pre-line text-muted">
                   {product.description}
                 </p>
               )}

@@ -2,32 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
 
 import { isActivePath, NAV_LINKS } from "./nav-links";
-
-function subscribeScroll(onChange: () => void) {
-  window.addEventListener("scroll", onChange, { passive: true });
-  return () => window.removeEventListener("scroll", onChange);
-}
-
-// Transparent at the top of the page, solid once the page has scrolled.
-export function HeaderFrame({ children }: { children: React.ReactNode }) {
-  const scrolled = useSyncExternalStore(
-    subscribeScroll,
-    () => window.scrollY > 8,
-    () => false,
-  );
-  return (
-    <header
-      className={`fixed inset-x-0 top-0 z-30 border-b transition-colors duration-300 ${
-        scrolled ? "border-brown bg-espresso" : "border-transparent"
-      }`}
-    >
-      {children}
-    </header>
-  );
-}
 
 export function NavItems({ pathname }: { pathname: string | null }) {
   return NAV_LINKS.map(({ href, label }) => {
@@ -39,8 +15,8 @@ export function NavItems({ pathname }: { pathname: string | null }) {
         aria-current={active ? "page" : undefined}
         className={`relative py-2 text-sm tracking-wide transition-colors ${
           active
-            ? "text-cream after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gold"
-            : "text-sand hover:text-cream"
+            ? "text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-brand"
+            : "text-muted hover:text-ink"
         }`}
       >
         {label}

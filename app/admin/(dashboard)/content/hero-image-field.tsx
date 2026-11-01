@@ -33,7 +33,7 @@ export function HeroImageField({
 
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-2 text-sm text-sand">Photo beside the headline</legend>
+      <legend className="mb-2 text-sm text-muted">Photo beside the headline</legend>
       <input type="hidden" name="imagePublicId" value={image?.publicId ?? ""} />
       <input type="hidden" name="imageWidth" value={image?.width ?? ""} />
       <input type="hidden" name="imageHeight" value={image?.height ?? ""} />
@@ -49,7 +49,7 @@ export function HeroImageField({
             className="aspect-4/5 w-full max-w-60 rounded-sm object-cover"
           />
           <label className="flex flex-col gap-2 text-sm">
-            <span className="text-sand">Describe the photo (for screen readers)</span>
+            <span className="text-muted">Describe the photo (for screen readers)</span>
             <input
               name="imageAlt"
               value={image.alt}
@@ -61,17 +61,17 @@ export function HeroImageField({
           <button
             type="button"
             onClick={() => change(undefined)}
-            className={`${outlineButton} hover:border-burgundy hover:text-cream`}
+            className={`${outlineButton} hover:border-ink hover:text-ink`}
           >
             Remove photo
           </button>
         </>
       ) : (
-        <p className="text-sm text-sand">
+        <p className="text-sm text-muted">
           No photo. The panel shows as plain colour.
         </p>
       )}
-      {error?.[0] && <p className="text-sm text-gold-light">{error[0]}</p>}
+      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
       <UploadButton
         label={image ? "Replace photo" : "Upload a photo"}
         videos={false}
@@ -80,7 +80,7 @@ export function HeroImageField({
           change({ publicId, width, height, alt: image?.alt ?? "" })
         }
       />
-      <p className="text-xs text-sand">
+      <p className="text-xs text-muted">
         A tall (portrait) photo works best. On phones it&apos;s cropped to fit,
         keeping the main subject in view.
       </p>

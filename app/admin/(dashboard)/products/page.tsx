@@ -35,7 +35,7 @@ export default async function ProductsAdminPage() {
       />
 
       {products.length === 0 ? (
-        <p className="text-sand">
+        <p className="text-muted">
           No products yet. Add your first one to open the Shop page.
         </p>
       ) : (
@@ -58,11 +58,11 @@ export default async function ProductsAdminPage() {
                       className="size-16 shrink-0 rounded-sm object-cover"
                     />
                   ) : (
-                    <span className="size-16 shrink-0 rounded-sm bg-cocoa" />
+                    <span className="size-16 shrink-0 rounded-sm bg-surface" />
                   )}
                   <span className="min-w-0 flex-1">
                     <span className={rowTitle}>{product.name}</span>
-                    <span className="block truncate text-sm text-sand">
+                    <span className="block truncate text-sm text-muted">
                       {formatPrice(product.pricePence)}
                       {product.category && ` · ${product.category}`}
                     </span>

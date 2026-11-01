@@ -22,7 +22,7 @@ export default async function AboutPage() {
           {rest.length > 0 && (
             <Reveal
               stagger
-              className="flex max-w-prose flex-col gap-5 text-lg text-sand"
+              className="flex max-w-prose flex-col gap-5 text-lg text-muted"
             >
               {rest.map((paragraph, i) => (
                 <p key={i}>{paragraph}</p>
@@ -33,20 +33,20 @@ export default async function AboutPage() {
             <Reveal
               className={rest.length > 0 ? "" : "md:col-span-2 md:max-w-3xl"}
             >
-              <ol className="border-t border-brown">
+              <ol className="border-t border-line">
                 {about.highlights.map((h, i) => (
                   <li
                     key={h.title}
-                    className="grid grid-cols-[3rem_1fr] gap-4 border-b border-brown py-6"
+                    className="grid grid-cols-[3rem_1fr] gap-4 border-b border-line py-6"
                   >
-                    <span className="font-display text-2xl text-gold">
+                    <span className="font-display text-2xl text-brand">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <div>
                       <h2 className="font-display text-2xl font-semibold">
                         {h.title}
                       </h2>
-                      <p className="mt-1 text-sand">{h.body}</p>
+                      <p className="mt-1 text-muted">{h.body}</p>
                     </div>
                   </li>
                 ))}

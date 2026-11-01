@@ -73,20 +73,20 @@ export default async function ContentPage() {
       <PageHeader title="Site content">
         The words on the public website. Each section saves on its own.
       </PageHeader>
-      <div className="border-t border-brown">
+      <div className="border-t border-line">
         {SECTIONS.map(({ id, title, where }) => (
-          <details key={id} className="group border-b border-brown">
+          <details key={id} className="group border-b border-line">
             <summary className="flex min-h-16 cursor-pointer items-center gap-3 py-3">
-              <span className="flex-1 font-display text-2xl font-semibold transition-colors group-hover:text-gold-light">
+              <span className="flex-1 font-display text-2xl font-semibold transition-colors group-hover:text-brand-hover">
                 {title}
               </span>
               {!saved.includes(id) && <Badge tone="muted">Placeholder</Badge>}
-              <span aria-hidden className="text-gold group-open:rotate-90">
+              <span aria-hidden className="text-brand group-open:rotate-90">
                 ›
               </span>
             </summary>
             <div className="pb-10">
-              <p className="mb-6 text-sm text-sand">{where}</p>
+              <p className="mb-6 text-sm text-muted">{where}</p>
               {forms[id]}
             </div>
           </details>

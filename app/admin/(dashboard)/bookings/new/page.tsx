@@ -26,11 +26,11 @@ export default async function NewBookingPage() {
         title="New booking"
       />
       {services.length === 0 ? (
-        <p className="text-sand">
+        <p className="text-muted">
           Add a service first under{" "}
           <Link
             href="/admin/services"
-            className="text-gold underline-offset-4 hover:underline"
+            className="text-brand underline-offset-4 hover:underline"
           >
             Services
           </Link>

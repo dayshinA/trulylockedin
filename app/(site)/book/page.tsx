@@ -18,7 +18,7 @@ export default function BookPage({ searchParams }: PageProps<"/book">) {
       <h1 className="font-display text-5xl leading-[1.05] font-semibold sm:text-6xl">
         Book an appointment
       </h1>
-      <Suspense fallback={<p className="mt-10 text-sand">Loading services…</p>}>
+      <Suspense fallback={<p className="mt-10 text-muted">Loading services…</p>}>
         <BookingLoader searchParams={searchParams} />
       </Suspense>
     </main>
@@ -73,11 +73,11 @@ async function BookingLoader({
 
 function Unavailable() {
   return (
-    <p className="mt-10 max-w-xl border-t border-brown pt-6 text-lg text-sand">
+    <p className="mt-10 max-w-xl border-t border-line pt-6 text-lg text-muted">
       Online booking isn&rsquo;t open yet. Please{" "}
       <Link
         href="/contact"
-        className="text-gold underline underline-offset-4 hover:text-gold-light"
+        className="text-brand underline underline-offset-4 hover:text-brand-hover"
       >
         get in touch
       </Link>{" "}

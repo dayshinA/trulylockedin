@@ -58,7 +58,7 @@ export function ManualBookingForm({
           <input name="start" type="time" step={300} className={inputClass} />
         </Field>
       </div>
-      <p className="-mt-2 text-xs text-sand">
+      <p className="-mt-2 text-xs text-muted">
         Any time works, including outside opening hours. It just can&rsquo;t
         overlap another appointment.
       </p>
@@ -111,17 +111,17 @@ function Booked({
       : `${window.location.origin}${state.managePath}`;
 
   return (
-    <div className="flex flex-col gap-6 border-t border-brown pt-6">
+    <div className="flex flex-col gap-6 border-t border-line pt-6">
       <p className="font-display text-3xl font-semibold">
         {state.message} It&rsquo;s confirmed.
       </p>
       <div className="flex flex-col gap-3 text-sm">
-        <p className="text-sand">
+        <p className="text-muted">
           Client&rsquo;s private link to view or cancel. Send it now if you want
           them to have it; it can&rsquo;t be shown again.
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          <code className="min-w-0 flex-1 break-all rounded-sm border border-brown bg-espresso p-3 text-xs">
+          <code className="min-w-0 flex-1 break-all rounded-sm border border-line bg-page p-3 text-xs">
             {link}
           </code>
           <button

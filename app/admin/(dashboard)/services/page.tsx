@@ -33,7 +33,7 @@ export default async function ServicesPage() {
       />
 
       {services.length === 0 ? (
-        <p className="text-sand">No services yet.</p>
+        <p className="text-muted">No services yet.</p>
       ) : (
         <ul className={rowList}>
           {services.map((service) => (
@@ -41,7 +41,7 @@ export default async function ServicesPage() {
               <Link href={`/admin/services/${service.id}`} className={rowLink}>
                 <span className="min-w-0 flex-1">
                   <span className={rowTitle}>{service.name}</span>
-                  <span className="block text-sm text-sand">
+                  <span className="block text-sm text-muted">
                     {formatDuration(service.durationMin)} ·{" "}
                     {formatPriceFrom(service.priceFromPence)}
                   </span>

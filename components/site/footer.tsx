@@ -4,7 +4,7 @@ import { summarizeWeeklyHours } from "@/lib/booking/hours-summary";
 import { getOpeningHours, getSiteContent } from "@/lib/data/public";
 import { SITE_NAME } from "@/lib/site";
 import { contactChannels, ContactLinks } from "./contact-links";
-import { LogoFull } from "./logo";
+import { Logo } from "./logo";
 import { NAV_LINKS } from "./nav-links";
 
 export async function Footer() {
@@ -15,15 +15,15 @@ export async function Footer() {
   const { contact } = content;
 
   return (
-    <footer className="border-t border-brown bg-cocoa">
+    <footer className="surface-burgundy border-t border-line">
       <div className="mx-auto max-w-6xl px-4 pt-10 pb-5 sm:px-6 sm:pt-12">
         <div className="grid gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-[1.4fr_1fr_1.3fr_1.3fr]">
           <div className="flex items-center gap-4 sm:col-span-2 lg:col-span-1 lg:flex-col lg:items-start">
             <Link href="/" className="inline-block shrink-0">
-              <LogoFull className="w-24 lg:w-32" />
+              <Logo className="h-auto w-36 lg:w-44" sizes="176px" />
             </Link>
             {content.hero.eyebrow && (
-              <p className="max-w-xs text-sm text-sand">{content.hero.eyebrow}</p>
+              <p className="max-w-xs text-sm text-muted">{content.hero.eyebrow}</p>
             )}
           </div>
 
@@ -37,7 +37,7 @@ export async function Footer() {
                   <Link
                     key={href}
                     href={href}
-                    className="inline-flex min-h-11 w-fit items-center text-cream transition-colors hover:text-gold-light"
+                    className="inline-flex min-h-11 w-fit items-center text-ink transition-colors hover:text-brand-hover"
                   >
                     {label}
                   </Link>
@@ -52,7 +52,7 @@ export async function Footer() {
             ) : (
               <Link
                 href="/contact"
-                className="inline-flex min-h-11 items-center text-sm text-cream transition-colors hover:text-gold-light"
+                className="inline-flex min-h-11 items-center text-sm text-ink transition-colors hover:text-brand-hover"
               >
                 Contact page
               </Link>
@@ -65,12 +65,12 @@ export async function Footer() {
                 {summarizeWeeklyHours(weekly).map(({ days, hours }) => (
                   <div
                     key={days}
-                    className="flex justify-between gap-4 border-b border-brown py-2 first:pt-0 last:border-b-0"
+                    className="flex justify-between gap-4 border-b border-line py-2 first:pt-0 last:border-b-0"
                   >
-                    <dt className="text-sand">{days}</dt>
+                    <dt className="text-muted">{days}</dt>
                     <dd
                       className={
-                        hours === "Closed" ? "text-sand" : "text-cream"
+                        hours === "Closed" ? "text-muted" : "text-ink"
                       }
                     >
                       {hours}
@@ -82,7 +82,7 @@ export async function Footer() {
           )}
         </div>
 
-        <div className="mt-8 flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-brown pt-4 text-xs text-sand">
+        <div className="mt-8 flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-line pt-4 text-xs text-muted">
           <p>© {SITE_NAME}</p>
           <p>
             By appointment only
@@ -103,7 +103,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="mb-1 font-display text-lg font-semibold text-cream">
+      <h2 className="mb-1 font-display text-lg font-semibold text-ink">
         {title}
       </h2>
       {children}

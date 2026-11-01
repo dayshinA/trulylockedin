@@ -114,26 +114,26 @@ export function UploadButton({
         >
           {label}
         </button>
-        <p className="text-xs text-sand">{uploadHint(videos)}</p>
+        <p className="text-xs text-muted">{uploadHint(videos)}</p>
       </div>
       {jobs.length > 0 && (
-        <ul className="border-t border-brown" aria-live="polite">
+        <ul className="border-t border-line" aria-live="polite">
           {jobs.map((job) => (
             <li
               key={job.id}
-              className="flex flex-col gap-2 border-b border-brown py-3"
+              className="flex flex-col gap-2 border-b border-line py-3"
             >
               <p className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate text-cream">
+                <span className="min-w-0 truncate text-ink">
                   {job.file.name}
                 </span>
-                <span className="shrink-0 text-xs text-sand">
+                <span className="shrink-0 text-xs text-muted">
                   {formatMegabytes(job.file.size)}
                 </span>
               </p>
               {job.status === "failed" ? (
                 <>
-                  <p className="text-sm text-gold-light">{job.error}</p>
+                  <p className="text-sm font-semibold text-brand">{job.error}</p>
                   <div className="flex flex-wrap gap-2">
                     {job.retryable && (
                       <button
@@ -161,14 +161,14 @@ export function UploadButton({
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={Math.round(job.progress * 100)}
-                    className="h-1 flex-1 overflow-hidden rounded-full bg-brown"
+                    className="h-1 flex-1 overflow-hidden rounded-full bg-line"
                   >
                     <div
-                      className="h-full rounded-full bg-gold transition-[width]"
+                      className="h-full rounded-full bg-brand transition-[width]"
                       style={{ width: `${job.progress * 100}%` }}
                     />
                   </div>
-                  <span className="w-20 shrink-0 text-right text-xs text-sand">
+                  <span className="w-20 shrink-0 text-right text-xs text-muted">
                     {job.status === "waiting"
                       ? "Waiting…"
                       : job.progress < 1

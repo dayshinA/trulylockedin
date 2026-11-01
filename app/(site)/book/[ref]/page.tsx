@@ -16,7 +16,7 @@ export default function ManageBookingPage({
       <h1 className="font-display text-5xl leading-[1.05] font-semibold sm:text-6xl">
         Your booking
       </h1>
-      <Suspense fallback={<p className="mt-8 text-sand">Loading…</p>}>
+      <Suspense fallback={<p className="mt-8 text-muted">Loading…</p>}>
         <ManageLoader params={params} />
       </Suspense>
     </main>

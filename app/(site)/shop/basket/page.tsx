@@ -28,7 +28,7 @@ export default async function BasketPage() {
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pt-28 pb-20 sm:px-6 sm:pt-36">
       <Link
         href="/shop"
-        className="-ml-1 mb-4 inline-flex min-h-11 w-fit items-center gap-2 px-1 text-sm font-semibold text-gold transition-colors hover:text-gold-light"
+        className="-ml-1 mb-4 inline-flex min-h-11 w-fit items-center gap-2 px-1 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
       >
         <ArrowLeft aria-hidden className="size-4" />
         Continue shopping

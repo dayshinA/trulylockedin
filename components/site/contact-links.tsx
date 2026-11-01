@@ -61,9 +61,9 @@ export function ContactLinks({
             {...(href.startsWith("http")
               ? { target: "_blank", rel: "noopener noreferrer" }
               : {})}
-            className="flex min-h-11 items-center gap-3 text-cream transition-colors hover:text-gold-light"
+            className="flex min-h-11 items-center gap-3 text-ink transition-colors hover:text-brand-hover"
           >
-            <span className="w-20 shrink-0 text-sand">{label}</span>
+            <span className="w-20 shrink-0 text-muted">{label}</span>
             <span className="min-w-0 [overflow-wrap:anywhere]">{value}</span>
           </a>
         </li>

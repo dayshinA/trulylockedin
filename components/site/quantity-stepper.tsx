@@ -3,7 +3,7 @@ import { Minus, Plus } from "lucide-react";
 import { MAX_QUANTITY } from "@/lib/shop/schemas";
 
 const stepButton =
-  "flex size-11 items-center justify-center text-cream transition-colors hover:text-gold disabled:text-caramel";
+  "flex size-11 items-center justify-center text-ink transition-colors hover:text-brand disabled:text-faint";
 
 export function QuantityStepper({
   value,
@@ -16,7 +16,7 @@ export function QuantityStepper({
     <div
       role="group"
       aria-label="Quantity"
-      className="flex w-fit items-center rounded-sm border border-brown"
+      className="flex w-fit items-center rounded-sm border border-line"
     >
       <button
         type="button"

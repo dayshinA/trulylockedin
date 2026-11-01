@@ -32,7 +32,7 @@ export default async function EditServicePage({
       <ServiceForm service={service} />
 
       <DangerZone summary="Delete this service">
-        <p className="text-sand">
+        <p className="text-muted">
           Existing bookings keep their details. To stop new bookings but keep
           the service, untick &ldquo;Bookable online&rdquo; instead.
         </p>

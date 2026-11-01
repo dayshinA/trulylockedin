@@ -43,7 +43,7 @@ export default async function EditLookPage({
       <PortfolioForm item={item} categories={categories} />
 
       <DangerZone summary="Delete this look">
-        <p className="text-sand">
+        <p className="text-muted">
           This removes the look and deletes its photos and videos from storage.
           To just hide it, untick &ldquo;Show on the website&rdquo; instead.
         </p>

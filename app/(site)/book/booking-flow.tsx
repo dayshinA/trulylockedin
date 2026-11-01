@@ -37,7 +37,7 @@ type Confirmation = {
 type FieldErrors = Partial<Record<string, string[]>>;
 
 const inputClass =
-  "min-h-12 w-full rounded-sm border border-brown bg-espresso px-3 text-base text-cream outline-none focus:border-gold";
+  "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
 
 export function BookingFlow({
   services,
@@ -183,9 +183,9 @@ export function BookingFlow({
             <StepHeading id="choose-service" number={1}>
               Choose a service
             </StepHeading>
-            <ul className="mt-6 border-t border-brown">
+            <ul className="mt-6 border-t border-line">
               {services.map((s) => (
-                <li key={s.id} className="border-b border-brown">
+                <li key={s.id} className="border-b border-line">
                   <button
                     type="button"
                     onClick={() => chooseService(s)}
@@ -193,23 +193,23 @@ export function BookingFlow({
                   >
                     <span className="min-w-0 flex-1">
                       <span
-                        className={`block font-display text-2xl font-semibold transition-colors group-hover:text-gold-light ${
-                          s.id === service?.id ? "text-gold" : "text-cream"
+                        className={`block font-display text-2xl font-semibold transition-colors group-hover:text-brand-hover ${
+                          s.id === service?.id ? "text-brand" : "text-ink"
                         }`}
                       >
                         {s.name}
                       </span>
-                      <span className="mt-1 block text-sm text-sand">
+                      <span className="mt-1 block text-sm text-muted">
                         {formatDuration(s.durationMin)}
                         {s.description ? ` · ${s.description}` : ""}
                       </span>
                       {s.depositNote && (
-                        <span className="mt-1 block text-sm text-cream">
+                        <span className="mt-1 block text-sm text-ink">
                           {s.depositNote}
                         </span>
                       )}
                     </span>
-                    <span className="shrink-0 text-gold">
+                    <span className="shrink-0 text-brand">
                       {formatPriceFrom(s.priceFromPence)}
                     </span>
                   </button>
@@ -244,18 +244,18 @@ export function BookingFlow({
               />
               <div className="flex flex-col gap-6">
                 {formError && (
-                  <p role="alert" className="text-sm text-gold-light">
+                  <p role="alert" className="text-sm font-semibold text-brand">
                     {formError}
                   </p>
                 )}
 
                 <div aria-live="polite">
                   {loadingSlots || (!slots && !slotError) ? (
-                    <p className="text-sand">Finding times…</p>
+                    <p className="text-muted">Finding times…</p>
                   ) : slotError ? (
-                    <p className="text-gold-light">{slotError}</p>
+                    <p className="font-semibold text-brand">{slotError}</p>
                   ) : slots && slots.length === 0 ? (
-                    <p className="text-sand">
+                    <p className="text-muted">
                       No times available on{" "}
                       {date && formatLocalDate(date, "long")}. Try another day.
                     </p>
@@ -263,7 +263,7 @@ export function BookingFlow({
                     <div className="flex flex-col gap-6">
                       {groupSlots(slots ?? []).map(([label, group]) => (
                         <div key={label}>
-                          <h3 className="text-sm text-sand">{label}</h3>
+                          <h3 className="text-sm text-muted">{label}</h3>
                           <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
                             {group.map((s) => (
                               <button
@@ -274,7 +274,7 @@ export function BookingFlow({
                                   setFormError(null);
                                   setStep("details");
                                 }}
-                                className="min-h-12 rounded-sm border border-brown text-cream transition-colors hover:border-gold hover:text-gold-light"
+                                className="min-h-12 rounded-sm border border-line text-ink transition-colors hover:border-brand hover:text-brand-hover"
                               >
                                 {s.start}
                               </button>
@@ -355,7 +355,7 @@ export function BookingFlow({
               </div>
 
               {formError && (
-                <p role="alert" className="text-sm text-gold-light">
+                <p role="alert" className="text-sm font-semibold text-brand">
                   {formError}
                 </p>
               )}
@@ -363,7 +363,7 @@ export function BookingFlow({
               <button
                 type="submit"
                 disabled={submitting}
-                className="min-h-12 rounded-full bg-gold px-10 font-semibold text-espresso transition-colors hover:bg-gold-light disabled:bg-brown disabled:text-sand sm:w-fit"
+                className="min-h-12 rounded-full bg-brand px-10 font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted sm:w-fit"
               >
                 {submitting ? "Booking…" : "Request booking"}
               </button>
@@ -381,7 +381,7 @@ export function BookingFlow({
                 ? "You're booked in"
                 : "Request received"}
             </h2>
-            <p className="mt-3 text-lg text-sand">
+            <p className="mt-3 text-lg text-muted">
               {confirmation.status === "confirmed"
                 ? "Your appointment is confirmed."
                 : "We'll confirm your appointment shortly."}
@@ -404,13 +404,13 @@ export function BookingFlow({
                 ]}
               />
             </div>
-            <p className="mt-8 text-sand">
+            <p className="mt-8 text-muted">
               Save or bookmark this link to view or cancel your booking.
               It&rsquo;s private to you.
             </p>
             <Link
               href={confirmation.manageUrl}
-              className="mt-4 inline-flex min-h-12 items-center rounded-full bg-gold px-8 text-sm font-semibold tracking-widest text-espresso uppercase transition-colors hover:bg-gold-light"
+              className="mt-4 inline-flex min-h-12 items-center rounded-full bg-brand px-8 text-sm font-semibold tracking-widest text-on-brand uppercase transition-colors hover:bg-brand-hover"
             >
               Manage my booking
             </Link>
@@ -444,13 +444,13 @@ function StepHeading({
         <button
           type="button"
           onClick={back.onClick}
-          className="-ml-1 mb-4 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold text-gold transition-colors hover:text-gold-light"
+          className="-ml-1 mb-4 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
         >
           <ArrowLeft aria-hidden className="size-4" />
           {back.label}
         </button>
       )}
-      <p className="text-sm text-sand">Step {number} of 3</p>
+      <p className="text-sm text-muted">Step {number} of 3</p>
       <h2
         id={id}
         className="mt-1 font-display text-3xl font-semibold sm:text-4xl"
@@ -492,34 +492,34 @@ function Summary({
   return (
     <div>
       <h2 className="font-display text-2xl font-semibold">Your appointment</h2>
-      <dl className="mt-4 border-t border-brown text-sm">
+      <dl className="mt-4 border-t border-line text-sm">
         <SummaryRow label="Service" onChange={onChangeService}>
           {service ? (
             <>
-              <span className="block text-cream">{service.name}</span>
-              <span className="block text-sand">
+              <span className="block text-ink">{service.name}</span>
+              <span className="block text-muted">
                 {formatDuration(service.durationMin)} ·{" "}
                 {formatPriceFrom(service.priceFromPence)}
               </span>
             </>
           ) : (
-            <span className="text-sand">Not chosen yet</span>
+            <span className="text-muted">Not chosen yet</span>
           )}
         </SummaryRow>
         <SummaryRow label="When" onChange={onChangeTime}>
           {date && slot ? (
-            <span className="text-cream">
+            <span className="text-ink">
               {formatLocalDate(date, "long")}, {slot.start}–{slot.end}
             </span>
           ) : date ? (
             <>
-              <span className="block text-cream">
+              <span className="block text-ink">
                 {formatLocalDate(date, "long")}
               </span>
-              <span className="block text-sand">Pick a time</span>
+              <span className="block text-muted">Pick a time</span>
             </>
           ) : (
-            <span className="text-sand">Not chosen yet</span>
+            <span className="text-muted">Not chosen yet</span>
           )}
         </SummaryRow>
       </dl>
@@ -537,16 +537,16 @@ function SummaryRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-brown py-3">
+    <div className="flex items-start justify-between gap-4 border-b border-line py-3">
       <div>
-        <dt className="text-xs tracking-widest text-sand uppercase">{label}</dt>
+        <dt className="text-xs tracking-widest text-muted uppercase">{label}</dt>
         <dd className="mt-1">{children}</dd>
       </div>
       {onChange && (
         <button
           type="button"
           onClick={onChange}
-          className="min-h-11 shrink-0 px-2 text-gold underline-offset-4 hover:underline"
+          className="min-h-11 shrink-0 px-2 text-brand underline-offset-4 hover:underline"
         >
           Change
         </button>
@@ -566,9 +566,9 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2 text-sm">
-      <span className="text-sand">{label}</span>
+      <span className="text-muted">{label}</span>
       {children}
-      {error?.[0] && <span className="text-gold-light">{error[0]}</span>}
+      {error?.[0] && <span className="font-semibold text-brand">{error[0]}</span>}
     </label>
   );
 }

@@ -38,7 +38,7 @@ export default async function ServicesPage() {
 
       <div className="flex flex-col gap-16 px-4 pb-24 sm:px-6 sm:gap-20">
         {services.length === 0 ? (
-          <p className="mx-auto w-full max-w-6xl text-sand">
+          <p className="mx-auto w-full max-w-6xl text-muted">
             Services will be listed here soon.
           </p>
         ) : (
@@ -48,13 +48,13 @@ export default async function ServicesPage() {
               className="mx-auto grid w-full max-w-6xl gap-6 md:grid-cols-[1fr_3fr] md:gap-16"
             >
               {groups.length > 1 && (
-                <h2 className="self-start font-display text-3xl font-semibold text-gold md:sticky md:top-24 md:pt-8">
+                <h2 className="self-start font-display text-3xl font-semibold text-brand md:sticky md:top-24 md:pt-8">
                   {category}
                 </h2>
               )}
               <Reveal
                 stagger
-                className={`border-t border-brown ${groups.length > 1 ? "" : "md:col-span-2"}`}
+                className={`border-t border-line ${groups.length > 1 ? "" : "md:col-span-2"}`}
               >
                 {list.map((service) => (
                   <ServiceRow key={service.id} service={service} />

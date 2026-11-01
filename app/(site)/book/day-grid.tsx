@@ -70,7 +70,7 @@ export function DayGrid({
 
       <div className="mt-4 grid grid-cols-7 gap-1 text-center">
         {WEEKDAY_LABELS.map((day) => (
-          <span key={day} aria-hidden className="pb-2 text-xs text-sand">
+          <span key={day} aria-hidden className="pb-2 text-xs text-muted">
             {day}
           </span>
         ))}
@@ -88,10 +88,10 @@ export function DayGrid({
               onClick={() => onSelect(date)}
               className={`flex aspect-square min-h-11 items-center justify-center rounded-sm border transition-colors ${
                 isSelected
-                  ? "border-gold bg-gold font-semibold text-espresso"
+                  ? "border-brand bg-brand font-semibold text-on-brand"
                   : bookable
-                    ? "border-brown text-cream hover:border-gold"
-                    : "border-transparent text-caramel"
+                    ? "border-line text-ink hover:border-brand"
+                    : "border-transparent text-faint"
               }`}
             >
               {Number(date.slice(8))}
@@ -120,7 +120,7 @@ function MonthButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-brown text-cream transition-colors hover:border-gold disabled:border-transparent disabled:text-caramel"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-line text-ink transition-colors hover:border-brand disabled:border-transparent disabled:text-faint"
     >
       {children}
     </button>

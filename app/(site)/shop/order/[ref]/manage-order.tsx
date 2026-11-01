@@ -59,16 +59,16 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
   }
 
   if (state.kind === "loading") {
-    return <p className="mt-8 text-sand">Loading your order…</p>;
+    return <p className="mt-8 text-muted">Loading your order…</p>;
   }
 
   if (state.kind === "error") {
     return (
-      <div className="mt-8 border-t border-brown pt-6">
+      <div className="mt-8 border-t border-line pt-6">
         <p className="text-lg">{state.message}</p>
         <Link
           href="/shop"
-          className="mt-4 inline-flex min-h-11 items-center text-gold underline-offset-4 hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center text-brand underline-offset-4 hover:underline"
         >
           Go to the shop
         </Link>
@@ -106,7 +106,7 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
       </div>
 
       {message && (
-        <p role="status" className="mt-5 text-gold-light">
+        <p role="status" className="mt-5 font-semibold text-brand">
           {message}
         </p>
       )}
@@ -119,14 +119,14 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
               type="button"
               onClick={cancel}
               disabled={cancelling}
-              className="min-h-11 rounded-full bg-burgundy px-5 text-sm font-semibold text-cream transition-colors hover:bg-wine disabled:bg-brown disabled:text-sand"
+              className="min-h-11 rounded-full bg-ink px-5 text-sm font-semibold text-page transition-colors hover:bg-brand disabled:bg-line disabled:text-muted"
             >
               {cancelling ? "Cancelling…" : "Yes, cancel it"}
             </button>
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="min-h-11 px-3 text-sm text-sand hover:text-cream"
+              className="min-h-11 px-3 text-sm text-muted hover:text-ink"
             >
               Keep my order
             </button>
@@ -135,14 +135,14 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            className="mt-8 min-h-11 rounded-full border border-caramel px-6 text-sm text-cream transition-colors hover:border-gold"
+            className="mt-8 min-h-11 rounded-full border border-brand px-6 text-sm text-ink transition-colors hover:border-brand"
           >
             Cancel order
           </button>
         )
       ) : (
         order.status === "ready" && (
-          <p className="mt-8 text-sand">
+          <p className="mt-8 text-muted">
             Need to change or cancel? Please contact us.
           </p>
         )

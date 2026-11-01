@@ -7,7 +7,7 @@ import type { Service } from "@/types/booking";
 // One entry of the full price list on /services.
 export function ServiceRow({ service }: { service: Service }) {
   return (
-    <article className="flex gap-5 border-b border-brown py-8 sm:gap-8">
+    <article className="flex gap-5 border-b border-line py-8 sm:gap-8">
       {service.imagePublicId && (
         <CldImage
           src={service.imagePublicId}
@@ -26,22 +26,22 @@ export function ServiceRow({ service }: { service: Service }) {
           <h3 className="font-display text-2xl font-semibold sm:text-3xl">
             {service.name}
           </h3>
-          <p className="shrink-0 text-gold">
+          <p className="shrink-0 text-brand">
             {formatPriceFrom(service.priceFromPence)}
           </p>
         </div>
-        <p className="mt-1 text-sm text-sand">
+        <p className="mt-1 text-sm text-muted">
           {formatDuration(service.durationMin)}
         </p>
         {service.description && (
-          <p className="mt-3 max-w-prose text-sand">{service.description}</p>
+          <p className="mt-3 max-w-prose text-muted">{service.description}</p>
         )}
         {service.depositNote && (
-          <p className="mt-2 text-sm text-cream">{service.depositNote}</p>
+          <p className="mt-2 text-sm text-ink">{service.depositNote}</p>
         )}
         <Link
           href={`/book?service=${encodeURIComponent(service.id)}`}
-          className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+          className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
         >
           Book this<span className="sr-only">: {service.name}</span>
           <span aria-hidden>&nbsp;→</span>

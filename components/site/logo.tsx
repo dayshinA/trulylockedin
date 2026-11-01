@@ -1,28 +1,23 @@
 import Image from "next/image";
 
-import logo from "@/public/brand/logo.jpg";
-import logoMark from "@/public/brand/logo-mark.jpg";
+import logo from "@/public/brand/logo-white.png";
+import { SITE_NAME } from "@/lib/site";
 
-// The head-only crop: the full logo's wordmark is unreadable at header size.
-export function LogoMark({ className = "" }: { className?: string }) {
-  return (
-    <Image
-      src={logoMark}
-      alt=""
-      sizes="48px"
-      loading="eager"
-      className={`rounded-lg ${className}`}
-    />
-  );
-}
-
-export function LogoFull({ className = "" }: { className?: string }) {
+// The logo is white on transparent, so it must sit on .surface-burgundy.
+export function Logo({
+  className = "",
+  sizes = "128px",
+}: {
+  className?: string;
+  sizes?: string;
+}) {
   return (
     <Image
       src={logo}
-      alt="TrulyLockedIn — Retwist & Styled"
-      sizes="(min-width: 768px) 224px, 192px"
-      className={`rounded-2xl ${className}`}
+      alt={SITE_NAME}
+      sizes={sizes}
+      loading="eager"
+      className={className}
     />
   );
 }

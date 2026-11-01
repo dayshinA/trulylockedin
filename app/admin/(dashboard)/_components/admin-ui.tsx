@@ -2,35 +2,35 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 // Admin building blocks in the public site's language: hairline dividers
-// instead of boxed cards, pill buttons, Cormorant headings with a gold eyebrow.
+// instead of boxed cards, pill buttons, Cormorant headings with a burgundy eyebrow.
 // No "use client", so server pages and client forms can both use them.
 
 export const primaryButton =
-  "inline-flex min-h-12 w-fit items-center justify-center rounded-full bg-gold px-6 text-sm font-semibold text-espresso transition-colors hover:bg-gold-light disabled:bg-brown disabled:text-sand";
+  "inline-flex min-h-12 w-fit items-center justify-center rounded-full bg-brand px-6 text-sm font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted";
 
 export const outlineButton =
-  "inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-caramel px-5 text-sm text-cream transition-colors hover:border-gold hover:text-gold-light disabled:border-brown disabled:text-sand";
+  "inline-flex min-h-11 w-fit items-center justify-center rounded-full border border-brand px-5 text-sm text-ink transition-colors hover:border-brand hover:text-brand-hover disabled:border-line disabled:text-muted";
 
 export const dangerButton =
-  "inline-flex min-h-11 w-fit items-center justify-center rounded-full bg-burgundy px-5 text-sm font-semibold text-cream transition-colors hover:bg-wine disabled:bg-brown disabled:text-sand";
+  "inline-flex min-h-11 w-fit items-center justify-center rounded-full bg-ink px-5 text-sm font-semibold text-page transition-colors hover:bg-brand disabled:bg-line disabled:text-muted";
 
 // Compact pill for row actions (move, remove, retry…).
 export const smallButton =
-  "min-h-11 min-w-11 rounded-full border border-brown px-3 text-xs text-cream transition-colors hover:border-gold hover:text-gold-light disabled:text-caramel disabled:hover:border-brown";
+  "min-h-11 min-w-11 rounded-full border border-line px-3 text-xs text-ink transition-colors hover:border-brand hover:text-brand-hover disabled:text-faint disabled:hover:border-line";
 
 export const textLink =
-  "inline-flex min-h-11 w-fit items-center text-sm font-semibold text-gold underline-offset-4 hover:underline";
+  "inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand underline-offset-4 hover:underline";
 
 // A list of rows between hairlines (bookings, orders, services…).
-export const rowList = "border-t border-brown";
+export const rowList = "border-t border-line";
 export const rowLink =
-  "group flex min-h-11 items-center gap-4 border-b border-brown py-4 transition-colors";
+  "group flex min-h-11 items-center gap-4 border-b border-line py-4 transition-colors";
 export const rowTitle =
-  "block truncate font-display text-xl font-semibold text-cream transition-colors group-hover:text-gold-light";
+  "block truncate font-display text-xl font-semibold text-ink transition-colors group-hover:text-brand-hover";
 
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-semibold tracking-[0.3em] text-gold uppercase">
+    <p className="text-xs font-semibold tracking-[0.3em] text-brand uppercase">
       {children}
     </p>
   );
@@ -46,7 +46,7 @@ export function BackLink({
   return (
     <Link
       href={href}
-      className="-ml-1 inline-flex min-h-11 w-fit items-center gap-2 px-1 text-sm font-semibold text-gold transition-colors hover:text-gold-light"
+      className="-ml-1 inline-flex min-h-11 w-fit items-center gap-2 px-1 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
     >
       <ArrowLeft aria-hidden className="size-4" />
       {children}
@@ -81,7 +81,7 @@ export function PageHeader({
         </div>
         {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
       </div>
-      {children && <div className="max-w-xl text-sand">{children}</div>}
+      {children && <div className="max-w-xl text-muted">{children}</div>}
     </header>
   );
 }
@@ -106,7 +106,7 @@ export function Section({
           <h2 className="flex items-baseline gap-3 font-display text-3xl font-semibold">
             {title}
             {count !== undefined && (
-              <span className="font-sans text-sm font-semibold text-gold tabular-nums">
+              <span className="font-sans text-sm font-semibold text-brand tabular-nums">
                 {count}
               </span>
             )}
@@ -114,7 +114,7 @@ export function Section({
           {action}
         </div>
         {description && (
-          <p className="mt-1 text-sm text-sand">{description}</p>
+          <p className="mt-1 text-sm text-muted">{description}</p>
         )}
       </div>
       {children}
@@ -125,11 +125,11 @@ export function Section({
 export type BadgeTone = "attention" | "accent" | "muted" | "struck" | "alert";
 
 const BADGE_TONES: Record<BadgeTone, string> = {
-  attention: "border-gold bg-gold text-espresso",
-  accent: "border-gold text-gold",
-  muted: "border-brown text-sand",
-  struck: "border-brown text-sand line-through",
-  alert: "border-burgundy bg-burgundy text-cream",
+  attention: "border-brand bg-brand text-on-brand",
+  accent: "border-brand text-brand",
+  muted: "border-line text-muted",
+  struck: "border-line text-muted line-through",
+  alert: "border-ink bg-ink text-page",
 };
 
 export function Badge({
@@ -148,7 +148,7 @@ export function Badge({
   );
 }
 
-// Link tabs with a gold underline, like the public gallery's filter.
+// Link tabs with a burgundy underline, like the public gallery's filter.
 export function Tabs({
   label,
   items,
@@ -159,7 +159,7 @@ export function Tabs({
   return (
     <nav
       aria-label={label}
-      className="-mx-4 flex gap-8 overflow-x-auto border-b border-brown px-4 sm:mx-0 sm:px-0"
+      className="-mx-4 flex gap-8 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0"
     >
       {items.map((item) => (
         <Link
@@ -168,8 +168,8 @@ export function Tabs({
           aria-current={item.current ? "page" : undefined}
           className={`-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 text-sm transition-colors ${
             item.current
-              ? "border-gold text-cream"
-              : "border-transparent text-sand hover:text-cream"
+              ? "border-brand text-ink"
+              : "border-transparent text-muted hover:text-ink"
           }`}
         >
           {item.label}
@@ -188,10 +188,10 @@ export function DangerZone({
   children: React.ReactNode;
 }) {
   return (
-    <details className="group border-y border-brown text-sm">
-      <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-4 text-sand transition-colors hover:text-cream">
+    <details className="group border-y border-line text-sm">
+      <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-4 text-muted transition-colors hover:text-ink">
         {summary}
-        <span aria-hidden className="text-gold group-open:rotate-90">
+        <span aria-hidden className="text-brand group-open:rotate-90">
           ›
         </span>
       </summary>
@@ -207,13 +207,13 @@ export function DetailList({
   rows: [label: string, value: React.ReactNode][];
 }) {
   return (
-    <dl className="border-t border-brown text-sm">
+    <dl className="border-t border-line text-sm">
       {rows.map(([label, value]) => (
         <div
           key={label}
-          className="grid grid-cols-[7rem_1fr] gap-4 border-b border-brown py-3 sm:grid-cols-[9rem_1fr]"
+          className="grid grid-cols-[7rem_1fr] gap-4 border-b border-line py-3 sm:grid-cols-[9rem_1fr]"
         >
-          <dt className="text-sand">{label}</dt>
+          <dt className="text-muted">{label}</dt>
           <dd className="min-w-0 break-words">{value}</dd>
         </div>
       ))}

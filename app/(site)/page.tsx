@@ -46,7 +46,7 @@ export default async function Home() {
         <div className="mx-auto grid w-full max-w-6xl gap-12 lg:min-h-[calc(100svh-15rem)] lg:grid-cols-2 lg:items-center lg:gap-16">
           <div>
             {hero.eyebrow && (
-              <p className="mb-5 text-xs font-semibold tracking-[0.35em] text-gold uppercase">
+              <p className="mb-5 text-xs font-semibold tracking-[0.35em] text-brand uppercase">
                 {hero.eyebrow}
               </p>
             )}
@@ -58,27 +58,27 @@ export default async function Home() {
             </SplitHeading>
             <Reveal delay={0.4}>
               {hero.subtitle && (
-                <p className="mt-6 max-w-lg text-lg text-sand">
+                <p className="mt-6 max-w-lg text-lg text-muted">
                   {hero.subtitle}
                 </p>
               )}
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/book"
-                  className="inline-flex min-h-12 items-center rounded-full bg-gold px-8 text-sm font-semibold tracking-widest text-espresso uppercase transition-colors hover:bg-gold-light"
+                  className="inline-flex min-h-12 items-center rounded-full bg-brand px-8 text-sm font-semibold tracking-widest text-on-brand uppercase transition-colors hover:bg-brand-hover"
                 >
                   Book an appointment
                 </Link>
                 <Link
                   href="/services"
-                  className="inline-flex min-h-12 items-center rounded-full border border-caramel px-8 text-sm font-semibold tracking-widest text-cream uppercase transition-colors hover:border-gold hover:text-gold"
+                  className="inline-flex min-h-12 items-center rounded-full border border-brand px-8 text-sm font-semibold tracking-widest text-ink uppercase transition-colors hover:border-brand hover:text-brand"
                 >
                   Services
                 </Link>
               </div>
             </Reveal>
           </div>
-          <div className="relative h-[26rem] overflow-hidden rounded-sm bg-wine sm:h-[32rem] lg:h-full lg:min-h-[34rem]">
+          <div className="relative h-[26rem] overflow-hidden rounded-sm bg-brand sm:h-[32rem] lg:h-full lg:min-h-[34rem]">
             {hero.image && (
               <CldImage
                 src={hero.image.publicId}
@@ -96,13 +96,13 @@ export default async function Home() {
       {featuredWork.length > 0 && (
         <section className="px-4 pb-20 sm:px-6 sm:pb-28">
           <div className="mx-auto max-w-6xl">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-brown pb-6">
+            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
               <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
                 Recent looks
               </SplitHeading>
               <Link
                 href="/work"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
               >
                 See all work <span aria-hidden>&nbsp;→</span>
               </Link>
@@ -122,12 +122,12 @@ export default async function Home() {
                 Services &amp; prices
               </SplitHeading>
               <Reveal>
-                <p className="mt-4 max-w-sm text-sand">
+                <p className="mt-4 max-w-sm text-muted">
                   Tap a service to see available times.
                 </p>
                 <Link
                   href="/services"
-                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
                 >
                   All services and prices <span aria-hidden>&nbsp;→</span>
                 </Link>
@@ -143,13 +143,13 @@ export default async function Home() {
       {featuredProducts.length > 0 && (
         <section className="px-4 pb-20 sm:px-6 sm:pb-28">
           <div className="mx-auto max-w-6xl">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-brown pb-6">
+            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
               <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
                 Care between visits
               </SplitHeading>
               <Link
                 href="/shop"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
               >
                 Shop all products <span aria-hidden>&nbsp;→</span>
               </Link>
@@ -161,37 +161,37 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="border-y border-brown bg-cocoa px-4 py-20 sm:px-6 sm:py-28">
+      <section className="surface-burgundy px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:gap-16">
           <div>
             <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
               {about.heading}
             </SplitHeading>
             <Reveal>
-              <p className="mt-6 text-lg text-sand">{about.paragraphs[0]}</p>
+              <p className="mt-6 text-lg text-muted">{about.paragraphs[0]}</p>
               <Link
                 href="/about"
-                className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-gold underline-offset-4 hover:underline"
+                className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
               >
                 More about us <span aria-hidden>&nbsp;→</span>
               </Link>
             </Reveal>
           </div>
           <Reveal className="self-center">
-            <ol className="border-t border-brown">
+            <ol className="border-t border-line">
               {about.highlights.map((h, i) => (
                 <li
                   key={h.title}
-                  className="grid grid-cols-[3rem_1fr] gap-4 border-b border-brown py-6"
+                  className="grid grid-cols-[3rem_1fr] gap-4 border-b border-line py-6"
                 >
-                  <span className="font-display text-2xl text-gold">
+                  <span className="font-display text-2xl text-brand">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div>
                     <h3 className="font-display text-2xl font-semibold">
                       {h.title}
                     </h3>
-                    <p className="mt-1 text-sand">{h.body}</p>
+                    <p className="mt-1 text-muted">{h.body}</p>
                   </div>
                 </li>
               ))}
@@ -217,7 +217,7 @@ export default async function Home() {
             {otherQuotes.length > 0 && (
               <Reveal
                 stagger
-                className="mt-16 grid gap-10 border-t border-brown pt-10 md:grid-cols-2 md:gap-16"
+                className="mt-16 grid gap-10 border-t border-line pt-10 md:grid-cols-2 md:gap-16"
               >
                 {otherQuotes.map((t, i) => (
                   <figure key={i}>
@@ -240,9 +240,9 @@ export default async function Home() {
 
 function Attribution({ name, detail }: { name: string; detail?: string }) {
   return (
-    <figcaption className="mt-5 text-sm text-sand">
+    <figcaption className="mt-5 text-sm text-muted">
       {name}
-      {detail && <span className="text-gold"> · {detail}</span>}
+      {detail && <span className="text-brand"> · {detail}</span>}
     </figcaption>
   );
 }
