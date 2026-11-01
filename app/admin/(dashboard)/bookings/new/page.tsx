@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 export default async function NewBookingPage() {
   await verifyAdmin();
   const repo = bookingRepository();
-  const [services, settings] = await Promise.all([
+  const [categories, services, settings] = await Promise.all([
+    repo.listCategories(),
     repo.listServices(),
     repo.getSettings(),
   ]);
@@ -38,11 +39,17 @@ export default async function NewBookingPage() {
         </p>
       ) : (
         <ManualBookingForm
-          services={services.map(({ id, name, durationMin, active }) => ({
-            id,
-            name,
-            durationMin,
-            active,
+          categories={categories.map(({ id, name }) => ({ id, name }))}
+          services={services.map((s) => ({
+            id: s.id,
+            categoryId: s.categoryId,
+            name: s.name,
+            priceFromPence: s.priceFromPence,
+            durationMin: s.durationMin,
+            active: s.active,
+            options: s.options,
+            optionsSelectionMode: s.optionsSelectionMode,
+            optionsRequired: s.optionsRequired,
           }))}
           today={todayLocal(new Date(), settings.timezone)}
         />

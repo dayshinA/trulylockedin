@@ -21,6 +21,7 @@ const bookingLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60_000 });
 // Live availability: request-time, never cached.
 export async function getSlots(input: {
   serviceId: string;
+  optionIds: string[];
   date: string;
 }): Promise<FindSlotsResult> {
   return findSlots(bookingRepository(), input, new Date());

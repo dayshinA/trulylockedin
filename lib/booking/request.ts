@@ -26,8 +26,11 @@ const optionalText = (max: number) =>
     .optional()
     .transform((value) => value || undefined);
 
+const optionIdsSchema = z.array(docIdSchema).max(50).default([]);
+
 export const slotQuerySchema = z.object({
   serviceId: docIdSchema,
+  optionIds: optionIdsSchema,
   date: localDateSchema,
 });
 
@@ -35,6 +38,7 @@ export const slotQuerySchema = z.object({
 // value means a bot filled it in.
 export const bookingRequestSchema = z.object({
   serviceId: docIdSchema,
+  optionIds: optionIdsSchema,
   date: localDateSchema,
   start: localTimeSchema,
   name: z

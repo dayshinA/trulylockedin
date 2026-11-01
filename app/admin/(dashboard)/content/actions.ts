@@ -39,7 +39,7 @@ async function save<K extends SiteSection>(
 // something else still uses it.
 export async function saveHeroAction(_previous: FormState, formData: FormData) {
   await verifyAdmin();
-  const before = (await readSiteContent(adminDb())).content.hero.image;
+  const before = (await readSiteContent(adminDb())).content.hero.portrait;
   const result = await save("hero", parseHeroForm(formData));
   if (result.status === "success" && before) {
     const inUse = await referencedPublicIds();

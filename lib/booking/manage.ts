@@ -11,6 +11,7 @@ import { BOOKING_REF_RE, tokenMatches } from "./tokens";
 export type BookingSummary = {
   ref: string;
   serviceName: string;
+  optionNames: string[];
   date: LocalDate;
   start: LocalTime;
   end: LocalTime;
@@ -54,6 +55,7 @@ export async function findManagedBooking(
     booking: {
       ref: booking.ref,
       serviceName: booking.service.name,
+      optionNames: (booking.service.options ?? []).map((o) => o.name),
       date: booking.date,
       start: booking.start,
       end: booking.end,

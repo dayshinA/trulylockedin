@@ -1,7 +1,7 @@
 "use client";
 
 import { penceToPounds } from "@/lib/booking/admin-forms";
-import type { Service } from "@/types/booking";
+import type { Service, ServiceCategory } from "@/types/booking";
 import {
   Checkbox,
   Field,
@@ -11,9 +11,16 @@ import {
   useAdminForm,
 } from "../_components/admin-form";
 import { saveServiceAction } from "./actions";
+import { OptionsEditor } from "./options-editor";
 import { ServiceImageField } from "./service-image-field";
 
-export function ServiceForm({ service }: { service?: Service }) {
+export function ServiceForm({
+  service,
+  categories,
+}: {
+  service?: Service;
+  categories: ServiceCategory[];
+}) {
   const { state, pending, onSubmit } = useAdminForm(saveServiceAction);
   const errors = state.fieldErrors ?? {};
 
@@ -57,7 +64,7 @@ export function ServiceForm({ service }: { service?: Service }) {
       <div className="grid grid-cols-2 gap-4">
         <Field
           label="Duration (minutes)"
-          hint="Include the full appointment time"
+          hint="Leave empty if it varies. It can't be booked until it has one."
           error={errors.durationMin}
         >
           <input
@@ -67,13 +74,13 @@ export function ServiceForm({ service }: { service?: Service }) {
             min={15}
             max={720}
             step={15}
-            defaultValue={service?.durationMin ?? 60}
+            defaultValue={service ? (service.durationMin ?? "") : 60}
             className={inputClass}
           />
         </Field>
         <Field
-          label="Price from (£)"
-          hint="0 shows as Free"
+          label="Base price (£)"
+          hint="Options are added to this. 0 shows as Free"
           error={errors.price}
         >
           <input
@@ -87,6 +94,18 @@ export function ServiceForm({ service }: { service?: Service }) {
         </Field>
       </div>
 
+      <Field
+        label="Note beside the price (optional)"
+        hint="e.g. Up to 100 locs, or Per strand"
+        error={errors.priceLabel}
+      >
+        <input
+          name="priceLabel"
+          defaultValue={service?.priceLabel}
+          className={inputClass}
+        />
+      </Field>
+
       <Field label="Deposit note (optional)" error={errors.depositNote}>
         <input
           name="depositNote"
@@ -97,12 +116,21 @@ export function ServiceForm({ service }: { service?: Service }) {
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Category (optional)" error={errors.category}>
-          <input
-            name="category"
-            defaultValue={service?.category}
+        <Field label="Category" error={errors.categoryId}>
+          <select
+            name="categoryId"
+            defaultValue={service?.categoryId ?? ""}
             className={inputClass}
-          />
+          >
+            <option value="" disabled>
+              Choose…
+            </option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field
           label="Display order"
@@ -120,6 +148,8 @@ export function ServiceForm({ service }: { service?: Service }) {
         </Field>
       </div>
 
+      <OptionsEditor service={service} errors={errors} />
+
       <ServiceImageField
         key={service?.imagePublicId}
         initial={service?.imagePublicId}
@@ -128,8 +158,13 @@ export function ServiceForm({ service }: { service?: Service }) {
 
       <Checkbox
         name="active"
-        label="Bookable online"
+        label="Show on the website"
         defaultChecked={service?.active ?? true}
+      />
+      <Checkbox
+        name="onlineBooking"
+        label="Bookable online"
+        defaultChecked={service?.onlineBooking ?? true}
       />
 
       <FormMessage state={state} />

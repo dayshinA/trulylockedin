@@ -10,10 +10,11 @@ import type {
   LocalDate,
   LocalTime,
   Service,
+  ServiceCategory,
   Slot,
   WeeklyHours,
 } from "@/types/booking";
-import { getAvailableSlots } from "./availability";
+import { getAvailableSlots, type AvailabilityInput } from "./availability";
 
 // Thrown when required booking data (e.g. weekly hours) has never been set up.
 export class BookingNotConfiguredError extends Error {
@@ -25,6 +26,8 @@ export class BookingNotConfiguredError extends Error {
 
 export type CreateBookingInput = {
   service: Service;
+  // Checked against the service and priced here, so the browser can't set a price.
+  optionIds?: string[];
   date: LocalDate;
   start: LocalTime;
   client: BookingClient;
@@ -58,6 +61,9 @@ export interface BookingRepository {
   getService(id: string): Promise<Service | null>;
   // Ordered by `order`, then name.
   listServices(options?: { activeOnly?: boolean }): Promise<Service[]>;
+  getCategory(id: string): Promise<ServiceCategory | null>;
+  // Ordered by `order`, then name.
+  listCategories(): Promise<ServiceCategory[]>;
   getBookingByRef(ref: string): Promise<Booking | null>;
   // Bookings starting in [fromUtc, toUtc), ordered by start; any status.
   listBookings(range: { fromUtc: string; toUtc?: string }): Promise<Booking[]>;
@@ -88,6 +94,12 @@ export interface BookingRepository {
   saveOverride(override: DateOverride): Promise<void>;
   deleteOverride(date: LocalDate): Promise<void>;
   saveService(service: Service, mode: "create" | "update"): Promise<SaveResult>;
+  saveCategory(
+    category: ServiceCategory,
+    mode: "create" | "update",
+  ): Promise<SaveResult>;
+  // Refused while any service is still in the category.
+  deleteCategory(id: string): Promise<DeleteCategoryResult>;
   deleteService(id: string): Promise<void>;
 }
 
@@ -95,15 +107,33 @@ export type SaveResult =
   | { ok: true }
   | { ok: false; reason: "exists" | "not_found" };
 
+export type DeleteCategoryResult =
+  | { ok: true }
+  | { ok: false; reason: "not_empty" };
+
 export function sortServices(services: Service[]): Service[] {
   return services.sort(
     (a, b) => a.order - b.order || a.name.localeCompare(b.name),
   );
 }
 
+export function sortCategories(categories: ServiceCategory[]) {
+  return categories.sort(
+    (a, b) => a.order - b.order || a.name.localeCompare(b.name),
+  );
+}
+
 export async function loadAvailableSlots(
   repo: BookingRepository,
-  { date, service, now }: { date: LocalDate; service: Service; now: Date },
+  {
+    date,
+    service,
+    now,
+  }: {
+    date: LocalDate;
+    service: AvailabilityInput["service"];
+    now: Date;
+  },
 ): Promise<Slot[]> {
   const [settings, weekly, override, bookings] = await Promise.all([
     repo.getSettings(),

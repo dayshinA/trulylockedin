@@ -19,6 +19,6 @@ export async function referencedPublicIds(): Promise<Set<string>> {
     ...items.flatMap((item) => item.media.map((m) => m.publicId)),
     ...services.flatMap((s) => (s.imagePublicId ? [s.imagePublicId] : [])),
     ...products.flatMap((p) => p.media.map((m) => m.publicId)),
-    ...(content.hero.image ? [content.hero.image.publicId] : []),
+    ...(content.hero.portrait ? [content.hero.portrait.publicId] : []),
   ]);
 }

@@ -47,18 +47,59 @@ export type BookingSettings = {
   autoConfirm: boolean;
 };
 
+// serviceCategories/{id}
+export type ServiceCategory = {
+  id: string;
+  name: string;
+  order: number;
+  visibleOnline: boolean;
+};
+
+// Stored on its service, in display order.
+export type ServiceOption = {
+  id: string;
+  name: string;
+  // Added to the service's base price; 0 if free.
+  pricePence: number;
+  // Added to the service's duration.
+  durationMin: number | null;
+};
+
+export type OptionsSelectionMode = "single" | "multiple";
+
+// services/{id}
 export type Service = {
   id: string;
+  categoryId: string;
   name: string;
   slug: string;
   description: string;
-  durationMin: number;
+  // Base price; selected options are added to it (see quote.ts).
   priceFromPence: number;
+  // Shown next to the price, e.g. "Up to 100 locs".
+  priceLabel?: string;
+  // Null when it varies. Slots can't be worked out, so it can't be booked yet.
+  durationMin: number | null;
   depositNote?: string;
-  category?: string;
   imagePublicId?: string;
   active: boolean;
+  onlineBooking: boolean;
+  optionsSelectionMode: OptionsSelectionMode;
+  optionsRequired: boolean;
+  options: ServiceOption[];
   order: number;
+};
+
+export type CatalogueCategory = ServiceCategory & { services: Service[] };
+
+// What a booking keeps. durationMin and priceFromPence are the appointment's
+// totals, options included. Older bookings have no options.
+export type BookedService = {
+  id: string;
+  name: string;
+  durationMin: number;
+  priceFromPence: number;
+  options?: ServiceOption[];
 };
 
 export type BookingStatus =
@@ -86,7 +127,7 @@ export type Booking = {
   // Short human code shown to the client, e.g. "TLI-7KQ2".
   ref: string;
   // Snapshot so later price/duration edits don't rewrite history.
-  service: Pick<Service, "id" | "name" | "durationMin" | "priceFromPence">;
+  service: BookedService;
   date: LocalDate;
   start: LocalTime;
   end: LocalTime;
@@ -117,6 +158,8 @@ export type BookingRejection =
   | "invalid_date"
   | "invalid_time"
   | "service_unavailable"
+  | "options_required"
+  | "invalid_options"
   | "outside_booking_window"
   | "closed"
   | "not_a_slot"

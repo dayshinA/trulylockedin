@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { CldImage } from "@/components/media/cld";
 import { Reveal } from "@/components/motion/reveal";
 import { SplitHeading } from "@/components/motion/split-heading";
 import { BookCta } from "@/components/site/book-cta";
+import { HomeHero } from "@/components/site/home-hero";
 import { ProductGrid } from "@/components/site/product-grid";
 import { ServiceList } from "@/components/site/service-list";
 import { WorkGallery } from "@/components/site/work-gallery";
@@ -42,56 +42,12 @@ export default async function Home() {
 
   return (
     <main className="flex flex-col">
-      <section className="px-4 pt-28 pb-20 sm:px-6 lg:pt-32 lg:pb-28">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 lg:min-h-[calc(100svh-15rem)] lg:grid-cols-2 lg:items-center lg:gap-16">
-          <div>
-            {hero.eyebrow && (
-              <p className="mb-5 text-xs font-semibold tracking-[0.35em] text-brand uppercase">
-                {hero.eyebrow}
-              </p>
-            )}
-            <SplitHeading
-              as="h1"
-              className="font-display text-6xl leading-[0.95] font-semibold sm:text-7xl lg:text-8xl"
-            >
-              {hero.title}
-            </SplitHeading>
-            <Reveal delay={0.4}>
-              {hero.subtitle && (
-                <p className="mt-6 max-w-lg text-lg text-muted">
-                  {hero.subtitle}
-                </p>
-              )}
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="/book"
-                  className="inline-flex min-h-12 items-center rounded-full bg-brand px-8 text-sm font-semibold tracking-widest text-on-brand uppercase transition-colors hover:bg-brand-hover"
-                >
-                  Book an appointment
-                </Link>
-                <Link
-                  href="/services"
-                  className="inline-flex min-h-12 items-center rounded-full border border-brand px-8 text-sm font-semibold tracking-widest text-ink uppercase transition-colors hover:border-brand hover:text-brand"
-                >
-                  Services
-                </Link>
-              </div>
-            </Reveal>
-          </div>
-          <div className="relative h-[26rem] overflow-hidden rounded-sm bg-brand sm:h-[32rem] lg:h-full lg:min-h-[34rem]">
-            {hero.image && (
-              <CldImage
-                src={hero.image.publicId}
-                alt={hero.image.alt}
-                fill
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                preload
-                className="object-cover"
-              />
-            )}
-          </div>
-        </div>
-      </section>
+      <HomeHero
+        eyebrow={hero.eyebrow}
+        title={hero.title}
+        subtitle={hero.subtitle}
+        portrait={hero.portrait}
+      />
 
       {featuredWork.length > 0 && (
         <section className="px-4 pb-20 sm:px-6 sm:pb-28">

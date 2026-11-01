@@ -27,7 +27,7 @@ export const heroSchema = z.object({
   eyebrow: z.string().trim().max(80, "At most 80 characters"),
   title: line(120, "Enter a headline"),
   subtitle: z.string().trim().max(300, "At most 300 characters"),
-  image: contentImageSchema.optional(),
+  portrait: contentImageSchema.optional(),
 });
 
 export const highlightSchema = z.object({

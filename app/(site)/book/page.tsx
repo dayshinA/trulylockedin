@@ -3,9 +3,11 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
+import { buildCatalogue, isOnlineService } from "@/lib/booking/catalogue";
 import { bookingRepository } from "@/lib/booking/server";
 import { todayLocal } from "@/lib/booking/time";
-import { BookingFlow, type BookableService } from "./booking-flow";
+import { BookingFlow } from "./booking-flow";
+import type { BookableCategory } from "./service-picker";
 
 export const metadata: Metadata = {
   title: "Book an appointment",
@@ -35,22 +37,40 @@ async function BookingLoader({
   const { service: requested } = await searchParams;
   const repo = bookingRepository();
 
-  let services: BookableService[];
+  let catalogue: BookableCategory[];
   let today: string;
   let maxAdvanceDays: number;
   try {
-    const [all, settings] = await Promise.all([
+    const [categories, all, settings] = await Promise.all([
+      repo.listCategories(),
       repo.listServices({ activeOnly: true }),
       repo.getSettings(),
     ]);
-    services = all.map((s) => ({
-      id: s.id,
-      name: s.name,
-      description: s.description,
-      durationMin: s.durationMin,
-      priceFromPence: s.priceFromPence,
-      depositNote: s.depositNote,
-    }));
+    catalogue = buildCatalogue(categories, all)
+      .map(({ id, name, services, ...category }) => ({
+        id,
+        name,
+        services: services.flatMap((s) =>
+          // No duration means no slots to offer.
+          isOnlineService(s, category) && s.durationMin !== null
+            ? [
+                {
+                  id: s.id,
+                  name: s.name,
+                  description: s.description,
+                  durationMin: s.durationMin,
+                  priceFromPence: s.priceFromPence,
+                  priceLabel: s.priceLabel,
+                  depositNote: s.depositNote,
+                  options: s.options,
+                  optionsSelectionMode: s.optionsSelectionMode,
+                  optionsRequired: s.optionsRequired,
+                },
+              ]
+            : [],
+        ),
+      }))
+      .filter((category) => category.services.length > 0);
     today = todayLocal(new Date(), settings.timezone);
     maxAdvanceDays = settings.maxAdvanceDays;
   } catch (error) {
@@ -58,11 +78,11 @@ async function BookingLoader({
     return <Unavailable />;
   }
 
-  if (services.length === 0) return <Unavailable />;
+  if (catalogue.length === 0) return <Unavailable />;
 
   return (
     <BookingFlow
-      services={services}
+      catalogue={catalogue}
       today={today}
       maxAdvanceDays={maxAdvanceDays}
       // From "Book this" links on /services; ignored if unknown or hidden.

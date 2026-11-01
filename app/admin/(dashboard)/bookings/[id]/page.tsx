@@ -85,6 +85,14 @@ export default async function BookingDetailPage({
             "Service",
             `${booking.service.name} (${formatDuration(booking.service.durationMin)})`,
           ],
+          ...(booking.service.options?.length
+            ? ([
+                [
+                  "Options",
+                  booking.service.options.map((o) => o.name).join(", "),
+                ],
+              ] as [string, string][])
+            : []),
           ["Price from", formatPrice(booking.service.priceFromPence)],
           [
             "Reference",

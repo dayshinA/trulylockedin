@@ -4,7 +4,6 @@ import type {
   BookingSettings,
   DateOverride,
   LocalDate,
-  Service,
   Slot,
   WeeklyHours,
 } from "@/types/booking";
@@ -15,11 +14,18 @@ import {
   meetsMinNotice,
   openingWindows,
 } from "./rules";
-import { localToUtcMs, MINUTE_MS, parseLocalDate, utcMsToLocal } from "./time";
+import {
+  localToUtcMs,
+  MINUTE_MS,
+  parseLocalDate,
+  parseLocalTime,
+  utcMsToLocal,
+} from "./time";
 
 export type AvailabilityInput = {
   date: LocalDate;
-  service: Pick<Service, "durationMin" | "active">;
+  // durationMin is the whole appointment, options included (see quote.ts).
+  service: { active: boolean; durationMin: number };
   weekly: WeeklyHours;
   override: DateOverride | null;
   // Bookings on this date; cancelled ones are ignored.
@@ -27,6 +33,15 @@ export type AvailabilityInput = {
   settings: BookingSettings;
   now: Date;
 };
+
+// A service longer than any normal opening stretch could never fit before closing.
+function longerThanAnyOpening(durationMin: number, weekly: WeeklyHours) {
+  return Object.values(weekly)
+    .flat()
+    .every(
+      (w) => durationMin > parseLocalTime(w.end)! - parseLocalTime(w.start)!,
+    );
+}
 
 type DayPlan =
   | { ok: true; startsMs: number[]; blocked: Interval[] }
@@ -63,6 +78,16 @@ export function planDay(input: AvailabilityInput): DayPlan {
     for (let t = windowStart; t + durationMs <= windowEnd; t += stepMs) {
       starts.add(t);
     }
+  }
+  // Such a service takes the whole day, so it's offered at opening and runs past
+  // closing. Not on days with special hours, which may be deliberately short.
+  if (
+    windows.length > 0 &&
+    !override?.windows &&
+    longerThanAnyOpening(service.durationMin, weekly)
+  ) {
+    const opening = localToUtcMs(date, windows[0].start, settings.timezone);
+    if (opening !== null) starts.add(opening);
   }
   for (const time of extras) {
     const t = localToUtcMs(date, time, settings.timezone);

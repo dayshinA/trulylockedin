@@ -79,17 +79,42 @@ export const bookedTimeSchema = z.object({
 // Firestore document ids we generate or accept from clients: no slashes or dots.
 export const docIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,100}$/);
 
+export const serviceCategorySchema = z.object({
+  id: docIdSchema,
+  name: z.string().min(1),
+  order: z.number().default(0),
+  visibleOnline: z.boolean(),
+});
+
+export const serviceOptionSchema = z.object({
+  id: docIdSchema,
+  name: z.string().min(1),
+  pricePence: z.number().int().min(0),
+  durationMin: z.number().int().positive().nullable(),
+});
+
 export const serviceSchema = z.object({
   id: docIdSchema,
+  categoryId: docIdSchema,
   name: z.string().min(1),
   slug: z.string().min(1),
   description: z.string().default(""),
-  durationMin: z.number().int().positive(),
   priceFromPence: z.number().int().min(0),
+  priceLabel: z.string().optional(),
+  durationMin: z.number().int().positive().nullable(),
   depositNote: z.string().optional(),
-  category: z.string().optional(),
   imagePublicId: mediaPublicIdSchema.optional(),
   active: z.boolean(),
+  onlineBooking: z.boolean(),
+  optionsSelectionMode: z.enum(["single", "multiple"]),
+  optionsRequired: z.boolean(),
+  options: z
+    .array(serviceOptionSchema)
+    .max(50)
+    .refine(
+      (options) => new Set(options.map((o) => o.id)).size === options.length,
+      "Option ids must be unique within a service",
+    ),
   order: z.number().default(0),
 });
 
@@ -101,6 +126,7 @@ export const bookingSchema = z.object({
     name: z.string(),
     durationMin: z.number().int().positive(),
     priceFromPence: z.number().int().min(0),
+    options: z.array(serviceOptionSchema).optional(),
   }),
   date: localDateSchema,
   start: localTimeSchema,

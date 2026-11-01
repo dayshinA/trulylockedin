@@ -5,6 +5,8 @@ import {
   type BookingSettings,
   type DateOverride,
   type Service,
+  type ServiceCategory,
+  type ServiceOption,
   type TimeWindow,
   type WeeklyHours,
 } from "@/types/booking";
@@ -13,6 +15,7 @@ import { bookingRequestSchema } from "./request";
 import {
   bookingSettingsSchema,
   dateOverrideSchema,
+  docIdSchema,
   localTimeSchema,
   serviceSchema,
   weeklyHoursSchema,
@@ -26,13 +29,15 @@ export type Parsed<T> =
   | { ok: true; value: T }
   | { ok: false; fieldErrors: FieldErrors; message?: string };
 
-type Form = Pick<FormData, "get">;
+type Form = Pick<FormData, "get" | "getAll">;
 
 const text = (form: Form, key: string) => {
   const value = form.get(key);
   return typeof value === "string" ? value.trim() : "";
 };
 const checked = (form: Form, key: string) => form.get(key) === "on";
+const all = (form: Form, key: string) =>
+  form.getAll(key).map((v) => (typeof v === "string" ? v.trim() : ""));
 
 function fail(error: z.ZodError, message?: string): Parsed<never> {
   return { ok: false, fieldErrors: z.flattenError(error).fieldErrors, message };
@@ -76,12 +81,14 @@ const serviceFormSchema = z.object({
     .number("Enter a duration in minutes")
     .int()
     .min(15, "At least 15 minutes")
-    .max(720, "At most 12 hours"),
+    .max(720, "At most 12 hours")
+    .nullable(),
   price: z
     .string()
     .refine((v) => poundsToPence(v) !== null, "Enter a price like 65 or 65.50"),
+  priceLabel: z.string().max(120, "Keep this under 120 characters"),
   depositNote: z.string().max(200),
-  category: z.string().max(60),
+  categoryId: docIdSchema.or(z.literal("")).refine(Boolean, "Choose a category"),
   order: z.coerce.number("Enter a number").int().min(0).max(999),
   imagePublicId: z
     .string()
@@ -90,6 +97,57 @@ const serviceFormSchema = z.object({
       "Upload the photo again",
     ),
 });
+
+const MAX_OPTIONS = 50;
+
+// Rows post each field under one name, read in order. Fully blank rows are
+// dropped; errors are keyed "<field>.<row>" by the row's position in the form.
+// A row keeps its id when renamed; a new row gets one from its name.
+function parseOptionRows(form: Form): {
+  options: ServiceOption[];
+  errors: FieldErrors;
+} {
+  const ids = all(form, "optionId");
+  const prices = all(form, "optionPrice");
+  const minutes = all(form, "optionMinutes");
+  const options: ServiceOption[] = [];
+  const errors: FieldErrors = {};
+  const used = new Set(ids.filter(Boolean));
+
+  all(form, "optionName").forEach((name, i) => {
+    const price = prices[i] ?? "";
+    const extra = minutes[i] ?? "";
+    if (!name && !price && !extra) return;
+
+    if (!name) errors[`optionName.${i}`] = ["Enter a name"];
+    if (name.length > 80) errors[`optionName.${i}`] = ["Keep this short"];
+    const pence = price === "" ? 0 : poundsToPence(price);
+    if (pence === null) {
+      errors[`optionPrice.${i}`] = ["Enter a price like 20 or 20.50"];
+    }
+    const durationMin = extra === "" ? null : Number(extra);
+    if (
+      durationMin !== null &&
+      (!Number.isInteger(durationMin) || durationMin < 5 || durationMin > 720)
+    ) {
+      errors[`optionMinutes.${i}`] = ["Between 5 and 720 minutes"];
+    }
+
+    let id = ids[i];
+    if (!id) {
+      const base = slugify(name) || `option-${i + 1}`;
+      id = base;
+      for (let n = 2; used.has(id); n++) id = `${base}-${n}`;
+      used.add(id);
+    }
+    options.push({ id, name, pricePence: pence ?? 0, durationMin });
+  });
+
+  if (options.length > MAX_OPTIONS) {
+    errors.options = [`At most ${MAX_OPTIONS} options`];
+  }
+  return { options, errors };
+}
 
 // On create the id is the slug; on update the id never changes.
 export function parseServiceForm(
@@ -100,15 +158,29 @@ export function parseServiceForm(
     name: text(form, "name"),
     slug: text(form, "slug") || slugify(text(form, "name")),
     description: text(form, "description"),
-    durationMin: text(form, "durationMin"),
+    durationMin: text(form, "durationMin") || null,
     price: text(form, "price"),
+    priceLabel: text(form, "priceLabel"),
     depositNote: text(form, "depositNote"),
-    category: text(form, "category"),
+    categoryId: text(form, "categoryId"),
     order: text(form, "order") || "0",
     imagePublicId: text(form, "imagePublicId"),
   };
   const parsed = serviceFormSchema.safeParse(raw);
-  if (!parsed.success) return fail(parsed.error);
+  const { options, errors: optionErrors } = parseOptionRows(form);
+  const optionsRequired = checked(form, "optionsRequired");
+  if (optionsRequired && options.length === 0) {
+    optionErrors.optionsRequired = ["Add an option, or untick this"];
+  }
+  if (!parsed.success || Object.keys(optionErrors).length > 0) {
+    return {
+      ok: false,
+      fieldErrors: {
+        ...(parsed.success ? {} : z.flattenError(parsed.error).fieldErrors),
+        ...optionErrors,
+      },
+    };
+  }
   const v = parsed.data;
 
   const service = serviceSchema.parse({
@@ -119,12 +191,41 @@ export function parseServiceForm(
     durationMin: v.durationMin,
     priceFromPence: poundsToPence(v.price)!,
     depositNote: v.depositNote || undefined,
-    category: v.category || undefined,
+    categoryId: v.categoryId,
+    priceLabel: v.priceLabel || undefined,
     imagePublicId: v.imagePublicId || undefined,
     active: checked(form, "active"),
+    onlineBooking: checked(form, "onlineBooking"),
+    optionsSelectionMode:
+      text(form, "optionsSelectionMode") === "single" ? "single" : "multiple",
+    optionsRequired,
+    options,
     order: v.order,
   });
   return { ok: true, value: service };
+}
+
+const categoryFormSchema = z.object({
+  name: z.string().min(1, "Enter a name").max(60, "Keep this short"),
+  order: z.coerce.number("Enter a number").int().min(0).max(999),
+});
+
+// On create the id comes from the name; on update the id never changes.
+export function parseCategoryForm(
+  form: Form,
+  existingId?: string,
+): Parsed<ServiceCategory> {
+  const parsed = categoryFormSchema.safeParse({
+    name: text(form, "name"),
+    order: text(form, "order") || "0",
+  });
+  if (!parsed.success) return fail(parsed.error);
+  const id = existingId ?? slugify(parsed.data.name);
+  if (!id) return { ok: false, fieldErrors: { name: ["Use letters or numbers"] } };
+  return {
+    ok: true,
+    value: { id, ...parsed.data, visibleOnline: checked(form, "visibleOnline") },
+  };
 }
 
 // Up to two windows per day: "{day}.start1/end1" and optional "{day}.start2/end2".
@@ -238,6 +339,7 @@ export type ManualBooking = z.infer<typeof manualSchema>;
 export function parseManualBookingForm(form: Form): Parsed<ManualBooking> {
   const parsed = manualSchema.safeParse({
     serviceId: text(form, "serviceId"),
+    optionIds: all(form, "optionIds").filter(Boolean),
     date: text(form, "date"),
     start: text(form, "start"),
     name: text(form, "name"),

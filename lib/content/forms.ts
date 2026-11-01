@@ -102,12 +102,12 @@ export function parseHeroForm(form: Form): Parsed<SiteContent["hero"]> {
       eyebrow: text(form, "eyebrow"),
       title: text(form, "title"),
       subtitle: text(form, "subtitle"),
-      image: text(form, "imagePublicId")
+      portrait: text(form, "portraitPublicId")
         ? {
-            publicId: text(form, "imagePublicId"),
-            width: Number(text(form, "imageWidth")),
-            height: Number(text(form, "imageHeight")),
-            alt: text(form, "imageAlt"),
+            publicId: text(form, "portraitPublicId"),
+            width: Number(text(form, "portraitWidth")),
+            height: Number(text(form, "portraitHeight")),
+            alt: text(form, "portraitAlt"),
           }
         : undefined,
     }),

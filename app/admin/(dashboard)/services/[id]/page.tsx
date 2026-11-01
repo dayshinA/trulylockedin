@@ -20,7 +20,11 @@ export default async function EditServicePage({
 }: PageProps<"/admin/services/[id]">) {
   await verifyAdmin();
   const { id } = await params;
-  const service = await bookingRepository().getService(id);
+  const repo = bookingRepository();
+  const [service, categories] = await Promise.all([
+    repo.getService(id),
+    repo.listCategories(),
+  ]);
   if (!service) notFound();
 
   return (
@@ -29,7 +33,7 @@ export default async function EditServicePage({
         back={{ href: "/admin/services", label: "Services" }}
         title={service.name}
       />
-      <ServiceForm service={service} />
+      <ServiceForm service={service} categories={categories} />
 
       <DangerZone summary="Delete this service">
         <p className="text-muted">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { Bodoni_Moda, Cormorant_Garamond, Manrope } from "next/font/google";
 import { SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
@@ -7,6 +7,14 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+// Home page masthead and headline.
+const bodoni = Bodoni_Moda({
+  variable: "--font-bodoni",
+  subsets: ["latin"],
+  axes: ["opsz"],
   style: ["normal", "italic"],
 });
 
@@ -28,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-GB"
-      className={`${cormorant.variable} ${manrope.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${bodoni.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>

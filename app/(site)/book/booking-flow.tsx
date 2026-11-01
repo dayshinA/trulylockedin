@@ -7,26 +7,30 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { STATUS_LABELS } from "@/lib/booking/labels";
 import { addDays } from "@/lib/booking/time";
 import { DetailRows } from "@/components/site/detail-rows";
-import { formatDuration, formatLocalDate, formatPriceFrom } from "@/lib/format";
-import type { BookingStatus, Service, Slot } from "@/types/booking";
+import {
+  formatDuration,
+  formatLocalDate,
+  formatPrice,
+  formatPriceFrom,
+} from "@/lib/format";
+import type { BookingStatus, Slot } from "@/types/booking";
 import { createBooking, getSlots } from "./actions";
 import { DayGrid } from "./day-grid";
-
-export type BookableService = Pick<
-  Service,
-  | "id"
-  | "name"
-  | "description"
-  | "durationMin"
-  | "priceFromPence"
-  | "depositNote"
->;
+import {
+  HEADER_CLEARANCE_PX,
+  ServicePicker,
+  totalsOf,
+  type BookableCategory,
+  type BookableService,
+} from "./service-picker";
 
 type Step = "service" | "time" | "details" | "done";
 
 type Confirmation = {
   ref: string;
   serviceName: string;
+  optionNames: string[];
+  pricePence: number;
   date: string;
   start: string;
   end: string;
@@ -40,26 +44,40 @@ const inputClass =
   "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
 
 export function BookingFlow({
-  services,
+  catalogue,
   today,
   maxAdvanceDays,
   initialServiceId,
 }: {
-  services: BookableService[];
+  catalogue: BookableCategory[];
   today: string;
   maxAdvanceDays: number;
   initialServiceId?: string;
 }) {
   const [initialService] = useState(
-    () => services.find((s) => s.id === initialServiceId) ?? null,
+    () =>
+      catalogue
+        .flatMap((category) => category.services)
+        .find((s) => s.id === initialServiceId) ?? null,
   );
-  const [step, setStep] = useState<Step>(initialService ? "time" : "service");
+  const startsOnTime = !!initialService && initialService.options.length === 0;
+  const [step, setStep] = useState<Step>(startsOnTime ? "time" : "service");
   const [service, setService] = useState<BookableService | null>(
     initialService,
   );
-  const [date, setDate] = useState<string | null>(
-    initialService ? today : null,
+  // Starts collapsed so the list fits on a screen, unless there's only one
+  // category or the client arrived with a service in mind.
+  const [openCategoryIds, setOpenCategoryIds] = useState<string[]>(() =>
+    catalogue.length === 1
+      ? [catalogue[0].id]
+      : catalogue
+          .filter((category) =>
+            category.services.some((s) => s.id === initialService?.id),
+          )
+          .map((category) => category.id),
   );
+  const [optionIds, setOptionIds] = useState<string[]>([]);
+  const [date, setDate] = useState<string | null>(startsOnTime ? today : null);
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [slotError, setSlotError] = useState<string | null>(null);
   const [slot, setSlot] = useState<Slot | null>(null);
@@ -70,14 +88,28 @@ export function BookingFlow({
   const [submitting, startSubmit] = useTransition();
   // Ignore slot responses for a day the client has already moved away from.
   const latestRequest = useRef(0);
+  const flowRef = useRef<HTMLDivElement>(null);
+  const shownStep = useRef(step);
 
-  // Arriving with ?service=…: fetch that service's times for today once.
+  // The steps differ a lot in height, so leaving a long list from far down would
+  // otherwise land the client in the footer.
   useEffect(() => {
-    if (!initialService) return;
+    if (shownStep.current === step) return;
+    shownStep.current = step;
+    const top = flowRef.current?.getBoundingClientRect().top;
+    if (top !== undefined && top < HEADER_CLEARANCE_PX) {
+      window.scrollBy({ top: top - HEADER_CLEARANCE_PX, behavior: "instant" });
+    }
+  }, [step]);
+
+  // Arriving with ?service=… and no options to pick: fetch today's times once.
+  useEffect(() => {
+    if (!initialService || initialService.options.length > 0) return;
     const request = ++latestRequest.current;
     startSlots(async () => {
       const result = await getSlots({
         serviceId: initialService.id,
+        optionIds: [],
         date: today,
       });
       if (request !== latestRequest.current) return;
@@ -88,13 +120,18 @@ export function BookingFlow({
 
   const lastDay = addDays(today, maxAdvanceDays);
 
-  function loadSlots(forService: BookableService, forDate: string) {
+  function loadSlots(
+    forService: BookableService,
+    forOptions: string[],
+    forDate: string,
+  ) {
     const request = ++latestRequest.current;
     setSlots(null);
     setSlotError(null);
     startSlots(async () => {
       const result = await getSlots({
         serviceId: forService.id,
+        optionIds: forOptions,
         date: forDate,
       });
       if (request !== latestRequest.current) return;
@@ -103,20 +140,47 @@ export function BookingFlow({
     });
   }
 
-  function chooseService(next: BookableService) {
+  function toggleCategory(categoryId: string) {
+    if (!openCategoryIds.includes(categoryId)) {
+      setOpenCategoryIds([...openCategoryIds, categoryId]);
+      return;
+    }
+    setOpenCategoryIds(openCategoryIds.filter((id) => id !== categoryId));
+    // Don't keep a service chosen where the client can no longer see it.
+    const holdsChoice = catalogue
+      .find((category) => category.id === categoryId)
+      ?.services.some((s) => s.id === service?.id);
+    if (holdsChoice) clearService();
+  }
+
+  function toggleService(next: BookableService) {
+    if (next.id === service?.id) {
+      clearService();
+      return;
+    }
     setService(next);
+    setOptionIds([]);
     setSlot(null);
+  }
+
+  function clearService() {
+    setService(null);
+    setOptionIds([]);
+    setSlot(null);
+  }
+
+  function goToTimes(forService: BookableService, forOptions: string[]) {
     setStep("time");
     const firstDay = date ?? today;
     setDate(firstDay);
-    loadSlots(next, firstDay);
+    loadSlots(forService, forOptions, firstDay);
   }
 
   function chooseDate(next: string) {
     if (!service) return;
     setDate(next);
     setSlot(null);
-    loadSlots(service, next);
+    loadSlots(service, optionIds, next);
   }
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -129,6 +193,7 @@ export function BookingFlow({
     startSubmit(async () => {
       const result = await createBooking({
         serviceId: service.id,
+        optionIds,
         date,
         start: slot.start,
         name: form.get("name"),
@@ -154,7 +219,7 @@ export function BookingFlow({
         // Someone else got there first: show fresh times.
         setSlot(null);
         setStep("time");
-        loadSlots(service, date);
+        loadSlots(service, optionIds, date);
       }
     });
   }
@@ -162,6 +227,7 @@ export function BookingFlow({
   const summary = step !== "done" && (
     <Summary
       service={service}
+      optionIds={optionIds}
       date={step !== "service" ? date : null}
       slot={step === "details" ? slot : null}
       onChangeService={step !== "service" ? () => setStep("service") : null}
@@ -171,51 +237,33 @@ export function BookingFlow({
 
   return (
     <div
+      ref={flowRef}
       className={`mt-10 grid gap-10 ${step !== "done" ? "lg:grid-cols-[1fr_20rem] lg:gap-16" : ""}`}
     >
       <div className="flex min-w-0 flex-col gap-8">
         {/* On phones the summary sits above the step, once there's
             something in it. */}
-        {step !== "service" && <div className="lg:hidden">{summary}</div>}
+        {step !== "service" && step !== "done" && (
+          <div className="lg:hidden">{summary}</div>
+        )}
 
         {step === "service" && (
           <section aria-labelledby="choose-service">
             <StepHeading id="choose-service" number={1}>
               Choose a service
             </StepHeading>
-            <ul className="mt-6 border-t border-line">
-              {services.map((s) => (
-                <li key={s.id} className="border-b border-line">
-                  <button
-                    type="button"
-                    onClick={() => chooseService(s)}
-                    className="group flex w-full items-baseline gap-6 py-5 text-left"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={`block font-display text-2xl font-semibold transition-colors group-hover:text-brand-hover ${
-                          s.id === service?.id ? "text-brand" : "text-ink"
-                        }`}
-                      >
-                        {s.name}
-                      </span>
-                      <span className="mt-1 block text-sm text-muted">
-                        {formatDuration(s.durationMin)}
-                        {s.description ? ` · ${s.description}` : ""}
-                      </span>
-                      {s.depositNote && (
-                        <span className="mt-1 block text-sm text-ink">
-                          {s.depositNote}
-                        </span>
-                      )}
-                    </span>
-                    <span className="shrink-0 text-brand">
-                      {formatPriceFrom(s.priceFromPence)}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <ServicePicker
+              catalogue={catalogue}
+              openCategoryIds={openCategoryIds}
+              service={service}
+              optionIds={optionIds}
+              onToggleCategory={toggleCategory}
+              onToggleService={toggleService}
+              onOptionsChange={setOptionIds}
+              onContinue={() => {
+                if (service) goToTimes(service, optionIds);
+              }}
+            />
           </section>
         )}
 
@@ -274,7 +322,7 @@ export function BookingFlow({
                                   setFormError(null);
                                   setStep("details");
                                 }}
-                                className="min-h-12 rounded-sm border border-line text-ink transition-colors hover:border-brand hover:text-brand-hover"
+                                className="min-h-12 rounded-sm border border-field text-ink transition-colors hover:border-brand hover:bg-brand hover:text-on-brand"
                               >
                                 {s.start}
                               </button>
@@ -390,6 +438,13 @@ export function BookingFlow({
               <DetailRows
                 rows={[
                   ["Service", confirmation.serviceName],
+                  ...(confirmation.optionNames.length > 0
+                    ? ([["Options", confirmation.optionNames.join(", ")]] as [
+                        string,
+                        string,
+                      ][])
+                    : []),
+                  ["Price from", formatPrice(confirmation.pricePence)],
                   [
                     "When",
                     `${formatLocalDate(confirmation.date, "long")}, ${confirmation.start}–${confirmation.end}`,
@@ -478,28 +533,36 @@ function groupSlots(slots: Slot[]): [string, Slot[]][] {
 // What's been picked so far: a sidebar on desktop, above the step on phones.
 function Summary({
   service,
+  optionIds,
   date,
   slot,
   onChangeService,
   onChangeTime,
 }: {
   service: BookableService | null;
+  optionIds: string[];
   date: string | null;
   slot: Slot | null;
   onChangeService: (() => void) | null;
   onChangeTime: (() => void) | null;
 }) {
+  const totals = service && totalsOf(service, optionIds);
   return (
     <div>
       <h2 className="font-display text-2xl font-semibold">Your appointment</h2>
       <dl className="mt-4 border-t border-line text-sm">
         <SummaryRow label="Service" onChange={onChangeService}>
-          {service ? (
+          {service && totals ? (
             <>
               <span className="block text-ink">{service.name}</span>
+              {totals.options.length > 0 && (
+                <span className="block text-ink">
+                  {totals.options.map((o) => o.name).join(", ")}
+                </span>
+              )}
               <span className="block text-muted">
-                {formatDuration(service.durationMin)} ·{" "}
-                {formatPriceFrom(service.priceFromPence)}
+                {formatDuration(totals.durationMin)} ·{" "}
+                {formatPriceFrom(totals.pricePence)}
               </span>
             </>
           ) : (

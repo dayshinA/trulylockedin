@@ -22,7 +22,7 @@ import {
   saveShopAction,
   saveTestimonialsAction,
 } from "./actions";
-import { HeroImageField } from "./hero-image-field";
+import { HeroPortraitField } from "./hero-portrait-field";
 
 const textareaClass = `${inputClass} py-2`;
 
@@ -99,7 +99,7 @@ export function HeroForm({ hero }: { hero: SiteContent["hero"] }) {
               className={textareaClass}
             />
           </Field>
-          <HeroImageField initial={hero.image} error={errors.image} />
+          <HeroPortraitField initial={hero.portrait} error={errors.portrait} />
         </>
       )}
     </SectionForm>

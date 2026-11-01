@@ -5,8 +5,17 @@ import { cacheLife, cacheTag } from "next/cache";
 import { bookingRepository } from "@/lib/booking/server";
 import { readSiteContent } from "@/lib/content/store";
 import { adminDb } from "@/lib/firebase/admin";
-import { SEED_SERVICES, SEED_SITE_CONTENT } from "@/lib/seed-data";
-import type { Service, WeeklyHours } from "@/types/booking";
+import { buildCatalogue } from "@/lib/booking/catalogue";
+import {
+  SEED_CATEGORIES,
+  SEED_SERVICES,
+  SEED_SITE_CONTENT,
+} from "@/lib/seed-data";
+import type {
+  CatalogueCategory,
+  Service,
+  WeeklyHours,
+} from "@/types/booking";
 import type { SiteContent } from "@/types/cms";
 import type { PortfolioItem } from "@/types/portfolio";
 import { portfolioRepository } from "@/lib/portfolio/server";
@@ -38,16 +47,27 @@ export async function getSiteContent(): Promise<SiteContent> {
   }
 }
 
-export async function getPublicServices(): Promise<Service[]> {
+// Categories shown online with their active services and options nested, all in
+// display order. Categories with nothing to show are left out.
+export async function getServiceCatalogue(): Promise<CatalogueCategory[]> {
   "use cache";
   cacheLife("max");
   cacheTag(PUBLIC_TAGS.services);
   try {
-    return await bookingRepository().listServices({ activeOnly: true });
+    const repo = bookingRepository();
+    const [categories, services] = await Promise.all([
+      repo.listCategories(),
+      repo.listServices({ activeOnly: true }),
+    ]);
+    return buildCatalogue(categories, services);
   } catch (error) {
-    console.error("Falling back to placeholder services", error);
-    return SEED_SERVICES.filter((service) => service.active);
+    console.error("Falling back to the seed services", error);
+    return buildCatalogue(SEED_CATEGORIES, SEED_SERVICES);
   }
+}
+
+export async function getPublicServices(): Promise<Service[]> {
+  return (await getServiceCatalogue()).flatMap((category) => category.services);
 }
 
 // No fallback: showing made-up opening hours would mislead clients.

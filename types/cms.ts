@@ -26,8 +26,9 @@ export type SiteContent = {
     eyebrow: string;
     title: string;
     subtitle: string;
-    // Shown beside the headline; without one the panel is a plain colour.
-    image?: ContentImage;
+    // Cut-out with a transparent background, shown over the burgundy disc.
+    // Without one the home page uses the bundled placeholder.
+    portrait?: ContentImage;
   };
   about: {
     heading: string;

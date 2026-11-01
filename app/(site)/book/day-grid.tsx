@@ -90,7 +90,7 @@ export function DayGrid({
                 isSelected
                   ? "border-brand bg-brand font-semibold text-on-brand"
                   : bookable
-                    ? "border-line text-ink hover:border-brand"
+                    ? "border-line text-ink hover:border-brand hover:bg-brand hover:text-on-brand"
                     : "border-transparent text-faint"
               }`}
             >
@@ -120,7 +120,7 @@ function MonthButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-line text-ink transition-colors hover:border-brand disabled:border-transparent disabled:text-faint"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-line text-ink transition-colors enabled:hover:border-brand enabled:hover:bg-brand/10 disabled:border-transparent disabled:text-faint"
     >
       {children}
     </button>

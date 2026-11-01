@@ -54,7 +54,8 @@ export function formatLocalDate(
   }).format(new Date(Date.UTC(year, month - 1, day, 12)));
 }
 
-export function formatDuration(minutes: number) {
+export function formatDuration(minutes: number | null) {
+  if (minutes === null) return "Time varies";
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   if (hours === 0) return `${rest} min`;
@@ -63,6 +64,11 @@ export function formatDuration(minutes: number) {
 
 export function formatPriceFrom(pence: number) {
   return pence === 0 ? "Free" : `From ${formatPrice(pence)}`;
+}
+
+// What an option adds to the base price.
+export function formatOptionPrice(pence: number) {
+  return pence === 0 ? "No extra cost" : `+${formatPrice(pence)}`;
 }
 
 // "yyyy-mm" → "November 2026".

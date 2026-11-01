@@ -77,6 +77,7 @@ export async function createManualBookingAction(
   const cancelToken = createCancelToken();
   const result = await repo.createBooking({
     service,
+    optionIds: input.optionIds,
     date: input.date,
     start: input.start,
     client: {

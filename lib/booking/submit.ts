@@ -8,6 +8,8 @@ import type {
   LocalTime,
   Slot,
 } from "@/types/booking";
+import { isOnlineService } from "./catalogue";
+import { quoteForBooking } from "./quote";
 import {
   BookingNotConfiguredError,
   loadAvailableSlots,
@@ -23,6 +25,14 @@ import { REJECTION_MESSAGES } from "./validate";
 const NOT_OPEN = "Online booking isn't open yet. Please get in touch to book.";
 const GENERIC = "Something went wrong. Please try again.";
 
+// Inactive, not bookable online, or in a category hidden from the site: null.
+async function getOnlineService(repo: BookingRepository, id: string) {
+  const service = await repo.getService(id);
+  if (!service) return null;
+  const category = await repo.getCategory(service.categoryId);
+  return category && isOnlineService(service, category) ? service : null;
+}
+
 export type FindSlotsResult =
   | { ok: true; slots: Slot[] }
   | { ok: false; error: string };
@@ -36,13 +46,17 @@ export async function findSlots(
   if (!parsed.success) return { ok: false, error: GENERIC };
 
   try {
-    const service = await repo.getService(parsed.data.serviceId);
-    if (!service?.active) {
+    const service = await getOnlineService(repo, parsed.data.serviceId);
+    if (!service) {
       return { ok: false, error: REJECTION_MESSAGES.service_unavailable };
+    }
+    const priced = quoteForBooking(service, parsed.data.optionIds);
+    if (!priced.ok) {
+      return { ok: false, error: REJECTION_MESSAGES[priced.reason] };
     }
     const slots = await loadAvailableSlots(repo, {
       date: parsed.data.date,
-      service,
+      service: { active: true, durationMin: priced.quote.durationMin },
       now,
     });
     return { ok: true, slots };
@@ -57,6 +71,8 @@ export type SubmitBookingResult =
       booking: {
         ref: string;
         serviceName: string;
+        optionNames: string[];
+        pricePence: number;
         date: LocalDate;
         start: LocalTime;
         end: LocalTime;
@@ -107,14 +123,15 @@ export async function submitBooking(
   const request = parsed.data;
 
   try {
-    const service = await repo.getService(request.serviceId);
-    if (!service?.active) {
+    const service = await getOnlineService(repo, request.serviceId);
+    if (!service) {
       return { ok: false, error: REJECTION_MESSAGES.service_unavailable };
     }
 
     const cancelToken = createCancelToken();
     const result = await repo.createBooking({
       service,
+      optionIds: request.optionIds,
       date: request.date,
       start: request.start,
       client: {
@@ -141,6 +158,8 @@ export async function submitBooking(
       booking: {
         ref: booking.ref,
         serviceName: booking.service.name,
+        optionNames: (booking.service.options ?? []).map((o) => o.name),
+        pricePence: booking.service.priceFromPence,
         date: booking.date,
         start: booking.start,
         end: booking.end,

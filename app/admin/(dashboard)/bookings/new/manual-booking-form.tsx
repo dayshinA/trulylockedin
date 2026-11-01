@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { formatDuration } from "@/lib/format";
-import type { Service } from "@/types/booking";
+import { OptionPicker } from "@/components/site/option-picker";
+import { quoteService } from "@/lib/booking/quote";
+import { formatDuration, formatPriceFrom } from "@/lib/format";
+import type { Service, ServiceCategory } from "@/types/booking";
 import {
   Field,
   FormMessage,
@@ -15,15 +17,34 @@ import {
 import { outlineButton, primaryButton } from "../../_components/admin-ui";
 import { createManualBookingAction } from "../actions";
 
+type ManualService = Pick<
+  Service,
+  | "id"
+  | "categoryId"
+  | "name"
+  | "priceFromPence"
+  | "durationMin"
+  | "active"
+  | "options"
+  | "optionsSelectionMode"
+  | "optionsRequired"
+>;
+
 export function ManualBookingForm({
+  categories,
   services,
   today,
 }: {
-  services: Pick<Service, "id" | "name" | "durationMin" | "active">[];
+  categories: Pick<ServiceCategory, "id" | "name">[];
+  services: ManualService[];
   today: string;
 }) {
   const { state, pending, onSubmit } = useAdminForm(createManualBookingAction);
   const errors = state.fieldErrors ?? {};
+  const [serviceId, setServiceId] = useState("");
+  const [optionIds, setOptionIds] = useState<string[]>([]);
+  const service = services.find((s) => s.id === serviceId);
+  const priced = service && quoteService(service, optionIds, "owner");
 
   if (state.status === "success" && state.bookingId) {
     return <Booked state={state} />;
@@ -32,18 +53,55 @@ export function ManualBookingForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <Field label="Service" error={errors.serviceId}>
-        <select name="serviceId" defaultValue="" className={inputClass}>
+        <select
+          name="serviceId"
+          value={serviceId}
+          onChange={(event) => {
+            setServiceId(event.target.value);
+            setOptionIds([]);
+          }}
+          className={inputClass}
+        >
           <option value="" disabled>
             Choose a service
           </option>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} ({formatDuration(s.durationMin)})
-              {s.active ? "" : " (hidden online)"}
-            </option>
+          {categories.map((category) => (
+            <optgroup key={category.id} label={category.name}>
+              {services
+                .filter((s) => s.categoryId === category.id)
+                .map((s) => (
+                  // No duration means the end time can't be worked out.
+                  <option
+                    key={s.id}
+                    value={s.id}
+                    disabled={s.durationMin === null}
+                  >
+                    {s.name}
+                    {s.durationMin === null
+                      ? " (add a duration first)"
+                      : ` (${formatDuration(s.durationMin)})`}
+                    {s.active ? "" : " (hidden online)"}
+                  </option>
+                ))}
+            </optgroup>
           ))}
         </select>
       </Field>
+
+      {service && service.options.length > 0 && (
+        <OptionPicker
+          service={service}
+          selected={optionIds}
+          onChange={setOptionIds}
+          owner
+        />
+      )}
+      {priced?.ok && (
+        <p className="-mt-2 text-sm text-muted" aria-live="polite">
+          {formatDuration(priced.quote.durationMin)} ·{" "}
+          {formatPriceFrom(priced.quote.pricePence)}
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Date" error={errors.date}>

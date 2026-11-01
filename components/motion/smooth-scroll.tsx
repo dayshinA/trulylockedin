@@ -28,5 +28,17 @@ export function SmoothScroll() {
   }, [reduceMotion]);
 
   if (reduceMotion) return null;
-  return <ReactLenis root options={{ autoRaf: false }} ref={lenisRef} />;
+  return (
+    <ReactLenis
+      root
+      options={{
+        autoRaf: false,
+        // Lenis's defaults (0.1 and 1) felt sluggish. Higher lerp catches up to
+        // the wheel sooner; the multiplier travels further per tick.
+        lerp: 0.18,
+        wheelMultiplier: 1.3,
+      }}
+      ref={lenisRef}
+    />
+  );
 }

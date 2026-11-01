@@ -1,11 +1,18 @@
 import Link from "next/link";
 
 import { CldImage } from "@/components/media/cld";
-import { formatDuration, formatPriceFrom } from "@/lib/format";
+import {
+  formatDuration,
+  formatOptionPrice,
+  formatPriceFrom,
+} from "@/lib/format";
 import type { Service } from "@/types/booking";
 
 // One entry of the full price list on /services.
 export function ServiceRow({ service }: { service: Service }) {
+  // Without a duration there are no slots to offer, so it's booked by asking.
+  const bookable = service.onlineBooking && service.durationMin !== null;
+
   return (
     <article className="flex gap-5 border-b border-line py-8 sm:gap-8">
       {service.imagePublicId && (
@@ -32,6 +39,7 @@ export function ServiceRow({ service }: { service: Service }) {
         </div>
         <p className="mt-1 text-sm text-muted">
           {formatDuration(service.durationMin)}
+          {service.priceLabel && ` · ${service.priceLabel}`}
         </p>
         {service.description && (
           <p className="mt-3 max-w-prose text-muted">{service.description}</p>
@@ -39,11 +47,31 @@ export function ServiceRow({ service }: { service: Service }) {
         {service.depositNote && (
           <p className="mt-2 text-sm text-ink">{service.depositNote}</p>
         )}
+        {service.options.length > 0 && (
+          <ul className="mt-4 max-w-prose border-t border-line text-sm">
+            {service.options.map((option) => (
+              <li
+                key={option.id}
+                className="flex items-baseline justify-between gap-4 border-b border-line py-2"
+              >
+                <span className="text-ink">{option.name}</span>
+                <span className="shrink-0 text-muted">
+                  {formatOptionPrice(option.pricePence)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
         <Link
-          href={`/book?service=${encodeURIComponent(service.id)}`}
+          href={
+            bookable
+              ? `/book?service=${encodeURIComponent(service.id)}`
+              : "/contact"
+          }
           className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
         >
-          Book this<span className="sr-only">: {service.name}</span>
+          {bookable ? "Book this" : "Get in touch to book"}
+          <span className="sr-only">: {service.name}</span>
           <span aria-hidden>&nbsp;→</span>
         </Link>
       </div>

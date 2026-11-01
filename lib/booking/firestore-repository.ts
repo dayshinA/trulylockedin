@@ -16,19 +16,23 @@ import type {
   DateOverride,
   LocalDate,
   Service,
+  ServiceCategory,
   WeeklyHours,
 } from "@/types/booking";
 import { DEFAULT_BOOKING_SETTINGS } from "./defaults";
 import { occupiesTime } from "./overlap";
 import {
   BookingNotConfiguredError,
+  sortCategories,
   sortServices,
   type BookingRepository,
   type CreateBookingInput,
   type CreateBookingResult,
+  type DeleteCategoryResult,
   type SaveResult,
   type StatusChangeResult,
 } from "./repository";
+import { quoteForBooking } from "./quote";
 import { canTransition, initialStatus } from "./rules";
 import {
   bookedTimeSchema,
@@ -36,6 +40,7 @@ import {
   bookingSettingsSchema,
   dateOverrideSchema,
   docIdSchema,
+  serviceCategorySchema,
   serviceSchema,
   weeklyHoursSchema,
 } from "./schemas";
@@ -45,6 +50,8 @@ import { validateBookingRequest } from "./validate";
 
 // Firestore layout:
 //   settings/main                         booking rule fields (others ignored here)
+//   serviceCategories/{id}                ServiceCategory minus id
+//   services/{id}                         Service minus id, options stored inline
 //   availability/weekly                   { sun..sat: TimeWindow[] }
 //   availability/overrides/dates/{date}   DateOverride
 //   bookings/{id}                         Booking minus id
@@ -161,6 +168,23 @@ export class FirestoreBookingRepository implements BookingRepository {
     );
   }
 
+  async getCategory(id: string) {
+    if (!docIdSchema.safeParse(id).success) return null;
+    const snap = await this.db.collection("serviceCategories").doc(id).get();
+    return snap.exists
+      ? serviceCategorySchema.parse({ ...snap.data(), id: snap.id })
+      : null;
+  }
+
+  async listCategories() {
+    const snap = await this.db.collection("serviceCategories").get();
+    return sortCategories(
+      snap.docs.map((doc) =>
+        serviceCategorySchema.parse({ ...doc.data(), id: doc.id }),
+      ),
+    );
+  }
+
   async getBookingByRef(ref: string) {
     if (!BOOKING_REF_RE.test(ref)) return null;
     const snap = await this.bookingsCol.where("ref", "==", ref).limit(1).get();
@@ -197,6 +221,14 @@ export class FirestoreBookingRepository implements BookingRepository {
     if (!parseLocalDate(input.date))
       return { ok: false, reason: "invalid_date" };
 
+    const priced = quoteForBooking(
+      input.service,
+      input.optionIds ?? [],
+      input.mode,
+    );
+    if (!priced.ok) return priced;
+    const { quote } = priced;
+
     return this.db.runTransaction(async (tx) => {
       const dayRef = this.dayRef(input.date);
       // Rules are read in the transaction too, so an owner edit mid-booking
@@ -212,7 +244,7 @@ export class FirestoreBookingRepository implements BookingRepository {
       const result = validateBookingRequest({
         date: input.date,
         start: input.start,
-        service: input.service,
+        service: { active: input.service.active, durationMin: quote.durationMin },
         weekly: parseWeekly(weeklySnap),
         override: parseOverride(overrideSnap),
         bookings: parseBookedTimes(daySnap),
@@ -230,8 +262,9 @@ export class FirestoreBookingRepository implements BookingRepository {
         service: {
           id: input.service.id,
           name: input.service.name,
-          durationMin: input.service.durationMin,
-          priceFromPence: input.service.priceFromPence,
+          durationMin: quote.durationMin,
+          priceFromPence: quote.pricePence,
+          options: quote.options.length > 0 ? quote.options : undefined,
         },
         date: input.date,
         start: result.slot.start,
@@ -355,6 +388,37 @@ export class FirestoreBookingRepository implements BookingRepository {
       }
       // Full replace, so cleared optional fields are removed.
       tx.set(ref, stripUndefined(data));
+      return { ok: true };
+    });
+  }
+
+  saveCategory(
+    category: ServiceCategory,
+    mode: "create" | "update",
+  ): Promise<SaveResult> {
+    const { id, ...data } = serviceCategorySchema.parse(category);
+    const ref = this.db.collection("serviceCategories").doc(id);
+    return this.db.runTransaction(async (tx) => {
+      const exists = (await tx.get(ref)).exists;
+      if (mode === "create" && exists) return { ok: false, reason: "exists" };
+      if (mode === "update" && !exists) {
+        return { ok: false, reason: "not_found" };
+      }
+      tx.set(ref, data);
+      return { ok: true };
+    });
+  }
+
+  deleteCategory(id: string): Promise<DeleteCategoryResult> {
+    if (!docIdSchema.safeParse(id).success) {
+      return Promise.resolve({ ok: true });
+    }
+    return this.db.runTransaction(async (tx) => {
+      const inUse = await tx.get(
+        this.db.collection("services").where("categoryId", "==", id).limit(1),
+      );
+      if (!inUse.empty) return { ok: false, reason: "not_empty" };
+      tx.delete(this.db.collection("serviceCategories").doc(id));
       return { ok: true };
     });
   }

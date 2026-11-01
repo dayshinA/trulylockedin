@@ -1,85 +1,10 @@
-import type { Service } from "@/types/booking";
 import type { SiteContent } from "@/types/cms";
 
 export {
   DEFAULT_BOOKING_SETTINGS,
   DEFAULT_WEEKLY_HOURS,
 } from "@/lib/booking/defaults";
-
-// Placeholder services so the booking flow works before the owner adds their
-// own. Names, durations and prices are examples; the owner edits them in the CMS.
-export const SEED_SERVICES: Service[] = [
-  {
-    id: "consultation",
-    name: "Loc consultation",
-    slug: "consultation",
-    description:
-      "A short chat about your hair, goals and the right loc method for you.",
-    durationMin: 30,
-    priceFromPence: 0,
-    category: "Consultation",
-    active: true,
-    order: 0,
-  },
-  {
-    id: "starter-locs",
-    name: "Starter locs",
-    slug: "starter-locs",
-    description: "Comb coils or two-strand twists to start your loc journey.",
-    durationMin: 240,
-    priceFromPence: 15000,
-    depositNote: "A deposit may be required to secure this appointment.",
-    category: "New locs",
-    active: true,
-    order: 1,
-  },
-  {
-    id: "retwist-style",
-    name: "Retwist & style",
-    slug: "retwist-style",
-    description: "Palm roll or two-strand retwist of new growth, plus a style.",
-    durationMin: 120,
-    priceFromPence: 6500,
-    category: "Maintenance",
-    active: true,
-    order: 2,
-  },
-  {
-    id: "interlocking",
-    name: "Interlocking maintenance",
-    slug: "interlocking",
-    description: "Root maintenance with an interlocking tool.",
-    durationMin: 180,
-    priceFromPence: 9000,
-    category: "Maintenance",
-    active: true,
-    order: 3,
-  },
-  {
-    id: "loc-extensions",
-    name: "Loc extensions",
-    slug: "loc-extensions",
-    description:
-      "Full head of human hair loc extensions. Hair priced separately.",
-    durationMin: 480,
-    priceFromPence: 35000,
-    depositNote: "A deposit is required to secure this appointment.",
-    category: "New locs",
-    active: true,
-    order: 4,
-  },
-  {
-    id: "loc-repair",
-    name: "Loc repair",
-    slug: "loc-repair",
-    description: "Repair of thinning, weak or broken locs.",
-    durationMin: 60,
-    priceFromPence: 3500,
-    category: "Maintenance",
-    active: true,
-    order: 5,
-  },
-];
+export { SEED_CATEGORIES, SEED_SERVICES } from "@/lib/booking/seed-catalogue";
 
 // Placeholder copy until the owner writes their own in the CMS. Contact
 // details are left empty on purpose: the site hides what isn't filled in.

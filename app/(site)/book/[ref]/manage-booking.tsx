@@ -89,6 +89,12 @@ export function ManageBooking({ bookingRef }: { bookingRef: string }) {
         <DetailRows
           rows={[
             ["Name", booking.clientName],
+            ...(booking.optionNames.length > 0
+              ? ([["Options", booking.optionNames.join(", ")]] as [
+                  string,
+                  string,
+                ][])
+              : []),
             [
               "When",
               `${formatLocalDate(booking.date, "long")}, ${booking.start}–${booking.end}`,

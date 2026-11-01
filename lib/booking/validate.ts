@@ -76,6 +76,8 @@ export const REJECTION_MESSAGES: Record<BookingRejection, string> = {
   invalid_date: "That date isn't valid.",
   invalid_time: "That time isn't valid.",
   service_unavailable: "That service isn't available to book right now.",
+  options_required: "Please choose an option for this service.",
+  invalid_options: "Those options aren't available for this service.",
   outside_booking_window: "Bookings aren't open for that date.",
   closed: "We're closed on that day.",
   not_a_slot: "That time isn't one of the available slots.",
@@ -89,6 +91,7 @@ export const REJECTION_MESSAGES: Record<BookingRejection, string> = {
 export const OWNER_REJECTION_MESSAGES: Partial<
   Record<BookingRejection, string>
 > = {
+  service_unavailable: "Add a duration to this service under Services first.",
   slot_taken: "That time overlaps another appointment.",
   outside_day: "The appointment must finish by midnight.",
 };

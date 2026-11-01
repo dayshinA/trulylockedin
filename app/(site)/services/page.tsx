@@ -4,30 +4,16 @@ import { Reveal } from "@/components/motion/reveal";
 import { BookCta } from "@/components/site/book-cta";
 import { PageIntro } from "@/components/site/page-intro";
 import { ServiceRow } from "@/components/site/service-row";
-import { getPublicServices } from "@/lib/data/public";
-import type { Service } from "@/types/booking";
+import { getServiceCatalogue } from "@/lib/data/public";
 
 export const metadata: Metadata = {
   title: "Services & prices",
   description:
-    "Starter locs, retwists, interlocking, extensions and repairs. Durations and prices, and online booking.",
+    "Locs, retwists, braids, ponytails and hair treatments. Durations and prices, and online booking.",
 };
 
-// Grouped by category in the order the owner set; uncategorised last.
-function groupByCategory(services: Service[]): [string, Service[]][] {
-  const groups = new Map<string, Service[]>();
-  for (const service of services) {
-    const key = service.category ?? "Other";
-    groups.set(key, [...(groups.get(key) ?? []), service]);
-  }
-  return [...groups].sort(([a], [b]) =>
-    a === "Other" ? 1 : b === "Other" ? -1 : 0,
-  );
-}
-
 export default async function ServicesPage() {
-  const services = await getPublicServices();
-  const groups = groupByCategory(services);
+  const groups = await getServiceCatalogue();
 
   return (
     <main className="flex flex-col">
@@ -37,26 +23,26 @@ export default async function ServicesPage() {
       </PageIntro>
 
       <div className="flex flex-col gap-16 px-4 pb-24 sm:px-6 sm:gap-20">
-        {services.length === 0 ? (
+        {groups.length === 0 ? (
           <p className="mx-auto w-full max-w-6xl text-muted">
             Services will be listed here soon.
           </p>
         ) : (
-          groups.map(([category, list]) => (
+          groups.map((category) => (
             <section
-              key={category}
+              key={category.id}
               className="mx-auto grid w-full max-w-6xl gap-6 md:grid-cols-[1fr_3fr] md:gap-16"
             >
               {groups.length > 1 && (
                 <h2 className="self-start font-display text-3xl font-semibold text-brand md:sticky md:top-24 md:pt-8">
-                  {category}
+                  {category.name}
                 </h2>
               )}
               <Reveal
                 stagger
                 className={`border-t border-line ${groups.length > 1 ? "" : "md:col-span-2"}`}
               >
-                {list.map((service) => (
+                {category.services.map((service) => (
                   <ServiceRow key={service.id} service={service} />
                 ))}
               </Reveal>
