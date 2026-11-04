@@ -3,7 +3,8 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
-import { buildCatalogue, isOnlineService } from "@/lib/booking/catalogue";
+import { getMember } from "@/lib/auth/member-dal";
+import { buildCatalogue, isBookableOnline } from "@/lib/booking/catalogue";
 import { bookingRepository } from "@/lib/booking/server";
 import { todayLocal } from "@/lib/booking/time";
 import { BookingFlow } from "./booking-flow";
@@ -34,8 +35,10 @@ async function BookingLoader({
   searchParams: PageProps<"/book">["searchParams"];
 }) {
   await connection();
-  const { service: requested } = await searchParams;
+  const { service: requested, options: requestedOptions } = await searchParams;
   const repo = bookingRepository();
+  // Null for guests; a failed session check also just means "guest".
+  const member = await getMember();
 
   let catalogue: BookableCategory[];
   let today: string;
@@ -51,8 +54,8 @@ async function BookingLoader({
         id,
         name,
         services: services.flatMap((s) =>
-          // No duration means no slots to offer.
-          isOnlineService(s, category) && s.durationMin !== null
+          // The null check repeats isBookableOnline's so TypeScript narrows it.
+          isBookableOnline(s, category) && s.durationMin !== null
             ? [
                 {
                   id: s.id,
@@ -85,8 +88,19 @@ async function BookingLoader({
       catalogue={catalogue}
       today={today}
       maxAdvanceDays={maxAdvanceDays}
-      // From "Book this" links on /services; ignored if unknown or hidden.
+      // From "Book this" links on /services and "Book again" on /account.
+      // Unknown or hidden services and options are ignored.
       initialServiceId={typeof requested === "string" ? requested : undefined}
+      initialOptionIds={
+        typeof requestedOptions === "string"
+          ? requestedOptions.split(",").filter(Boolean)
+          : []
+      }
+      member={
+        member
+          ? { name: member.name, email: member.email, phone: member.phone }
+          : null
+      }
     />
   );
 }

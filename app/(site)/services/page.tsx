@@ -34,7 +34,7 @@ export default async function ServicesPage() {
               className="mx-auto grid w-full max-w-6xl gap-6 md:grid-cols-[1fr_3fr] md:gap-16"
             >
               {groups.length > 1 && (
-                <h2 className="self-start font-display text-3xl font-semibold text-brand md:sticky md:top-24 md:pt-8">
+                <h2 className="self-start font-display text-3xl font-semibold text-accent-ink md:sticky md:top-24 md:pt-8">
                   {category.name}
                 </h2>
               )}

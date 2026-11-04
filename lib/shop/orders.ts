@@ -14,7 +14,7 @@ export function canTransitionOrder(from: OrderStatus, to: OrderStatus) {
   return TRANSITIONS[from].includes(to);
 }
 
-// Customers can cancel online until the order is being handed over.
+// Customers can cancel online until the order is ready or posted.
 export const canCustomerCancel = (order: Pick<Order, "status">) =>
   order.status === "pending";
 
@@ -24,38 +24,71 @@ export const orderTotal = (items: Pick<OrderItem, "pricePence" | "quantity">[]) 
 export const itemCount = (items: Pick<OrderItem, "quantity">[]) =>
   items.reduce((sum, item) => sum + item.quantity, 0);
 
-// What the customer sees.
-export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+// The statuses are shared, but "ready" and "collected" read differently for an
+// order that is posted. Pass the order (or anything with its `delivery`).
+type Fulfilled = Pick<Order, "delivery">;
+const posted = (order: Fulfilled) => order.delivery !== undefined;
+
+const CUSTOMER_LABELS: Record<OrderStatus, string> = {
   pending: "Received, being prepared",
   ready: "Ready to collect",
   collected: "Collected",
   cancelled: "Cancelled",
 };
+const CUSTOMER_DELIVERY_LABELS: Record<OrderStatus, string> = {
+  ...CUSTOMER_LABELS,
+  ready: "Posted",
+  collected: "Delivered",
+};
 
-// What the owner sees.
-export const ORDER_ADMIN_LABELS: Record<OrderStatus, string> = {
+const ADMIN_LABELS: Record<OrderStatus, string> = {
   pending: "New",
   ready: "Ready",
   collected: "Collected",
   cancelled: "Cancelled",
 };
+const ADMIN_DELIVERY_LABELS: Record<OrderStatus, string> = {
+  ...ADMIN_LABELS,
+  ready: "Posted",
+  collected: "Delivered",
+};
 
-export const ORDER_STATUS_ACTIONS: Record<OrderStatus, string> = {
+const ACTIONS: Record<OrderStatus, string> = {
   pending: "Back to new",
   ready: "Mark ready to collect",
   collected: "Mark collected",
   cancelled: "Cancel order",
 };
+const DELIVERY_ACTIONS: Record<OrderStatus, string> = {
+  ...ACTIONS,
+  ready: "Mark posted",
+  collected: "Mark delivered",
+};
 
-// Admin list views.
+// What the customer sees.
+export const orderStatusLabel = (order: Fulfilled & Pick<Order, "status">) =>
+  (posted(order) ? CUSTOMER_DELIVERY_LABELS : CUSTOMER_LABELS)[order.status];
+
+// What the owner sees.
+export const orderAdminLabel = (order: Fulfilled & Pick<Order, "status">) =>
+  (posted(order) ? ADMIN_DELIVERY_LABELS : ADMIN_LABELS)[order.status];
+
+// The owner's button that moves the order to `status`.
+export const orderStatusAction = (order: Fulfilled, status: OrderStatus) =>
+  (posted(order) ? DELIVERY_ACTIONS : ACTIONS)[status];
+
+export const fulfilmentLabel = (order: Fulfilled) =>
+  posted(order) ? "Delivery" : "Collection";
+
+// Admin list views. "collected" holds delivered orders too.
 export const ORDER_VIEWS = ["open", "collected", "cancelled"] as const;
 export type OrderView = (typeof ORDER_VIEWS)[number];
 
-// How far back the collected and cancelled views reach.
+// How far back the completed and cancelled views reach.
 export const ORDER_HISTORY_DAYS = 60;
 
 // Orders for one admin view, newest first. "open" lists new orders before
-// those waiting for collection.
+// those waiting for collection or already posted.
 export async function loadOrderList(
   repo: Pick<OrderRepository, "listOrders">,
   view: OrderView,

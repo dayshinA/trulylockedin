@@ -63,7 +63,7 @@ export function WorkGallery({ items }: { items: PortfolioItem[] }) {
                     {item.title}
                   </span>
                   {item.category && (
-                    <span className="shrink-0 text-xs tracking-[0.2em] text-brand uppercase">
+                    <span className="shrink-0 text-xs tracking-[0.2em] text-accent-ink uppercase">
                       {item.category}
                     </span>
                   )}

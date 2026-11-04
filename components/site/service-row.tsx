@@ -33,7 +33,7 @@ export function ServiceRow({ service }: { service: Service }) {
           <h3 className="font-display text-2xl font-semibold sm:text-3xl">
             {service.name}
           </h3>
-          <p className="shrink-0 text-brand">
+          <p className="shrink-0 font-semibold text-accent-ink">
             {formatPriceFrom(service.priceFromPence)}
           </p>
         </div>
@@ -68,11 +68,11 @@ export function ServiceRow({ service }: { service: Service }) {
               ? `/book?service=${encodeURIComponent(service.id)}`
               : "/contact"
           }
-          className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+          className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
         >
           {bookable ? "Book this" : "Get in touch to book"}
           <span className="sr-only">: {service.name}</span>
-          <span aria-hidden>&nbsp;→</span>
+          <span aria-hidden className="text-accent">&nbsp;→</span>
         </Link>
       </div>
     </article>

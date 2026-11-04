@@ -92,7 +92,13 @@ export type SubmitBookingResult =
 export async function submitBooking(
   repo: BookingRepository,
   raw: unknown,
-  context: { now: Date; clientKey: string; limiter: RateLimiter },
+  context: {
+    now: Date;
+    clientKey: string;
+    limiter: RateLimiter;
+    // From the member session, never from `raw`.
+    memberId?: string;
+  },
 ): Promise<SubmitBookingResult> {
   // Honeypot first: bots get a dull, uninformative failure.
   if (
@@ -143,6 +149,7 @@ export async function submitBooking(
       ref: createBookingRef(),
       cancelTokenHash: hashToken(cancelToken),
       now: context.now,
+      memberId: context.memberId,
     });
     if (!result.ok) {
       return {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { portfolioIdSchema, mediaSchema } from "@/lib/portfolio/schemas";
+import { deliveryAddressSchema } from "./address";
 
 export const productIdSchema = portfolioIdSchema;
 
@@ -52,8 +53,10 @@ export const orderSchema = z.object({
     email: z.string().optional(),
     notes: z.string().optional(),
   }),
+  delivery: deliveryAddressSchema.optional(),
   status: orderStatusSchema,
   cancelTokenHash: z.string(),
+  memberId: z.string().optional(),
   adminNotes: z.string().optional(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

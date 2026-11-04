@@ -5,8 +5,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { STATUS_LABELS } from "@/lib/booking/labels";
+import { quoteService } from "@/lib/booking/quote";
 import { addDays } from "@/lib/booking/time";
 import { DetailRows } from "@/components/site/detail-rows";
+import { Field, inputClass } from "@/components/site/form-field";
+import { MemberBar } from "@/components/site/member-bar";
 import {
   formatDuration,
   formatLocalDate,
@@ -14,6 +17,7 @@ import {
   formatPriceFrom,
 } from "@/lib/format";
 import type { BookingStatus, Slot } from "@/types/booking";
+import type { MemberProfile } from "@/types/member";
 import { createBooking, getSlots } from "./actions";
 import { DayGrid } from "./day-grid";
 import {
@@ -40,27 +44,25 @@ type Confirmation = {
 
 type FieldErrors = Partial<Record<string, string[]>>;
 
-const inputClass =
-  "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
-
 export function BookingFlow({
   catalogue,
   today,
   maxAdvanceDays,
   initialServiceId,
+  initialOptionIds = [],
+  member,
 }: {
   catalogue: BookableCategory[];
   today: string;
   maxAdvanceDays: number;
   initialServiceId?: string;
+  initialOptionIds?: string[];
+  member: MemberProfile | null;
 }) {
-  const [initialService] = useState(
-    () =>
-      catalogue
-        .flatMap((category) => category.services)
-        .find((s) => s.id === initialServiceId) ?? null,
+  const [initial] = useState(() =>
+    initialSelection(catalogue, initialServiceId, initialOptionIds),
   );
-  const startsOnTime = !!initialService && initialService.options.length === 0;
+  const { service: initialService, startsOnTime } = initial;
   const [step, setStep] = useState<Step>(startsOnTime ? "time" : "service");
   const [service, setService] = useState<BookableService | null>(
     initialService,
@@ -76,7 +78,7 @@ export function BookingFlow({
           )
           .map((category) => category.id),
   );
-  const [optionIds, setOptionIds] = useState<string[]>([]);
+  const [optionIds, setOptionIds] = useState<string[]>(initial.optionIds);
   const [date, setDate] = useState<string | null>(startsOnTime ? today : null);
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [slotError, setSlotError] = useState<string | null>(null);
@@ -102,21 +104,22 @@ export function BookingFlow({
     }
   }, [step]);
 
-  // Arriving with ?service=… and no options to pick: fetch today's times once.
+  // Arriving on the time step (see initialSelection): fetch today's times once.
   useEffect(() => {
-    if (!initialService || initialService.options.length > 0) return;
+    if (!initial.startsOnTime || !initial.service) return;
     const request = ++latestRequest.current;
+    const { service: first, optionIds: firstOptions } = initial;
     startSlots(async () => {
       const result = await getSlots({
-        serviceId: initialService.id,
-        optionIds: [],
+        serviceId: first.id,
+        optionIds: firstOptions,
         date: today,
       });
       if (request !== latestRequest.current) return;
       if (result.ok) setSlots(result.slots);
       else setSlotError(result.error);
     });
-  }, [initialService, today]);
+  }, [initial, today]);
 
   const lastDay = addDays(today, maxAdvanceDays);
 
@@ -252,6 +255,12 @@ export function BookingFlow({
             <StepHeading id="choose-service" number={1}>
               Choose a service
             </StepHeading>
+            {initial.serviceMissing && (
+              <p className="mb-6 border-l-2 border-brand pl-4 text-ink">
+                That service can&rsquo;t be booked online any more. Choose
+                another below or get in touch.
+              </p>
+            )}
             <ServicePicker
               catalogue={catalogue}
               openCategoryIds={openCategoryIds}
@@ -351,10 +360,19 @@ export function BookingFlow({
               Your details
             </StepHeading>
 
-            <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+            <MemberBar member={member} purpose="booking" />
+
+            {/* Keyed so a sign-in (or sign-out) mid-form refills the fields. */}
+            <form
+              key={member?.email ?? "guest"}
+              onSubmit={submit}
+              className="flex flex-col gap-5"
+              noValidate
+            >
               <Field label="Name" error={fieldErrors.name}>
                 <input
                   name="name"
+                  defaultValue={member?.name}
                   autoComplete="name"
                   required
                   className={inputClass}
@@ -364,6 +382,7 @@ export function BookingFlow({
                 <input
                   name="phone"
                   type="tel"
+                  defaultValue={member?.phone}
                   autoComplete="tel"
                   inputMode="tel"
                   placeholder="07700 900123"
@@ -375,6 +394,7 @@ export function BookingFlow({
                 <input
                   name="email"
                   type="email"
+                  defaultValue={member?.email}
                   autoComplete="email"
                   inputMode="email"
                   className={inputClass}
@@ -469,6 +489,18 @@ export function BookingFlow({
             >
               Manage my booking
             </Link>
+            {member && (
+              <p className="mt-6 text-muted">
+                It&rsquo;s also saved in{" "}
+                <Link
+                  href="/account"
+                  className="text-brand underline underline-offset-4 hover:text-brand-hover"
+                >
+                  your account
+                </Link>
+                .
+              </p>
+            )}
           </section>
         )}
       </div>
@@ -480,6 +512,40 @@ export function BookingFlow({
       )}
     </div>
   );
+}
+
+
+// Where the flow opens for a ?service=…&options=… link. It skips to the time
+// step when there's nothing left to choose: the service has no options, or the
+// link names a valid choice (e.g. "Book again"). Unknown option ids are dropped.
+function initialSelection(
+  catalogue: BookableCategory[],
+  serviceId: string | undefined,
+  requestedOptionIds: string[],
+) {
+  const service =
+    catalogue
+      .flatMap((category) => category.services)
+      .find((s) => s.id === serviceId) ?? null;
+  if (!service) {
+    return {
+      service: null,
+      optionIds: [],
+      startsOnTime: false,
+      serviceMissing: serviceId !== undefined,
+    };
+  }
+
+  const known = new Set(service.options.map((o) => o.id));
+  const optionIds = requestedOptionIds.filter((id) => known.has(id));
+  const valid = quoteService(service, optionIds).ok;
+  return {
+    service,
+    optionIds: valid ? optionIds : [],
+    startsOnTime:
+      valid && (service.options.length === 0 || optionIds.length > 0),
+    serviceMissing: false,
+  };
 }
 
 function StepHeading({
@@ -609,29 +675,11 @@ function SummaryRow({
         <button
           type="button"
           onClick={onChange}
-          className="min-h-11 shrink-0 px-2 text-brand underline-offset-4 hover:underline"
+          className="min-h-11 shrink-0 px-2 text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
         >
           Change
         </button>
       )}
     </div>
-  );
-}
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string[];
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-2 text-sm">
-      <span className="text-muted">{label}</span>
-      {children}
-      {error?.[0] && <span className="font-semibold text-brand">{error[0]}</span>}
-    </label>
   );
 }

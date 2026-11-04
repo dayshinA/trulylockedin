@@ -39,7 +39,7 @@ export default async function AboutPage() {
                     key={h.title}
                     className="grid grid-cols-[3rem_1fr] gap-4 border-b border-line py-6"
                   >
-                    <span className="font-display text-2xl text-brand">
+                    <span className="font-display text-2xl text-accent">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <div>

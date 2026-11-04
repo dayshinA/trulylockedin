@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { verifyAdmin } from "@/lib/auth/dal";
@@ -11,11 +12,13 @@ import type { BookingStatus } from "@/types/booking";
 import { saveAdminNotesAction, setBookingStatusAction } from "../actions";
 import { inputClass } from "../../_components/admin-form";
 import {
+  Badge,
   dangerButton,
   DetailList,
   outlineButton,
   PageHeader,
   primaryButton,
+  textLink,
 } from "../../_components/admin-ui";
 import { StatusBadge } from "../booking-list";
 
@@ -57,7 +60,12 @@ export default async function BookingDetailPage({
         back={{ href: "/admin/bookings", label: "All bookings" }}
         eyebrow={`${formatLocalDate(booking.date, "long")}, ${booking.start}–${booking.end}`}
         title={client.name}
-        actions={<StatusBadge status={booking.status} />}
+        actions={
+          <>
+            {booking.memberId && <Badge tone="accent">Member</Badge>}
+            <StatusBadge status={booking.status} />
+          </>
+        }
       />
 
       <div className="flex flex-wrap gap-3">
@@ -112,9 +120,19 @@ export default async function BookingDetailPage({
           ["Booked", `${formatLocalDate(bookedOn.date)} at ${bookedOn.time}`],
           [
             "Booked by",
-            booking.source === "admin"
-              ? "You (manual booking)"
-              : "Client, online",
+            booking.source === "admin" ? (
+              "You (manual booking)"
+            ) : booking.memberId ? (
+              <Link
+                key="member"
+                href={`/admin/members/${booking.memberId}`}
+                className={textLink}
+              >
+                Client, online, signed in as a member
+              </Link>
+            ) : (
+              "Client, online, as a guest"
+            ),
           ],
         ]}
       />

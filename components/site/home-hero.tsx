@@ -6,19 +6,37 @@ import { useRef } from "react";
 
 import { CldImage } from "@/components/media/cld";
 import { gsap, useGSAP } from "@/lib/gsap";
-import placeholder from "@/public/hero/portrait-placeholder.webp";
+import placeholder from "@/public/hero/portrait.webp";
 import type { ContentImage } from "@/types/cms";
 
-const DISC_RADIUS = 17; // vmax
-const DISC_CENTRE = "50% 47%";
+// One geometry for masthead, portrait and disc, set as CSS variables on the
+// section so they keep their proportions at every screen size:
+//   --f  masthead font size        --mast  masthead top
+//   --t  portrait top (top of the hair), part-way down the masthead letters
+//   --p  portrait height
+// The disc is centred on the face and sized from --p. The ratios suit a
+// head-and-shoulders cut-out with the hair touching the top edge, like
+// public/hero/portrait.webp. On tall screens the masthead is width-bound, so
+// --mast centres masthead + portrait (whose shoulders fade out at 0.92 of its
+// height) in the space above the headline instead of leaving a gap below.
+// --o is how far down the masthead (in font sizes) the hair starts: less on
+// phones, where the head is large next to the width-bound letters.
+const heroGeometry =
+  "[--f:min(12.4vw,26svh)] [--o:0.72] [--t:calc(var(--mast)_+_var(--o)*var(--f))] " +
+  "[--p:min(56svh,112vw)] [--mast:max(76px,calc((100svh_-_130px_-_var(--o)*var(--f)_-_0.92*var(--p))/2))] " +
+  "md:[--o:0.55] md:[--p:min(calc(100svh_-_max(8svh,72px)_-_var(--o)*var(--f)),105vw)] " +
+  "md:[--mast:max(8svh,72px,calc((100svh_-_40px_-_var(--o)*var(--f)_-_0.92*var(--p))/2))]";
+
+const FACE_Y = 0.43; // disc centre, as a fraction of the portrait height
+const DISC_RADIUS = 0.4; // fraction of the portrait height
 
 const discClip = (radius: number) =>
-  `circle(${radius}vmax at ${DISC_CENTRE})`;
+  `circle(calc(var(--p) * ${radius}) at 50% calc(var(--t) + var(--p) * ${FACE_Y}))`;
 
 // Softens the lower body and the sides, where a portrait is usually cropped.
 const fadeEdges: React.CSSProperties = {
   maskImage:
-    "linear-gradient(to right, transparent 1%, black 10%, black 84%, transparent 98%), linear-gradient(to bottom, black 58%, transparent 96%)",
+    "linear-gradient(to right, transparent 2%, black 14%, black 86%, transparent 98%), linear-gradient(to bottom, black 72%, transparent 92%)",
   maskRepeat: "no-repeat",
   maskComposite: "intersect",
   WebkitMaskComposite: "source-in",
@@ -29,22 +47,36 @@ const fadeEdges: React.CSSProperties = {
 const portraitClass =
   "hero-portrait h-full w-auto max-w-none origin-bottom";
 
+// Placed from the top so the hair always overlaps the masthead by the same
+// share of its letters; on phones the shoulders fade out above the headline.
+const portraitFrame =
+  "absolute top-(--t) left-1/2 z-10 h-(--p) -translate-x-1/2";
+
 function Masthead() {
   return (
     <p
       aria-hidden
-      className="absolute inset-x-0 top-[12%] text-center font-masthead text-[min(14.6vw,30svh)] leading-none tracking-[-0.04em] whitespace-nowrap md:top-[9%]"
+      className="absolute inset-x-0 top-(--mast) text-center font-masthead text-(length:--f) leading-none font-bold tracking-[-0.04em] whitespace-nowrap"
     >
       Truly Locked In
     </p>
   );
 }
 
-function BookLink({ className = "" }: { className?: string }) {
+function BookLink({
+  className = "",
+  accent = false,
+}: {
+  className?: string;
+  accent?: boolean;
+}) {
+  const colours = accent
+    ? "bg-accent text-on-accent hover:bg-accent-hover"
+    : "bg-brand text-on-brand hover:bg-brand-hover";
   return (
     <Link
       href="/book"
-      className={`min-h-12 items-center gap-3 rounded-full bg-brand px-7 text-sm font-semibold text-on-brand transition-colors hover:bg-brand-hover ${className}`}
+      className={`min-h-12 items-center gap-3 rounded-full px-7 text-sm font-semibold transition-colors ${colours} ${className}`}
     >
       Book your appointment <span aria-hidden>→</span>
     </Link>
@@ -76,7 +108,7 @@ export function HomeHero({
 
         gsap.from(".hero-portrait", { y: 60, duration: 1.3, ease: "power3.out" });
         gsap.from(disc, {
-          radius: 11,
+          radius: 0.24,
           duration: 1.3,
           ease: "expo.out",
           onUpdate: paint,
@@ -98,7 +130,8 @@ export function HomeHero({
             disc,
             { radius: DISC_RADIUS },
             {
-              radius: 120,
+              // Several portrait heights: enough to cover any screen.
+              radius: 5,
               ease: "power2.in",
               onUpdate: paint,
               immediateRender: false,
@@ -126,7 +159,7 @@ export function HomeHero({
     <div>
       <section
         ref={root}
-        className="relative z-10 h-svh min-h-[34rem] overflow-hidden bg-page"
+        className={`relative z-10 h-svh min-h-[34rem] overflow-hidden bg-page ${heroGeometry}`}
       >
         <div className="absolute inset-0 text-brand">
           <Masthead />
@@ -140,7 +173,7 @@ export function HomeHero({
 
         {portrait ? (
           // Uploaded cut-outs are expected to have the head centred.
-          <div className="absolute bottom-0 left-1/2 z-10 h-[72svh] -translate-x-1/2 md:h-[88svh]">
+          <div className={portraitFrame}>
             <CldImage
               src={portrait.publicId}
               width={portrait.width}
@@ -153,8 +186,8 @@ export function HomeHero({
             />
           </div>
         ) : (
-          // The placeholder's head sits left of the picture's centre.
-          <div className="absolute bottom-0 left-1/2 z-10 h-[72svh] -translate-x-[40%] md:h-[88svh]">
+          // The default portrait, used until one is uploaded.
+          <div className={portraitFrame}>
             <Image
               src={placeholder}
               alt=""
@@ -171,7 +204,8 @@ export function HomeHero({
             {title}
           </h1>
           {eyebrow && (
-            <p className="mt-3 text-xs tracking-[0.3em] text-muted uppercase">
+            <p className="mt-3 flex items-center gap-3 text-xs tracking-[0.3em] text-accent-ink uppercase">
+              <span aria-hidden className="h-0.5 w-8 shrink-0 bg-accent" />
               {eyebrow}
             </p>
           )}
@@ -195,7 +229,7 @@ export function HomeHero({
               {subtitle}
             </p>
           )}
-          <BookLink className="mt-6 inline-flex" />
+          <BookLink accent className="mt-6 inline-flex" />
         </div>
       </section>
     </div>

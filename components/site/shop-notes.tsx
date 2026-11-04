@@ -17,7 +17,7 @@ export function ShopNotes({
           key={note}
           className={`flex gap-4 border-b border-line py-4 last:border-b-0 ${columns ? "sm:border-b-0" : ""}`}
         >
-          <span className="font-display text-xl text-brand">
+          <span className="font-display text-xl text-accent">
             {String(i + 1).padStart(2, "0")}
           </span>
           <span className="pt-0.5 text-muted">{note}</span>

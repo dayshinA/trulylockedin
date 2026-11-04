@@ -86,7 +86,7 @@ async function ProductDetail({
               <h1 className="font-display text-4xl leading-[1.05] font-semibold sm:text-6xl">
                 {product.name}
               </h1>
-              <p className="mt-4 text-2xl text-brand">
+              <p className="mt-4 text-2xl font-semibold text-accent-ink">
                 {formatPrice(product.pricePence)}
               </p>
               {product.category && (

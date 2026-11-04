@@ -16,6 +16,15 @@
   --color-brand: var(--color-burgundy); /* buttons, links, eyebrows */
   --color-brand-hover: var(--color-burgundy-deep);
   --color-on-brand: #ffffff; /* text on bg-brand */
+  /* Tertiary copper. Supports burgundy, never replaces it.
+     accent: fills, rules, arrows, large numerals (2.9:1 on white, so not
+       for text there).
+     accent-ink: copper text (prices, small labels): 5:1 on white.
+     on-accent: text on bg-accent buttons (5.3:1). */
+  --color-accent: #d08644;
+  --color-accent-hover: #dc9c62;
+  --color-accent-ink: #a35e22;
+  --color-on-accent: var(--color-burgundy-deep);
 }
 
 @theme inline {
@@ -37,6 +46,7 @@
   --color-brand: #ffffff;
   --color-brand-hover: #f1e2e6;
   --color-on-brand: var(--color-burgundy);
+  --color-accent-ink: #e3a874; /* 5.3:1 on burgundy */
   background-color: var(--color-page);
   color: var(--color-ink);
 }

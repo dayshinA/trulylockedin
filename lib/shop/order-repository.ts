@@ -1,12 +1,21 @@
-import type { Order, OrderClient, OrderStatus } from "@/types/shop";
+import type {
+  DeliveryAddress,
+  Order,
+  OrderClient,
+  OrderStatus,
+} from "@/types/shop";
 
 export type CreateOrderInput = {
   // Quantities per product; names and prices are read from the products.
   lines: { productId: string; quantity: number }[];
   client: OrderClient;
+  // Missing means collection in the salon.
+  delivery?: DeliveryAddress;
   ref: string;
   cancelTokenHash: string;
   now: Date;
+  // The signed-in member placing the order.
+  memberId?: string;
 };
 
 export type CreateOrderResult =
@@ -34,4 +43,10 @@ export interface OrderRepository {
     now: Date,
   ): Promise<OrderUpdateResult>;
   updateOrderAdminNotes(id: string, notes: string, now: Date): Promise<void>;
+  // Every order linked to a member, newest first.
+  listOrdersByMember(memberId: string): Promise<Order[]>;
+  // Number of orders (any status) per member id.
+  countOrdersByMember(): Promise<Map<string, number>>;
+  // A deleted member's orders stay as guest orders.
+  unlinkMember(memberId: string): Promise<void>;
 }

@@ -58,9 +58,9 @@ export default async function Home() {
               </SplitHeading>
               <Link
                 href="/work"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
               >
-                See all work <span aria-hidden>&nbsp;→</span>
+                See all work <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>
             </div>
             <div className="mt-10">
@@ -83,9 +83,9 @@ export default async function Home() {
                 </p>
                 <Link
                   href="/services"
-                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
                 >
-                  All services and prices <span aria-hidden>&nbsp;→</span>
+                  All services and prices <span aria-hidden className="text-accent">&nbsp;→</span>
                 </Link>
               </Reveal>
             </div>
@@ -105,9 +105,9 @@ export default async function Home() {
               </SplitHeading>
               <Link
                 href="/shop"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
               >
-                Shop all products <span aria-hidden>&nbsp;→</span>
+                Shop all products <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>
             </div>
             <div className="mt-10">
@@ -127,9 +127,9 @@ export default async function Home() {
               <p className="mt-6 text-lg text-muted">{about.paragraphs[0]}</p>
               <Link
                 href="/about"
-                className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+                className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
               >
-                More about us <span aria-hidden>&nbsp;→</span>
+                More about us <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>
             </Reveal>
           </div>
@@ -140,7 +140,7 @@ export default async function Home() {
                   key={h.title}
                   className="grid grid-cols-[3rem_1fr] gap-4 border-b border-line py-6"
                 >
-                  <span className="font-display text-2xl text-brand">
+                  <span className="font-display text-2xl text-accent">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div>
@@ -165,7 +165,8 @@ export default async function Home() {
             <Reveal>
               <figure className="mt-10 max-w-4xl">
                 <blockquote className="font-display text-3xl leading-snug sm:text-5xl">
-                  &ldquo;{leadQuote.quote}&rdquo;
+                  <span className="text-accent">&ldquo;</span>
+                  {leadQuote.quote}&rdquo;
                 </blockquote>
                 <Attribution {...leadQuote} />
               </figure>
@@ -178,7 +179,8 @@ export default async function Home() {
                 {otherQuotes.map((t, i) => (
                   <figure key={i}>
                     <blockquote className="font-display text-2xl leading-snug">
-                      &ldquo;{t.quote}&rdquo;
+                      <span className="text-accent">&ldquo;</span>
+                      {t.quote}&rdquo;
                     </blockquote>
                     <Attribution {...t} />
                   </figure>
@@ -198,7 +200,7 @@ function Attribution({ name, detail }: { name: string; detail?: string }) {
   return (
     <figcaption className="mt-5 text-sm text-muted">
       {name}
-      {detail && <span className="text-brand"> · {detail}</span>}
+      {detail && <span className="text-accent-ink"> · {detail}</span>}
     </figcaption>
   );
 }

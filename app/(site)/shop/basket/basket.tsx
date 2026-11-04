@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { AddressBlock } from "@/components/site/address-block";
 import { DetailRows } from "@/components/site/detail-rows";
+import { Field, inputClass } from "@/components/site/form-field";
+import { MemberBar } from "@/components/site/member-bar";
 import { OrderLines } from "@/components/site/order-lines";
 import { QuantityStepper } from "@/components/site/quantity-stepper";
 import { ShopNotes } from "@/components/site/shop-notes";
@@ -16,7 +19,8 @@ import {
   setBasketQuantity,
   useBasket,
 } from "@/lib/shop/basket";
-import type { OrderItem } from "@/types/shop";
+import type { MemberProfile } from "@/types/member";
+import type { DeliveryAddress, OrderItem } from "@/types/shop";
 import { placeOrder } from "../actions";
 
 export type BasketProduct = {
@@ -29,22 +33,38 @@ export type BasketProduct = {
 
 type FieldErrors = Partial<Record<string, string[]>>;
 
-const inputClass =
-  "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
+type Fulfilment = "collection" | "delivery";
 
 type Placed = {
   ref: string;
   items: OrderItem[];
   totalPence: number;
+  delivery?: DeliveryAddress;
   manageUrl: string;
 };
+
+const FULFILMENT_CHOICES: { value: Fulfilment; title: string; hint: string }[] =
+  [
+    {
+      value: "collection",
+      title: "Collect from the salon",
+      hint: "Pay when you collect",
+    },
+    {
+      value: "delivery",
+      title: "Deliver to me",
+      hint: "Free UK delivery",
+    },
+  ];
 
 export function Basket({
   products,
   notes,
+  member,
 }: {
   products: BasketProduct[];
   notes: string[];
+  member: MemberProfile | null;
 }) {
   const router = useRouter();
   const lines = useBasket();
@@ -52,6 +72,8 @@ export function Basket({
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [placed, setPlaced] = useState<Placed | null>(null);
+  const [fulfilment, setFulfilment] = useState<Fulfilment>("collection");
+  const delivering = fulfilment === "delivery";
   const [submitting, startSubmit] = useTransition();
 
   const byId = new Map(products.map((p) => [p.id, p]));
@@ -80,6 +102,11 @@ export function Basket({
           productId,
           quantity,
         })),
+        fulfilment,
+        addressLine1: form.get("addressLine1"),
+        addressLine2: form.get("addressLine2"),
+        city: form.get("city"),
+        postcode: form.get("postcode"),
         name: form.get("name"),
         phone: form.get("phone"),
         email: form.get("email"),
@@ -115,13 +142,18 @@ export function Basket({
           Order received
         </h2>
         <p className="mt-3 text-lg text-muted">
-          We&rsquo;ll get it ready and let you know when you can collect it. You
-          pay when you collect.
+          {placed.delivery
+            ? "We’ll get it ready and let you know when it’s posted."
+            : "We’ll get it ready and let you know when you can collect it. You pay when you collect."}
         </p>
         <div className="mt-8">
           <OrderLines
             items={placed.items}
-            totalLabel="Total to pay on collection"
+            totalLabel={
+              placed.delivery
+                ? "Total, free delivery"
+                : "Total to pay on collection"
+            }
             totalPence={placed.totalPence}
           />
         </div>
@@ -134,6 +166,12 @@ export function Basket({
                   {placed.ref}
                 </span>,
               ],
+              placed.delivery
+                ? [
+                    "Delivery to",
+                    <AddressBlock key="address" address={placed.delivery} />,
+                  ]
+                : ["Collection", "From the salon"],
             ]}
           />
         </div>
@@ -147,6 +185,18 @@ export function Basket({
         >
           View my order
         </Link>
+        {member && (
+          <p className="mt-6 text-muted">
+            It&rsquo;s also saved in{" "}
+            <Link
+              href="/account"
+              className="text-brand underline underline-offset-4 hover:text-brand-hover"
+            >
+              your account
+            </Link>
+            .
+          </p>
+        )}
       </section>
     );
   }
@@ -157,9 +207,9 @@ export function Basket({
         <p className="text-lg">Your basket is empty.</p>
         <Link
           href="/shop"
-          className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
         >
-          Browse the shop <span aria-hidden>&nbsp;→</span>
+          Browse the shop <span aria-hidden className="text-accent">&nbsp;→</span>
         </Link>
       </div>
     );
@@ -232,95 +282,164 @@ export function Basket({
         </ul>
 
         <div className="flex items-baseline justify-between text-lg">
-          <span>Total, paid on collection</span>
+          <span>
+            {delivering ? "Total, free delivery" : "Total, paid on collection"}
+          </span>
           <span className="font-semibold text-brand">{formatPrice(total)}</span>
         </div>
 
         <ShopNotes notes={notes} />
       </div>
 
-      <form
-        onSubmit={submit}
-        className="flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start"
-        noValidate
-      >
+      <div className="flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start">
         <h2 className="font-display text-3xl font-semibold">Your details</h2>
-        <Field label="Name" error={fieldErrors.name}>
-          <input name="name" autoComplete="name" className={inputClass} />
-        </Field>
-        <Field label="Phone" error={fieldErrors.phone}>
-          <input
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            inputMode="tel"
-            placeholder="07700 900123"
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Email (optional)" error={fieldErrors.email}>
-          <input
-            name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            className={inputClass}
-          />
-        </Field>
-        <Field
-          label="Anything we should know? (optional)"
-          error={fieldErrors.notes}
+        <MemberBar member={member} purpose="order" />
+        {/* Keyed so a sign-in (or sign-out) mid-checkout refills the fields. */}
+        <form
+          key={member?.email ?? "guest"}
+          onSubmit={submit}
+          className="flex flex-col gap-5"
+          noValidate
         >
-          <textarea name="notes" rows={3} className={`${inputClass} py-2`} />
-        </Field>
+          <fieldset className="flex flex-col gap-3">
+            <legend className="mb-3 text-sm text-muted">
+              How would you like to get it?
+            </legend>
+            {FULFILMENT_CHOICES.map((choice) => (
+              <label
+                key={choice.value}
+                className="flex min-h-14 cursor-pointer items-center gap-3 rounded-sm border border-field px-4 py-3 transition-colors hover:bg-brand/5 has-checked:border-brand has-checked:bg-brand/5"
+              >
+                <input
+                  type="radio"
+                  name="fulfilment"
+                  value={choice.value}
+                  checked={fulfilment === choice.value}
+                  onChange={() => setFulfilment(choice.value)}
+                  className="size-4 accent-brand"
+                />
+                <span className="flex flex-col">
+                  <span className="font-semibold">{choice.title}</span>
+                  <span className="text-sm text-muted">{choice.hint}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
 
-        {/* Honeypot: hidden from people and assistive tech; bots fill it. */}
-        <div
-          aria-hidden
-          className="absolute -left-[9999px] h-0 overflow-hidden"
-        >
-          <label>
-            Website
-            <input name="website" tabIndex={-1} autoComplete="off" />
-          </label>
-        </div>
+          <Field label="Name" error={fieldErrors.name}>
+            <input
+              name="name"
+              defaultValue={member?.name}
+              autoComplete="name"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Phone" error={fieldErrors.phone}>
+            <input
+              name="phone"
+              type="tel"
+              defaultValue={member?.phone}
+              autoComplete="tel"
+              inputMode="tel"
+              placeholder="07700 900123"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Email (optional)" error={fieldErrors.email}>
+            <input
+              name="email"
+              type="email"
+              defaultValue={member?.email}
+              autoComplete="email"
+              inputMode="email"
+              className={inputClass}
+            />
+          </Field>
+          {delivering && (
+            <fieldset className="flex flex-col gap-5">
+              <legend className="mb-5 font-display text-2xl font-semibold">
+                Delivery address
+              </legend>
+              <Field label="Address line 1" error={fieldErrors.addressLine1}>
+                <input
+                  name="addressLine1"
+                  autoComplete="address-line1"
+                  className={inputClass}
+                />
+              </Field>
+              <Field
+                label="Address line 2 (optional)"
+                error={fieldErrors.addressLine2}
+              >
+                <input
+                  name="addressLine2"
+                  autoComplete="address-line2"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Town or city" error={fieldErrors.city}>
+                <input
+                  name="city"
+                  autoComplete="address-level2"
+                  className={inputClass}
+                />
+              </Field>
+              <Field
+                label="Postcode"
+                hint="We deliver free to UK addresses only."
+                error={fieldErrors.postcode}
+              >
+                <input
+                  name="postcode"
+                  autoComplete="postal-code"
+                  autoCapitalize="characters"
+                  className={`${inputClass} uppercase`}
+                />
+              </Field>
+            </fieldset>
+          )}
 
-        {formError && (
-          <p role="alert" className="text-sm font-semibold text-brand">
-            {formError}
-          </p>
-        )}
-        {blocked && (
-          <p className="text-sm font-semibold text-brand">
-            Remove the unavailable items to place your order.
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={submitting || blocked}
-          className="min-h-12 rounded-full bg-brand px-8 font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
-        >
-          {submitting ? "Placing order…" : "Place order · pay on collection"}
-        </button>
-      </form>
+          <Field
+            label="Anything we should know? (optional)"
+            error={fieldErrors.notes}
+          >
+            <textarea name="notes" rows={3} className={`${inputClass} py-2`} />
+          </Field>
+
+          {/* Honeypot: hidden from people and assistive tech; bots fill it. */}
+          <div
+            aria-hidden
+            className="absolute -left-[9999px] h-0 overflow-hidden"
+          >
+            <label>
+              Website
+              <input name="website" tabIndex={-1} autoComplete="off" />
+            </label>
+          </div>
+
+          {formError && (
+            <p role="alert" className="text-sm font-semibold text-brand">
+              {formError}
+            </p>
+          )}
+          {blocked && (
+            <p className="text-sm font-semibold text-brand">
+              Remove the unavailable items to place your order.
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={submitting || blocked}
+            className="min-h-12 rounded-full bg-brand px-8 font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
+          >
+            {submitting
+              ? "Placing order…"
+              : delivering
+                ? "Place order · free delivery"
+                : "Place order · pay on collection"}
+          </button>
+        </form>
+      </div>
     </div>
-  );
-}
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string[];
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-2 text-sm">
-      <span className="text-muted">{label}</span>
-      {children}
-      {error?.[0] && <span className="font-semibold text-brand">{error[0]}</span>}
-    </label>
   );
 }

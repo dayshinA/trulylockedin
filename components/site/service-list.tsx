@@ -28,7 +28,7 @@ export function ServiceList({ services }: { services: Service[] }) {
                 )}
               </span>
             </span>
-            <span className="shrink-0 text-brand">
+            <span className="shrink-0 font-semibold text-accent-ink">
               {formatPriceFrom(service.priceFromPence)}
             </span>
           </Link>

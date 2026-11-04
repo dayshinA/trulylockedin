@@ -77,7 +77,7 @@ export function ProductGrid({
                   {product.name}
                 </span>
                 <span className="mt-1 block text-sm">
-                  <span className="text-brand">
+                  <span className="font-semibold text-accent-ink">
                     {formatPrice(product.pricePence)}
                   </span>
                   {!product.inStock && (

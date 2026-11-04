@@ -275,6 +275,7 @@ export class FirestoreBookingRepository implements BookingRepository {
         status: initialStatus(settings, input.mode),
         cancelTokenHash: input.cancelTokenHash,
         source: input.mode === "owner" ? "admin" : "online",
+        memberId: input.memberId,
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -309,6 +310,41 @@ export class FirestoreBookingRepository implements BookingRepository {
 
   cancelBooking(id: string, now: Date) {
     return this.transition(id, "cancelled", now);
+  }
+
+  // Equality only, so Firestore's automatic index covers it; callers sort.
+  async listBookingsByMember(memberId: string) {
+    const snap = await this.bookingsCol.where("memberId", "==", memberId).get();
+    return snap.docs.map(parseBooking);
+  }
+
+  async countBookingsByMember() {
+    // "!= null" matches only documents that have the field; select() keeps
+    // the read to that one field.
+    const snap = await this.bookingsCol
+      .where("memberId", "!=", null)
+      .select("memberId")
+      .get();
+    const counts = new Map<string, number>();
+    for (const doc of snap.docs) {
+      const memberId = doc.get("memberId");
+      if (typeof memberId === "string") {
+        counts.set(memberId, (counts.get(memberId) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }
+
+  async unlinkMember(memberId: string) {
+    const snap = await this.bookingsCol.where("memberId", "==", memberId).get();
+    // A batch takes at most 500 writes.
+    for (let i = 0; i < snap.docs.length; i += 500) {
+      const batch = this.db.batch();
+      for (const doc of snap.docs.slice(i, i + 500)) {
+        batch.update(doc.ref, { memberId: FieldValue.delete() });
+      }
+      await batch.commit();
+    }
   }
 
   private transition(

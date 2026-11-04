@@ -36,7 +36,7 @@ export function AddToBasket({ productId }: { productId: string }) {
           {inBasket} in your basket ·{" "}
           <Link
             href="/shop/basket"
-            className="font-semibold text-brand underline-offset-4 hover:underline"
+            className="font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
           >
             View basket
           </Link>

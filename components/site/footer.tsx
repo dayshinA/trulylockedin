@@ -103,7 +103,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h2 className="mb-1 font-display text-lg font-semibold text-ink">
+      <h2 className="mb-1 font-display text-lg font-semibold text-accent-ink">
         {title}
       </h2>
       {children}

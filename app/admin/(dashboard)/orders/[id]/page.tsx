@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { verifyAdmin } from "@/lib/auth/dal";
 import { formatPrice } from "@/lib/format";
-import { canTransitionOrder, ORDER_STATUS_ACTIONS } from "@/lib/shop/orders";
+import { AddressBlock } from "@/components/site/address-block";
+import { canTransitionOrder, orderStatusAction } from "@/lib/shop/orders";
 import { orderRepository } from "@/lib/shop/server";
 import type { OrderStatus } from "@/types/shop";
 import { saveOrderNotesAction, setOrderStatusAction } from "../actions";
 import { inputClass } from "../../_components/admin-form";
 import {
+  Badge,
   dangerButton,
   DetailList,
   outlineButton,
   PageHeader,
   primaryButton,
+  textLink,
 } from "../../_components/admin-ui";
 import { OrderStatusBadge } from "../order-list";
 
@@ -49,7 +53,9 @@ export default async function OrderDetailPage({
   if (!order) notFound();
 
   const { client } = order;
-  const readyText = `Hi ${client.name.split(" ")[0]}, your order ${order.ref} is ready to collect.`;
+  const readyText = `Hi ${client.name.split(" ")[0]}, your order ${order.ref} ${
+    order.delivery ? "has been posted" : "is ready to collect"
+  }.`;
   const whatsapp = `https://wa.me/${client.phone.replace(/^\+/, "")}${
     order.status === "ready" ? `?text=${encodeURIComponent(readyText)}` : ""
   }`;
@@ -63,7 +69,13 @@ export default async function OrderDetailPage({
         back={{ href: "/admin/orders", label: "All orders" }}
         eyebrow={`Ordered ${placedAt.format(new Date(order.createdAt))}`}
         title={client.name}
-        actions={<OrderStatusBadge status={order.status} />}
+        actions={
+          <>
+            {order.memberId && <Badge tone="accent">Member</Badge>}
+            {order.delivery && <Badge tone="accent">Delivery</Badge>}
+            <OrderStatusBadge order={order} />
+          </>
+        }
       />
 
       <div className="flex flex-wrap gap-3">
@@ -76,7 +88,11 @@ export default async function OrderDetailPage({
           rel="noopener noreferrer"
           className={outlineButton}
         >
-          {order.status === "ready" ? "WhatsApp: it's ready" : "WhatsApp"}
+          {order.status !== "ready"
+            ? "WhatsApp"
+            : order.delivery
+              ? "WhatsApp: it's posted"
+              : "WhatsApp: it's ready"}
         </a>
         {client.email && (
           <a
@@ -107,7 +123,7 @@ export default async function OrderDetailPage({
           </li>
         ))}
         <li className="flex justify-between gap-4 border-b border-line py-4 text-lg">
-          <span>Total to take</span>
+          <span>{order.delivery ? "Total (free delivery)" : "Total to take"}</span>
           <span className="shrink-0 font-semibold text-brand">
             {formatPrice(order.totalPence)}
           </span>
@@ -122,6 +138,14 @@ export default async function OrderDetailPage({
               {order.ref}
             </span>,
           ],
+          order.delivery
+            ? [
+                "Post to",
+                <span key="address" className="select-all">
+                  <AddressBlock address={order.delivery} />
+                </span>,
+              ]
+            : ["Collection", "In the salon"],
           ...(client.email
             ? ([["Email", client.email]] as [string, string][])
             : []),
@@ -130,6 +154,20 @@ export default async function OrderDetailPage({
             <span key="notes" className="whitespace-pre-wrap">
               {client.notes ?? "—"}
             </span>,
+          ],
+          [
+            "Ordered by",
+            order.memberId ? (
+              <Link
+                key="member"
+                href={`/admin/members/${order.memberId}`}
+                className={textLink}
+              >
+                Signed in as a member
+              </Link>
+            ) : (
+              "A guest"
+            ),
           ],
         ]}
       />
@@ -150,7 +188,7 @@ export default async function OrderDetailPage({
                       : outlineButton
                 }
               >
-                {ORDER_STATUS_ACTIONS[status]}
+                {orderStatusAction(order, status)}
               </button>
             </form>
           ))}

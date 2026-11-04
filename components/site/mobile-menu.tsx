@@ -63,7 +63,7 @@ export function MobileMenu() {
             <Link
               href="/book"
               onClick={close}
-              className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full bg-brand text-sm font-semibold tracking-widest text-on-brand uppercase"
+              className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full bg-accent text-sm font-semibold tracking-widest text-on-accent uppercase transition-colors hover:bg-accent-hover"
             >
               Book an appointment
             </Link>
@@ -96,7 +96,7 @@ function MobileNavItems({
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={`font-display text-5xl leading-tight transition-colors hover:text-brand ${
-              active ? "text-brand" : "text-ink"
+              active ? "text-accent" : "text-ink"
             }`}
           >
             {label}

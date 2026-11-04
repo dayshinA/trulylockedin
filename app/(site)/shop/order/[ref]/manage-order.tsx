@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 
+import { AddressBlock } from "@/components/site/address-block";
 import { DetailRows } from "@/components/site/detail-rows";
 import { OrderLines } from "@/components/site/order-lines";
 import type { OrderSummary } from "@/lib/shop/manage";
-import { ORDER_STATUS_LABELS } from "@/lib/shop/orders";
+import { orderStatusLabel } from "@/lib/shop/orders";
 import { cancelMyOrder, getMyOrder } from "../../actions";
 
 // The token lives in the URL fragment (#t=…), which browsers never send to the
@@ -68,7 +69,7 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
         <p className="text-lg">{state.message}</p>
         <Link
           href="/shop"
-          className="mt-4 inline-flex min-h-11 items-center text-brand underline-offset-4 hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
         >
           Go to the shop
         </Link>
@@ -80,13 +81,17 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
   return (
     <section className="mt-10">
       <h2 className="font-display text-3xl font-semibold">
-        {ORDER_STATUS_LABELS[order.status]}
+        {orderStatusLabel(order)}
       </h2>
       <div className="mt-6">
         <OrderLines
           items={order.items}
           totalLabel={
-            order.status === "collected" ? "Total" : "To pay on collection"
+            order.delivery
+              ? "Total, free delivery"
+              : order.status === "collected"
+                ? "Total"
+                : "To pay on collection"
           }
           totalPence={order.totalPence}
         />
@@ -101,6 +106,12 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
                 {order.ref}
               </span>,
             ],
+            order.delivery
+              ? [
+                  "Delivery to",
+                  <AddressBlock key="address" address={order.delivery} />,
+                ]
+              : ["Collection", "From the salon"],
           ]}
         />
       </div>

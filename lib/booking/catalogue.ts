@@ -30,3 +30,11 @@ export function isOnlineService(
 ): boolean {
   return service.active && service.onlineBooking && category.visibleOnline;
 }
+
+// Online booking also needs a known duration, or no slots can be worked out.
+export function isBookableOnline(
+  service: Pick<Service, "active" | "onlineBooking" | "durationMin">,
+  category: Pick<ServiceCategory, "visibleOnline">,
+): boolean {
+  return isOnlineService(service, category) && service.durationMin !== null;
+}

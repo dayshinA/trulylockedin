@@ -1,12 +1,7 @@
 "use client";
 
 import { FirebaseError } from "firebase/app";
-import {
-  inMemoryPersistence,
-  setPersistence,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useState, useTransition } from "react";
 
 import { clientAuth } from "@/lib/firebase/client";
@@ -44,8 +39,6 @@ export function LoginForm() {
       const auth = clientAuth();
       let idToken: string;
       try {
-        // The httpOnly session cookie is the only session; keep nothing in browser storage.
-        await setPersistence(auth, inMemoryPersistence);
         const { user } = await signInWithEmailAndPassword(
           auth,
           email,

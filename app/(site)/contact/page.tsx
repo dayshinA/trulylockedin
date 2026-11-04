@@ -54,7 +54,7 @@ export default async function ContactPage() {
                         {external && (
                           <ArrowUpRight
                             aria-hidden
-                            className="size-5 shrink-0 self-center text-brand"
+                            className="size-5 shrink-0 self-center text-accent-ink"
                           />
                         )}
                       </a>
@@ -100,9 +100,9 @@ export default async function ContactPage() {
                     href={contact.mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+                    className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
                   >
-                    Open in maps <span aria-hidden>&nbsp;→</span>
+                    Open in maps <span aria-hidden className="text-accent">&nbsp;→</span>
                   </a>
                 )}
               </div>
@@ -147,7 +147,7 @@ export default async function ContactPage() {
                   key={item}
                   className="grid grid-cols-[3rem_1fr] gap-4 border-b border-line py-5"
                 >
-                  <span className="font-display text-2xl text-brand">
+                  <span className="font-display text-2xl text-accent">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="pt-1 text-muted">{item}</span>

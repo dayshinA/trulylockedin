@@ -2,7 +2,7 @@ import type { PortfolioMedia } from "./portfolio";
 
 // products/{id} — something the salon sells. The id doubles as the URL slug
 // (/shop/{id}) and never changes after creation. Customers order online and
-// pay when they collect in the salon.
+// either collect in the salon or have it posted to a UK address.
 
 // Photos only; same shape as portfolio media so the viewer can be shared.
 export type ProductImage = PortfolioMedia & { type: "image" };
@@ -26,9 +26,19 @@ export type Product = {
   updatedAt: string;
 };
 
-// orders/{id} — a click-and-collect order, paid in the salon on collection.
+// orders/{id} — an order to collect in the salon, or to post (`delivery`).
 //   pending → ready → collected; pending | ready → cancelled.
+// For a delivery, "ready" means posted and "collected" means delivered; the
+// labels in lib/shop/orders.ts say so.
 export type OrderStatus = "pending" | "ready" | "collected" | "cancelled";
+
+// A UK postal address. The postcode is stored upper-case with one space.
+export type DeliveryAddress = {
+  line1: string;
+  line2?: string;
+  city: string;
+  postcode: string;
+};
 
 // Copied from the product when ordered, so later edits don't change the order.
 export type OrderItem = {
@@ -53,9 +63,15 @@ export type Order = {
   items: OrderItem[];
   totalPence: number;
   client: OrderClient;
+  // Where to post it. Missing means the customer collects in the salon, which
+  // is also what every order placed before delivery existed means.
+  delivery?: DeliveryAddress;
   status: OrderStatus;
   // sha256 of the token in the customer's private order link.
   cancelTokenHash: string;
+  // Set when a signed-in member placed the order (members/{uid}). Only ever
+  // taken from the session on the server, never from form data.
+  memberId?: string;
   adminNotes?: string;
   createdAt: string;
   updatedAt: string;

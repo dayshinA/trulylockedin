@@ -55,7 +55,7 @@ export type SiteContent = {
   shop: {
     heading: string;
     intro: string;
-    // How ordering and collection work; one point per line.
+    // How ordering, collection and delivery work; one point per line.
     notes: string[];
   };
   seo: {

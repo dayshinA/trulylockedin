@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ORDER_REF_RE, tokenMatches } from "@/lib/booking/tokens";
-import type { OrderItem, OrderStatus } from "@/types/shop";
+import type { DeliveryAddress, OrderItem, OrderStatus } from "@/types/shop";
 import type { OrderRepository } from "./order-repository";
 import { canCustomerCancel } from "./orders";
 
@@ -14,6 +14,8 @@ export type OrderSummary = {
   totalPence: number;
   status: OrderStatus;
   clientName: string;
+  // Missing means collection in the salon.
+  delivery?: DeliveryAddress;
   canCancel: boolean;
 };
 
@@ -53,6 +55,7 @@ export async function findManagedOrder(
       totalPence: order.totalPence,
       status: order.status,
       clientName: order.client.name,
+      delivery: order.delivery,
       canCancel: canCustomerCancel(order),
     },
   };

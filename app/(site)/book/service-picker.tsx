@@ -180,7 +180,7 @@ function ServiceItem({
               {formatDuration(service.durationMin)}
             </span>
           </span>
-          <span className="shrink-0 text-sm text-brand">
+          <span className="shrink-0 text-sm font-semibold text-accent-ink">
             {formatPriceFrom(service.priceFromPence)}
           </span>
           <Chevron open={open} small />

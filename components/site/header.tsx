@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { AccountLink } from "./account-link";
 import { BasketLink } from "./basket-link";
 import { CurrentNavItems, NavItems } from "./header-nav";
 import { Logo } from "./logo";
@@ -17,15 +18,19 @@ export function Header() {
           <Suspense fallback={<NavItems pathname={null} />}>
             <CurrentNavItems />
           </Suspense>
-          <BasketLink />
+          <div className="-mx-3 flex items-center">
+            <AccountLink />
+            <BasketLink />
+          </div>
           <Link
             href="/book"
-            className="inline-flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-semibold text-on-brand transition-colors hover:bg-brand-hover"
+            className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-hover"
           >
             Book now
           </Link>
         </nav>
         <div className="flex items-center gap-1 md:hidden">
+          <AccountLink />
           <BasketLink />
           <MobileMenu />
         </div>

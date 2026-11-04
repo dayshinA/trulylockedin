@@ -3,7 +3,8 @@ import { z } from "zod";
 import { bookingRequestSchema } from "@/lib/booking/request";
 import { createCancelToken, createOrderRef, hashToken } from "@/lib/booking/tokens";
 import type { RateLimiter } from "@/lib/rate-limit";
-import type { OrderItem } from "@/types/shop";
+import type { DeliveryAddress, OrderItem } from "@/types/shop";
+import { deliveryFormSchema } from "./address";
 import type { OrderRepository } from "./order-repository";
 import { MAX_ORDER_LINES, MAX_QUANTITY, productIdSchema } from "./schemas";
 
@@ -22,6 +23,7 @@ const lineSchema = z.object({
 export const orderRequestSchema = bookingRequestSchema
   .pick({ name: true, phone: true, email: true, notes: true, website: true })
   .extend({
+    fulfilment: z.enum(["collection", "delivery"]).default("collection"),
     lines: z
       .array(lineSchema)
       .min(1, "Your basket is empty")
@@ -42,7 +44,12 @@ export const orderRequestSchema = bookingRequestSchema
 export type SubmitOrderResult =
   | {
       ok: true;
-      order: { ref: string; items: OrderItem[]; totalPence: number };
+      order: {
+        ref: string;
+        items: OrderItem[];
+        totalPence: number;
+        delivery?: DeliveryAddress;
+      };
       // Only ever returned here; the store keeps its hash.
       cancelToken: string;
     }
@@ -57,7 +64,13 @@ export type SubmitOrderResult =
 export async function submitOrder(
   repo: OrderRepository,
   raw: unknown,
-  context: { now: Date; clientKey: string; limiter: RateLimiter },
+  context: {
+    now: Date;
+    clientKey: string;
+    limiter: RateLimiter;
+    // From the member session, never from `raw`.
+    memberId?: string;
+  },
 ): Promise<SubmitOrderResult> {
   // Honeypot first: bots get a dull, uninformative failure.
   if (
@@ -78,8 +91,22 @@ export async function submitOrder(
   }
 
   const parsed = orderRequestSchema.safeParse(raw);
-  if (!parsed.success) {
-    const { fieldErrors } = z.flattenError(parsed.error);
+  // The address is only read for a delivery. Both are checked together so the
+  // customer sees every field error at once.
+  const wantsDelivery = parsed.success
+    ? parsed.data.fulfilment === "delivery"
+    : typeof raw === "object" &&
+      raw !== null &&
+      "fulfilment" in raw &&
+      raw.fulfilment === "delivery";
+  const address = wantsDelivery ? deliveryFormSchema.safeParse(raw) : null;
+  if (!parsed.success || (address && !address.success)) {
+    const fieldErrors = {
+      ...(parsed.success ? {} : z.flattenError(parsed.error).fieldErrors),
+      ...(address && !address.success
+        ? z.flattenError(address.error).fieldErrors
+        : {}),
+    };
     return {
       ok: false,
       error: fieldErrors.lines?.[0] ?? "Please check the highlighted details.",
@@ -93,9 +120,11 @@ export async function submitOrder(
     const result = await repo.createOrder({
       lines,
       client: { name, phone, email, notes },
+      delivery: address?.data,
       ref: createOrderRef(),
       cancelTokenHash: hashToken(cancelToken),
       now: context.now,
+      memberId: context.memberId,
     });
     if (!result.ok) {
       return {
@@ -105,8 +134,8 @@ export async function submitOrder(
         unavailable: result.productIds,
       };
     }
-    const { ref, items, totalPence } = result.order;
-    return { ok: true, order: { ref, items, totalPence }, cancelToken };
+    const { ref, items, totalPence, delivery } = result.order;
+    return { ok: true, order: { ref, items, totalPence, delivery }, cancelToken };
   } catch (error) {
     console.error("Order failed", error);
     return { ok: false, error: GENERIC };

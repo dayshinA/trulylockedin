@@ -72,8 +72,8 @@ export const SEED_SITE_CONTENT: SiteContent = {
     intro:
       "The oils, sprays and accessories used in the chair, for looking after your locs between appointments.",
     notes: [
-      "Order online and pay when you collect in the salon.",
-      "We'll message you when your order is ready to collect.",
+      "Order online, then collect in the salon or choose free UK delivery.",
+      "Collecting? Pay when you pick it up. We'll message you when it's ready.",
     ],
   },
   seo: {

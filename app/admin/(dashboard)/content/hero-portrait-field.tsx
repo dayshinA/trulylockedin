@@ -67,7 +67,7 @@ export function HeroPortraitField({
         </>
       ) : (
         <p className="text-sm text-muted">
-          No portrait yet. The home page is showing a placeholder.
+          No portrait uploaded. The home page is showing the default portrait.
         </p>
       )}
       {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}

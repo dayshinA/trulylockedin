@@ -36,6 +36,8 @@ export type CreateBookingInput = {
   now: Date;
   // Defaults to "client". Owner bookings are confirmed immediately.
   mode?: BookingMode;
+  // The signed-in member making an online booking.
+  memberId?: string;
 };
 
 export type CreateBookingResult =
@@ -84,6 +86,12 @@ export interface BookingRepository {
   ): Promise<StatusChangeResult>;
   // Frees the time in the same write (Firestore: removes the bookingDays entry).
   cancelBooking(id: string, now: Date): Promise<StatusChangeResult>;
+  // Every booking linked to a member, any status, in no particular order.
+  listBookingsByMember(memberId: string): Promise<Booking[]>;
+  // Number of bookings (any status) per member id.
+  countBookingsByMember(): Promise<Map<string, number>>;
+  // A deleted member's bookings stay as guest bookings.
+  unlinkMember(memberId: string): Promise<void>;
 
   // Admin config writes. They never change bookings that already exist.
   saveSettings(settings: BookingSettings): Promise<void>;

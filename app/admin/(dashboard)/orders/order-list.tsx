@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { formatPrice } from "@/lib/format";
-import { ORDER_ADMIN_LABELS, itemCount } from "@/lib/shop/orders";
+import { fulfilmentLabel, itemCount, orderAdminLabel } from "@/lib/shop/orders";
 import type { Order, OrderStatus } from "@/types/shop";
 import {
   Badge,
@@ -18,8 +18,12 @@ const TONE: Record<OrderStatus, BadgeTone> = {
   cancelled: "struck",
 };
 
-export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  return <Badge tone={TONE[status]}>{ORDER_ADMIN_LABELS[status]}</Badge>;
+export function OrderStatusBadge({
+  order,
+}: {
+  order: Pick<Order, "status" | "delivery">;
+}) {
+  return <Badge tone={TONE[order.status]}>{orderAdminLabel(order)}</Badge>;
 }
 
 const placedAt = new Intl.DateTimeFormat("en-GB", {
@@ -49,12 +53,13 @@ export function OrderRows({
               <span className="min-w-0 flex-1">
                 <span className={rowTitle}>{order.client.name}</span>
                 <span className="block truncate text-sm text-muted">
-                  {count} {count === 1 ? "item" : "items"} ·{" "}
+                  {fulfilmentLabel(order)} · {count}{" "}
+                  {count === 1 ? "item" : "items"} ·{" "}
                   {formatPrice(order.totalPence)} ·{" "}
                   {placedAt.format(new Date(order.createdAt))}
                 </span>
               </span>
-              <OrderStatusBadge status={order.status} />
+              <OrderStatusBadge order={order} />
             </Link>
           </li>
         );

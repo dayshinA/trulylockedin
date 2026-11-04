@@ -1,6 +1,10 @@
 import "server-only";
 
-import type { DocumentSnapshot, Firestore } from "firebase-admin/firestore";
+import {
+  FieldValue,
+  type DocumentSnapshot,
+  type Firestore,
+} from "firebase-admin/firestore";
 
 import type { Order, OrderItem } from "@/types/shop";
 import type {
@@ -72,13 +76,15 @@ export class FirestoreOrderRepository implements OrderRepository {
         items,
         totalPence: orderTotal(items),
         client: input.client,
+        delivery: input.delivery,
         status: "pending",
         cancelTokenHash: input.cancelTokenHash,
+        memberId: input.memberId,
         createdAt: now,
         updatedAt: now,
       };
       tx.create(ref, stripUndefined(data));
-      return { ok: true, order: { id: ref.id, ...data } };
+      return { ok: true, order: stripUndefined({ id: ref.id, ...data }) };
     });
   }
 
@@ -131,5 +137,39 @@ export class FirestoreOrderRepository implements OrderRepository {
     await this.col
       .doc(id)
       .update({ adminNotes: notes, updatedAt: now.toISOString() });
+  }
+
+  // Equality only, so Firestore's automatic index covers it.
+  async listOrdersByMember(memberId: string) {
+    const snap = await this.col.where("memberId", "==", memberId).get();
+    return newestFirst(snap.docs.map(parse));
+  }
+
+  async countOrdersByMember() {
+    // "!= null" matches only documents that have the field.
+    const snap = await this.col
+      .where("memberId", "!=", null)
+      .select("memberId")
+      .get();
+    const counts = new Map<string, number>();
+    for (const doc of snap.docs) {
+      const memberId = doc.get("memberId");
+      if (typeof memberId === "string") {
+        counts.set(memberId, (counts.get(memberId) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }
+
+  async unlinkMember(memberId: string) {
+    const snap = await this.col.where("memberId", "==", memberId).get();
+    // A batch takes at most 500 writes.
+    for (let i = 0; i < snap.docs.length; i += 500) {
+      const batch = this.db.batch();
+      for (const doc of snap.docs.slice(i, i + 500)) {
+        batch.update(doc.ref, { memberId: FieldValue.delete() });
+      }
+      await batch.commit();
+    }
   }
 }

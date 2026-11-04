@@ -413,8 +413,8 @@ export function ShopForm({ shop }: { shop: SiteContent["shop"] }) {
             />
           </Field>
           <Field
-            label="Ordering and collection"
-            hint="One point per line, e.g. how payment and collection work"
+            label="Ordering, collection and delivery"
+            hint="One point per line, e.g. how payment, collection and delivery work"
             error={errors.notes}
           >
             <textarea

@@ -138,6 +138,9 @@ export type Booking = {
   cancelTokenHash: string;
   // "admin" = entered by the owner (phone/walk-in); missing on older docs means online.
   source?: BookingSource;
+  // Set when a signed-in member booked online (members/{uid}). Only ever
+  // taken from the session on the server, never from form data.
+  memberId?: string;
   adminNotes?: string;
   createdAt: string;
   updatedAt: string;

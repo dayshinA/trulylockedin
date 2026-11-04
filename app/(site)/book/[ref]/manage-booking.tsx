@@ -71,7 +71,7 @@ export function ManageBooking({ bookingRef }: { bookingRef: string }) {
         <p className="text-lg">{state.message}</p>
         <Link
           href="/book"
-          className="mt-4 inline-flex min-h-11 items-center text-brand underline-offset-4 hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
         >
           Make a new booking
         </Link>

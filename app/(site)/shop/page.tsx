@@ -9,7 +9,7 @@ import { getPublishedProducts, getSiteContent } from "@/lib/data/public";
 
 export const metadata: Metadata = {
   title: "Shop",
-  description: "Loc care products and accessories, collected in the salon.",
+  description: "Loc care products and accessories. Collect in the salon or get free UK delivery.",
 };
 
 export default async function ShopPage() {
@@ -36,9 +36,9 @@ export default async function ShopPage() {
               </p>
               <Link
                 href="/services"
-                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline"
+                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
               >
-                View services <span aria-hidden>&nbsp;→</span>
+                View services <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>
             </div>
           )}

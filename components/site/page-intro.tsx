@@ -14,7 +14,8 @@ export function PageIntro({
     <section className="px-4 pt-32 pb-12 sm:px-6 sm:pt-40 sm:pb-16">
       <div className="mx-auto max-w-6xl">
         {eyebrow && (
-          <p className="mb-4 text-xs font-semibold tracking-[0.3em] text-brand uppercase">
+          <p className="mb-4 flex items-center gap-3 text-xs font-semibold tracking-[0.3em] text-accent-ink uppercase">
+            <span aria-hidden className="h-0.5 w-8 bg-accent" />
             {eyebrow}
           </p>
         )}

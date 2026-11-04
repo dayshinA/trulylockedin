@@ -142,6 +142,7 @@ export const bookingSchema = z.object({
   status: bookingStatusSchema,
   cancelTokenHash: z.string(),
   source: z.enum(["online", "admin"]).optional(),
+  memberId: z.string().optional(),
   adminNotes: z.string().optional(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

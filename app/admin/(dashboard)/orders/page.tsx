@@ -16,14 +16,14 @@ export const metadata: Metadata = {
 };
 
 const VIEW_LABELS: Record<OrderView, string> = {
-  open: "To prepare / collect",
-  collected: "Collected",
+  open: "Open",
+  collected: "Completed",
   cancelled: "Cancelled",
 };
 
 const EMPTY: Record<OrderView, string> = {
   open: "No open orders.",
-  collected: `Nothing collected in the last ${ORDER_HISTORY_DAYS} days.`,
+  collected: `Nothing collected or delivered in the last ${ORDER_HISTORY_DAYS} days.`,
   cancelled: `No cancellations in the last ${ORDER_HISTORY_DAYS} days.`,
 };
 

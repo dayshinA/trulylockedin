@@ -15,7 +15,7 @@ export function NavItems({ pathname }: { pathname: string | null }) {
         aria-current={active ? "page" : undefined}
         className={`relative py-2 text-sm tracking-wide transition-colors ${
           active
-            ? "text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-brand"
+            ? "text-ink after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-accent"
             : "text-muted hover:text-ink"
         }`}
       >
