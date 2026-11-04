@@ -51,3 +51,16 @@ export function tokenMatches(token: string, storedHash: string): boolean {
   const b = Buffer.from(storedHash, "hex");
   return a.length === b.length && timingSafeEqual(a, b);
 }
+
+// What a client types as a reference: "tli-7kq2 abcd", "TLI7KQ2ABCD" or just
+// "7KQ2ABCD" all become "TLI-7KQ2ABCD" (prefix "TLI" or "TLO").
+export function normalizeRef(input: string, prefix: "TLI" | "TLO"): string {
+  const compact = input.toUpperCase().replace(/[\s-]/g, "");
+  const code = compact.startsWith(prefix) ? compact.slice(prefix.length) : compact;
+  return `${prefix}-${code}`;
+}
+
+// Emails as typed at checkout vs a lookup: trimmed, case-insensitive.
+export function sameEmail(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}

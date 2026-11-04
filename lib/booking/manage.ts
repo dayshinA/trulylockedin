@@ -3,10 +3,17 @@ import { z } from "zod";
 import type { BookingStatus, LocalDate, LocalTime } from "@/types/booking";
 import type { BookingRepository } from "./repository";
 import { canClientCancel } from "./rules";
-import { BOOKING_REF_RE, tokenMatches } from "./tokens";
+import {
+  BOOKING_REF_RE,
+  normalizeRef,
+  sameEmail,
+  tokenMatches,
+} from "./tokens";
 
-// Client self-service through the link shown after booking:
-// /book/{ref}#t={cancelToken}. The ref alone grants nothing; the token does.
+// Client self-service, two ways in:
+// - the private link shown after booking, /book/{ref}#t={cancelToken};
+// - "Find my booking" (/book/find): the ref plus the email used to book.
+// The ref alone grants nothing.
 
 export type BookingSummary = {
   ref: string;
@@ -17,6 +24,8 @@ export type BookingSummary = {
   end: LocalTime;
   status: BookingStatus;
   clientName: string;
+  pricePence: number;
+  notes?: string;
   canCancel: boolean;
 };
 
@@ -24,22 +33,48 @@ export type ManageResult =
   | { ok: true; booking: BookingSummary }
   | { ok: false; error: string };
 
-const manageSchema = z.object({
-  ref: z.string().regex(BOOKING_REF_RE),
-  token: z.string().min(20).max(100),
-});
+const refSchema = z
+  .string()
+  .max(40)
+  .transform((ref) => normalizeRef(ref, "TLI"))
+  .pipe(
+  z.string().regex(BOOKING_REF_RE),
+);
 
-// Same message for an unknown ref and a wrong token, so refs can't be probed.
-const NOT_FOUND = "We couldn't find that booking. Please check your link.";
+const manageSchema = z.union([
+  z.object({ ref: refSchema, token: z.string().min(20).max(100) }),
+  z.object({ ref: refSchema, email: z.string().trim().min(3).max(200) }),
+]);
+
+export type ManageCredentials =
+  | { ref: string; token: string }
+  | { ref: string; email: string };
+
+// Same message for an unknown ref and a wrong token or email, so refs can't
+// be probed.
+const NOT_FOUND_LINK = "We couldn't find that booking. Please check your link.";
+const NOT_FOUND_EMAIL =
+  "We couldn't find a booking with those details. Check the reference and use the email you booked with.";
 
 async function authorise(repo: BookingRepository, raw: unknown) {
   const parsed = manageSchema.safeParse(raw);
   if (!parsed.success) return null;
-  const booking = await repo.getBookingByRef(parsed.data.ref);
-  if (!booking || !tokenMatches(parsed.data.token, booking.cancelTokenHash)) {
-    return null;
-  }
-  return booking;
+  const credentials = parsed.data;
+  const booking = await repo.getBookingByRef(credentials.ref);
+  if (!booking) return null;
+  const allowed =
+    "token" in credentials
+      ? tokenMatches(credentials.token, booking.cancelTokenHash)
+      : // Older bookings without an email can only use their link.
+        booking.client.email !== undefined &&
+        sameEmail(credentials.email, booking.client.email);
+  return allowed ? booking : null;
+}
+
+function notFound(raw: unknown): string {
+  return typeof raw === "object" && raw !== null && "email" in raw
+    ? NOT_FOUND_EMAIL
+    : NOT_FOUND_LINK;
 }
 
 export async function findManagedBooking(
@@ -48,7 +83,7 @@ export async function findManagedBooking(
   now: Date,
 ): Promise<ManageResult> {
   const booking = await authorise(repo, raw);
-  if (!booking) return { ok: false, error: NOT_FOUND };
+  if (!booking) return { ok: false, error: notFound(raw) };
   const settings = await repo.getSettings();
   return {
     ok: true,
@@ -61,6 +96,8 @@ export async function findManagedBooking(
       end: booking.end,
       status: booking.status,
       clientName: booking.client.name,
+      pricePence: booking.service.priceFromPence,
+      notes: booking.client.notes,
       canCancel: canClientCancel(booking, settings, now),
     },
   };
@@ -72,7 +109,7 @@ export async function cancelManagedBooking(
   now: Date,
 ): Promise<ManageResult> {
   const booking = await authorise(repo, raw);
-  if (!booking) return { ok: false, error: NOT_FOUND };
+  if (!booking) return { ok: false, error: notFound(raw) };
 
   const settings = await repo.getSettings();
   if (!canClientCancel(booking, settings, now)) {

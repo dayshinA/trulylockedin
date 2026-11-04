@@ -135,7 +135,7 @@ export const bookingSchema = z.object({
   endUtc: z.iso.datetime(),
   client: z.object({
     name: z.string(),
-    phone: z.string(),
+    phone: z.string().optional(),
     email: z.string().optional(),
     notes: z.string().optional(),
   }),
@@ -143,6 +143,7 @@ export const bookingSchema = z.object({
   cancelTokenHash: z.string(),
   source: z.enum(["online", "admin"]).optional(),
   memberId: z.string().optional(),
+  referencePhotos: z.array(z.string()).optional(),
   adminNotes: z.string().optional(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

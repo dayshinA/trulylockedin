@@ -115,9 +115,11 @@ export type BookingSource = "online" | "admin";
 // skips hours, notice, advance window, blocks and buffer but still refuses clashes.
 export type BookingMode = "client" | "owner";
 
+// Online bookings since 2026-11-04 always have an email and may have no phone;
+// owner bookings and older online ones always have a phone.
 export type BookingClient = {
   name: string;
-  phone: string;
+  phone?: string;
   email?: string;
   notes?: string;
 };
@@ -141,6 +143,9 @@ export type Booking = {
   // Set when a signed-in member booked online (members/{uid}). Only ever
   // taken from the session on the server, never from form data.
   memberId?: string;
+  // Cloudinary public ids of the client's reference photos (private assets in
+  // REFERENCE_FOLDER). Removed once the photos are deleted after the visit.
+  referencePhotos?: string[];
   adminNotes?: string;
   createdAt: string;
   updatedAt: string;

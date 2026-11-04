@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
+import { FindCallout } from "@/components/site/find-callout";
 import { getMember } from "@/lib/auth/member-dal";
 import { buildCatalogue, isBookableOnline } from "@/lib/booking/catalogue";
 import { bookingRepository } from "@/lib/booking/server";
@@ -21,6 +22,13 @@ export default function BookPage({ searchParams }: PageProps<"/book">) {
       <h1 className="font-display text-5xl leading-[1.05] font-semibold sm:text-6xl">
         Book an appointment
       </h1>
+      <FindCallout
+        className="mt-8"
+        title="Already booked?"
+        text="Check whether your appointment has been confirmed, or cancel it."
+        href="/book/find"
+        label="Find my booking"
+      />
       <Suspense fallback={<p className="mt-10 text-muted">Loading services…</p>}>
         <BookingLoader searchParams={searchParams} />
       </Suspense>

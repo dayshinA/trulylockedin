@@ -32,7 +32,12 @@ export async function Footer() {
               aria-label="Footer"
               className="flex flex-wrap gap-x-5 text-sm sm:flex-col sm:gap-x-0"
             >
-              {[...NAV_LINKS, { href: "/book", label: "Book online" }].map(
+              {[
+                ...NAV_LINKS,
+                { href: "/book", label: "Book online" },
+                { href: "/book/find", label: "Find my booking" },
+                { href: "/shop/order/find", label: "Find my order" },
+              ].map(
                 ({ href, label }) => (
                   <Link
                     key={href}

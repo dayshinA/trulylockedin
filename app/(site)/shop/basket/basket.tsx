@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { AddressBlock } from "@/components/site/address-block";
+import { CopyButton } from "@/components/site/copy-button";
 import { DetailRows } from "@/components/site/detail-rows";
 import { Field, inputClass } from "@/components/site/form-field";
 import { MemberBar } from "@/components/site/member-bar";
@@ -160,12 +161,6 @@ export function Basket({
         <div className="mt-6">
           <DetailRows
             rows={[
-              [
-                "Reference",
-                <span key="ref" className="font-mono">
-                  {placed.ref}
-                </span>,
-              ],
               placed.delivery
                 ? [
                     "Delivery to",
@@ -175,9 +170,28 @@ export function Basket({
             ]}
           />
         </div>
+        <div className="mt-8 border-l-2 border-accent pl-4">
+          <p className="text-sm text-muted">Your order reference</p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="font-mono text-2xl font-semibold tracking-wider">
+              {placed.ref}
+            </span>
+            <CopyButton text={placed.ref} />
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            Keep this safe. With the email you ordered with, you can check your
+            order any time on{" "}
+            <Link
+              href="/shop/order/find"
+              className="text-brand underline underline-offset-4 hover:text-brand-hover"
+            >
+              Find my order
+            </Link>
+            .
+          </p>
+        </div>
         <p className="mt-8 text-muted">
-          Save or bookmark this link to check or cancel your order. It&rsquo;s
-          private to you.
+          Or save this private link to check or cancel your order.
         </p>
         <Link
           href={placed.manageUrl}
@@ -345,13 +359,18 @@ export function Basket({
               className={inputClass}
             />
           </Field>
-          <Field label="Email (optional)" error={fieldErrors.email}>
+          <Field
+            label="Email"
+            hint="With your order reference, this lets you check your order later."
+            error={fieldErrors.email}
+          >
             <input
               name="email"
               type="email"
               defaultValue={member?.email}
               autoComplete="email"
               inputMode="email"
+              required
               className={inputClass}
             />
           </Field>

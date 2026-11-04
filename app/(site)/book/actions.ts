@@ -4,6 +4,7 @@ import { getMember } from "@/lib/auth/member-dal";
 import {
   cancelManagedBooking,
   findManagedBooking,
+  type ManageCredentials,
   type ManageResult,
 } from "@/lib/booking/manage";
 import { bookingRepository } from "@/lib/booking/server";
@@ -19,6 +20,17 @@ import { createRateLimiter } from "@/lib/rate-limit";
 
 // Per-process; see lib/rate-limit.ts.
 const bookingLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60_000 });
+// "Find my booking" (ref + email) guesses; the private link isn't limited.
+const lookupLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60_000 });
+
+const TOO_MANY_LOOKUPS: ManageResult = {
+  ok: false,
+  error: "Too many attempts. Please try again in a few minutes.",
+};
+
+async function lookupAllowed(input: ManageCredentials): Promise<boolean> {
+  return !("email" in input) || lookupLimiter.hit(await clientKey());
+}
 
 // Live availability: request-time, never cached.
 export async function getSlots(input: {
@@ -46,17 +58,18 @@ export async function createBooking(
   return result;
 }
 
-// Self-service via the link shown after booking (/book/{ref}#t={token}).
-export async function getMyBooking(input: {
-  ref: string;
-  token: string;
-}): Promise<ManageResult> {
+// Self-service via the link shown after booking (/book/{ref}#t={token}) or
+// "Find my booking" (/book/find: ref + email).
+export async function getMyBooking(
+  input: ManageCredentials,
+): Promise<ManageResult> {
+  if (!(await lookupAllowed(input))) return TOO_MANY_LOOKUPS;
   return findManagedBooking(bookingRepository(), input, new Date());
 }
 
-export async function cancelMyBooking(input: {
-  ref: string;
-  token: string;
-}): Promise<ManageResult> {
+export async function cancelMyBooking(
+  input: ManageCredentials,
+): Promise<ManageResult> {
+  if (!(await lookupAllowed(input))) return TOO_MANY_LOOKUPS;
   return cancelManagedBooking(bookingRepository(), input, new Date());
 }

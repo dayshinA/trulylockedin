@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { referencePhotosSchema } from "./reference-photos";
 import { docIdSchema, localDateSchema, localTimeSchema } from "./schemas";
 
 // UK numbers normalise to E.164 (+44…), which works for tel: and WhatsApp links.
@@ -26,6 +27,33 @@ const optionalText = (max: number) =>
     .optional()
     .transform((value) => value || undefined);
 
+const PHONE_MESSAGE = "Enter a valid phone number, e.g. 07700 900123";
+const EMAIL_MESSAGE = "Enter a valid email address";
+
+export const phoneSchema = z
+  .string()
+  .trim()
+  .refine((value) => normalizePhone(value) !== null, PHONE_MESSAGE)
+  .transform((value) => normalizePhone(value)!);
+
+export const optionalPhoneSchema = optionalText(30)
+  .refine(
+    (value) => value === undefined || normalizePhone(value) !== null,
+    PHONE_MESSAGE,
+  )
+  .transform((value) => (value === undefined ? undefined : normalizePhone(value)!));
+
+export const emailSchema = z
+  .string()
+  .trim()
+  .min(1, "Enter your email address")
+  .max(200)
+  .pipe(z.email(EMAIL_MESSAGE));
+
+export const optionalEmailSchema = optionalText(200).pipe(
+  z.email(EMAIL_MESSAGE).optional(),
+);
+
 const optionIdsSchema = z.array(docIdSchema).max(50).default([]);
 
 export const slotQuerySchema = z.object({
@@ -34,8 +62,9 @@ export const slotQuerySchema = z.object({
   date: localDateSchema,
 });
 
-// The public booking form. `website` is a honeypot: hidden from people, so any
-// value means a bot filled it in.
+// The public booking form. Email is required (with the booking reference it
+// finds the booking again on /book/find); phone is optional. `website` is a
+// honeypot: hidden from people, so any value means a bot filled it in.
 export const bookingRequestSchema = z.object({
   serviceId: docIdSchema,
   optionIds: optionIdsSchema,
@@ -46,18 +75,10 @@ export const bookingRequestSchema = z.object({
     .trim()
     .min(2, "Please enter your name")
     .max(80, "Name is too long"),
-  phone: z
-    .string()
-    .trim()
-    .refine(
-      (value) => normalizePhone(value) !== null,
-      "Enter a valid phone number, e.g. 07700 900123",
-    )
-    .transform((value) => normalizePhone(value)!),
-  email: optionalText(200).pipe(
-    z.email("Enter a valid email address").optional(),
-  ),
+  phone: optionalPhoneSchema,
+  email: emailSchema,
   notes: optionalText(1000),
+  referencePhotos: referencePhotosSchema,
   website: z.string().optional(),
 });
 

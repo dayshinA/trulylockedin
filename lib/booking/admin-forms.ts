@@ -11,7 +11,11 @@ import {
   type WeeklyHours,
 } from "@/types/booking";
 import { mediaPublicIdSchema } from "@/lib/media/folder";
-import { bookingRequestSchema } from "./request";
+import {
+  bookingRequestSchema,
+  optionalEmailSchema,
+  phoneSchema,
+} from "./request";
 import {
   bookingSettingsSchema,
   dateOverrideSchema,
@@ -328,7 +332,10 @@ export function parseOverrideForm(form: Form): Parsed<DateOverride> {
     : fail(parsed.error, "Check the date and times");
 }
 
+// Owner bookings usually come in by phone: phone required, email optional.
 const manualSchema = bookingRequestSchema.omit({ website: true }).extend({
+  phone: phoneSchema,
+  email: optionalEmailSchema,
   // Owner can pick any minute, not just the slot grid.
   start: localTimeSchema.refine((t) => t !== "24:00", "Pick a start time"),
   adminNotes: z.string().trim().max(2000).optional(),

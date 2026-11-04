@@ -40,7 +40,12 @@ export function BookingRows({ bookings }: { bookings: Booking[] }) {
                 {booking.service.name}
               </span>
             </span>
-            <StatusBadge status={booking.status} />
+            <span className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {booking.referencePhotos?.length ? (
+                <Badge tone="muted">Photo</Badge>
+              ) : null}
+              <StatusBadge status={booking.status} />
+            </span>
           </Link>
         </li>
       ))}

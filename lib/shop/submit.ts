@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { bookingRequestSchema } from "@/lib/booking/request";
+import {
+  bookingRequestSchema,
+  emailSchema,
+  phoneSchema,
+} from "@/lib/booking/request";
 import { createCancelToken, createOrderRef, hashToken } from "@/lib/booking/tokens";
 import type { RateLimiter } from "@/lib/rate-limit";
 import type { DeliveryAddress, OrderItem } from "@/types/shop";
@@ -19,10 +23,14 @@ const lineSchema = z.object({
   quantity: z.number().int().min(1).max(MAX_QUANTITY),
 });
 
-// The same contact fields (and honeypot) as the booking form.
+// The booking form's name, notes and honeypot. Orders need a phone (collection
+// / "ready" messages) and an email (with the ref it finds the order again on
+// /shop/order/find).
 export const orderRequestSchema = bookingRequestSchema
-  .pick({ name: true, phone: true, email: true, notes: true, website: true })
+  .pick({ name: true, notes: true, website: true })
   .extend({
+    phone: phoneSchema,
+    email: emailSchema,
     fulfilment: z.enum(["collection", "delivery"]).default("collection"),
     lines: z
       .array(lineSchema)

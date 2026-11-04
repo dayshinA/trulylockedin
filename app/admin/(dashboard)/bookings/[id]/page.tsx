@@ -7,6 +7,7 @@ import { STATUS_ACTIONS } from "@/lib/booking/labels";
 import { canTransition } from "@/lib/booking/rules";
 import { bookingRepository } from "@/lib/booking/server";
 import { utcMsToLocal } from "@/lib/booking/time";
+import { REFERENCE_RETENTION_DAYS } from "@/lib/booking/reference-photos";
 import { formatDuration, formatLocalDate, formatPrice } from "@/lib/format";
 import type { BookingStatus } from "@/types/booking";
 import { saveAdminNotesAction, setBookingStatusAction } from "../actions";
@@ -51,7 +52,8 @@ export default async function BookingDetailPage({
   );
 
   const { client } = booking;
-  const whatsapp = `https://wa.me/${client.phone.replace(/^\+/, "")}`;
+  const whatsapp =
+    client.phone && `https://wa.me/${client.phone.replace(/^\+/, "")}`;
   const actions = NEXT_STATUSES.filter((s) => canTransition(booking.status, s));
 
   return (
@@ -69,20 +71,27 @@ export default async function BookingDetailPage({
       />
 
       <div className="flex flex-wrap gap-3">
-        <a href={`tel:${client.phone}`} className={primaryButton}>
-          Call {client.phone}
-        </a>
-        <a
-          href={whatsapp}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={outlineButton}
-        >
-          WhatsApp
-        </a>
+        {client.phone && whatsapp && (
+          <>
+            <a href={`tel:${client.phone}`} className={primaryButton}>
+              Call {client.phone}
+            </a>
+            <a
+              href={whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={outlineButton}
+            >
+              WhatsApp
+            </a>
+          </>
+        )}
         {client.email && (
-          <a href={`mailto:${client.email}`} className={outlineButton}>
-            Email
+          <a
+            href={`mailto:${client.email}`}
+            className={client.phone ? outlineButton : primaryButton}
+          >
+            {client.phone ? "Email" : `Email ${client.email}`}
           </a>
         )}
       </div>
@@ -136,6 +145,44 @@ export default async function BookingDetailPage({
           ],
         ]}
       />
+
+      {booking.referencePhotos && booking.referencePhotos.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-2xl font-semibold">
+            Reference photos
+          </h2>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {booking.referencePhotos.map((_, index) => {
+              const src = `/api/admin/bookings/${booking.id}/photos/${index}`;
+              return (
+                <li key={index}>
+                  <a
+                    href={src}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block aspect-square overflow-hidden rounded-sm bg-surface"
+                  >
+                    {/* Served by an admin-only route (private Cloudinary
+                        asset), so next/image can't fetch it. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`${src}?size=thumb`}
+                      alt={`Reference photo ${index + 1} from ${client.name}`}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="text-sm text-muted">
+            Tap a photo to open it full size. Photos are deleted{" "}
+            {REFERENCE_RETENTION_DAYS} days after the appointment, or when the
+            booking is cancelled.
+          </p>
+        </section>
+      )}
 
       {actions.length > 0 && (
         <div className="flex flex-wrap gap-3">

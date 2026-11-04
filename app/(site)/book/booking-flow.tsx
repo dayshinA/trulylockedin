@@ -1,25 +1,28 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
-import { STATUS_LABELS } from "@/lib/booking/labels";
 import { quoteService } from "@/lib/booking/quote";
 import { addDays } from "@/lib/booking/time";
-import { DetailRows } from "@/components/site/detail-rows";
 import { Field, inputClass } from "@/components/site/form-field";
 import { MemberBar } from "@/components/site/member-bar";
 import {
   formatDuration,
   formatLocalDate,
-  formatPrice,
   formatPriceFrom,
 } from "@/lib/format";
-import type { BookingStatus, Slot } from "@/types/booking";
+import type { Slot } from "@/types/booking";
 import type { MemberProfile } from "@/types/member";
 import { createBooking, getSlots } from "./actions";
 import { DayGrid } from "./day-grid";
+import {
+  photosBusy,
+  ReferencePhotosField,
+  uploadedPhotoIds,
+  type ReferencePhoto,
+} from "./reference-photos-field";
 import {
   HEADER_CLEARANCE_PX,
   ServicePicker,
@@ -28,19 +31,7 @@ import {
   type BookableService,
 } from "./service-picker";
 
-type Step = "service" | "time" | "details" | "done";
-
-type Confirmation = {
-  ref: string;
-  serviceName: string;
-  optionNames: string[];
-  pricePence: number;
-  date: string;
-  start: string;
-  end: string;
-  status: BookingStatus;
-  manageUrl: string;
-};
+type Step = "service" | "time" | "details";
 
 type FieldErrors = Partial<Record<string, string[]>>;
 
@@ -85,9 +76,11 @@ export function BookingFlow({
   const [slot, setSlot] = useState<Slot | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const [photos, setPhotos] = useState<ReferencePhoto[]>([]);
+  const uploading = photosBusy(photos);
   const [loadingSlots, startSlots] = useTransition();
   const [submitting, startSubmit] = useTransition();
+  const router = useRouter();
   // Ignore slot responses for a day the client has already moved away from.
   const latestRequest = useRef(0);
   const flowRef = useRef<HTMLDivElement>(null);
@@ -188,7 +181,7 @@ export function BookingFlow({
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!service || !date || !slot) return;
+    if (!service || !date || !slot || uploading) return;
     const form = new FormData(event.currentTarget);
     setFormError(null);
     setFieldErrors({});
@@ -203,16 +196,19 @@ export function BookingFlow({
         phone: form.get("phone"),
         email: form.get("email"),
         notes: form.get("notes"),
+        referencePhotos: uploadedPhotoIds(photos),
         website: form.get("website"),
       });
 
       if (result.ok) {
         const { booking, cancelToken } = result;
-        setConfirmation({
-          ...booking,
-          manageUrl: `/book/${booking.ref}#t=${cancelToken}`,
-        });
-        setStep("done");
+        const fragment = new URLSearchParams({ t: cancelToken });
+        if (booking.referencePhotoCount > 0) {
+          fragment.set("photos", String(booking.referencePhotoCount));
+        }
+        router.push(
+          `/book/${encodeURIComponent(booking.ref)}/thank-you#${fragment}`,
+        );
         return;
       }
 
@@ -227,7 +223,7 @@ export function BookingFlow({
     });
   }
 
-  const summary = step !== "done" && (
+  const summary = (
     <Summary
       service={service}
       optionIds={optionIds}
@@ -241,12 +237,12 @@ export function BookingFlow({
   return (
     <div
       ref={flowRef}
-      className={`mt-10 grid gap-10 ${step !== "done" ? "lg:grid-cols-[1fr_20rem] lg:gap-16" : ""}`}
+      className="mt-10 grid gap-10 lg:grid-cols-[1fr_20rem] lg:gap-16"
     >
       <div className="flex min-w-0 flex-col gap-8">
         {/* On phones the summary sits above the step, once there's
             something in it. */}
-        {step !== "service" && step !== "done" && (
+        {step !== "service" && (
           <div className="lg:hidden">{summary}</div>
         )}
 
@@ -378,7 +374,22 @@ export function BookingFlow({
                   className={inputClass}
                 />
               </Field>
-              <Field label="Phone" error={fieldErrors.phone}>
+              <Field
+                label="Email"
+                hint="With your booking reference, this lets you check your booking later."
+                error={fieldErrors.email}
+              >
+                <input
+                  name="email"
+                  type="email"
+                  defaultValue={member?.email}
+                  autoComplete="email"
+                  inputMode="email"
+                  required
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Phone (optional)" error={fieldErrors.phone}>
                 <input
                   name="phone"
                   type="tel"
@@ -386,17 +397,6 @@ export function BookingFlow({
                   autoComplete="tel"
                   inputMode="tel"
                   placeholder="07700 900123"
-                  required
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Email (optional)" error={fieldErrors.email}>
-                <input
-                  name="email"
-                  type="email"
-                  defaultValue={member?.email}
-                  autoComplete="email"
-                  inputMode="email"
                   className={inputClass}
                 />
               </Field>
@@ -410,6 +410,12 @@ export function BookingFlow({
                   className={`${inputClass} py-2`}
                 />
               </Field>
+
+              <ReferencePhotosField
+                photos={photos}
+                setPhotos={setPhotos}
+                error={fieldErrors.referencePhotos}
+              />
 
               {/* Honeypot: hidden from people and assistive tech; bots fill it. */}
               <div
@@ -430,86 +436,24 @@ export function BookingFlow({
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || uploading}
                 className="min-h-12 rounded-full bg-brand px-10 font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted sm:w-fit"
               >
-                {submitting ? "Booking…" : "Request booking"}
+                {submitting
+                  ? "Booking…"
+                  : uploading
+                    ? "Uploading photos…"
+                    : "Request booking"}
               </button>
             </form>
           </section>
         )}
 
-        {step === "done" && confirmation && (
-          <section aria-labelledby="booked" className="max-w-2xl">
-            <h2
-              id="booked"
-              className="font-display text-4xl font-semibold sm:text-5xl"
-            >
-              {confirmation.status === "confirmed"
-                ? "You're booked in"
-                : "Request received"}
-            </h2>
-            <p className="mt-3 text-lg text-muted">
-              {confirmation.status === "confirmed"
-                ? "Your appointment is confirmed."
-                : "We'll confirm your appointment shortly."}
-            </p>
-            <div className="mt-8">
-              <DetailRows
-                rows={[
-                  ["Service", confirmation.serviceName],
-                  ...(confirmation.optionNames.length > 0
-                    ? ([["Options", confirmation.optionNames.join(", ")]] as [
-                        string,
-                        string,
-                      ][])
-                    : []),
-                  ["Price from", formatPrice(confirmation.pricePence)],
-                  [
-                    "When",
-                    `${formatLocalDate(confirmation.date, "long")}, ${confirmation.start}–${confirmation.end}`,
-                  ],
-                  ["Status", STATUS_LABELS[confirmation.status]],
-                  [
-                    "Reference",
-                    <span key="ref" className="font-mono">
-                      {confirmation.ref}
-                    </span>,
-                  ],
-                ]}
-              />
-            </div>
-            <p className="mt-8 text-muted">
-              Save or bookmark this link to view or cancel your booking.
-              It&rsquo;s private to you.
-            </p>
-            <Link
-              href={confirmation.manageUrl}
-              className="mt-4 inline-flex min-h-12 items-center rounded-full bg-brand px-8 text-sm font-semibold tracking-widest text-on-brand uppercase transition-colors hover:bg-brand-hover"
-            >
-              Manage my booking
-            </Link>
-            {member && (
-              <p className="mt-6 text-muted">
-                It&rsquo;s also saved in{" "}
-                <Link
-                  href="/account"
-                  className="text-brand underline underline-offset-4 hover:text-brand-hover"
-                >
-                  your account
-                </Link>
-                .
-              </p>
-            )}
-          </section>
-        )}
       </div>
 
-      {step !== "done" && (
-        <aside className="hidden lg:block">
-          <div className="sticky top-24">{summary}</div>
-        </aside>
-      )}
+      <aside className="hidden lg:block">
+        <div className="sticky top-24">{summary}</div>
+      </aside>
     </div>
   );
 }

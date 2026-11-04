@@ -38,6 +38,8 @@ export type CreateBookingInput = {
   mode?: BookingMode;
   // The signed-in member making an online booking.
   memberId?: string;
+  // Already checked to be in REFERENCE_FOLDER (bookingRequestSchema).
+  referencePhotos?: string[];
 };
 
 export type CreateBookingResult =
@@ -92,6 +94,10 @@ export interface BookingRepository {
   countBookingsByMember(): Promise<Map<string, number>>;
   // A deleted member's bookings stay as guest bookings.
   unlinkMember(memberId: string): Promise<void>;
+  // Every booking that still has reference photos, any status.
+  listBookingsWithReferencePhotos(): Promise<Booking[]>;
+  // After the photos were deleted from Cloudinary.
+  clearReferencePhotos(id: string): Promise<void>;
 
   // Admin config writes. They never change bookings that already exist.
   saveSettings(settings: BookingSettings): Promise<void>;

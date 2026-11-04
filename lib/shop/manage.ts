@@ -1,12 +1,19 @@
 import { z } from "zod";
 
-import { ORDER_REF_RE, tokenMatches } from "@/lib/booking/tokens";
+import {
+  normalizeRef,
+  ORDER_REF_RE,
+  sameEmail,
+  tokenMatches,
+} from "@/lib/booking/tokens";
 import type { DeliveryAddress, OrderItem, OrderStatus } from "@/types/shop";
 import type { OrderRepository } from "./order-repository";
 import { canCustomerCancel } from "./orders";
 
-// Customer self-service through the link shown after ordering:
-// /shop/order/{ref}#t={cancelToken}. The ref alone grants nothing.
+// Customer self-service, two ways in:
+// - the private link shown after ordering, /shop/order/{ref}#t={cancelToken};
+// - "Find my order" (/shop/order/find): the ref plus the email used to order.
+// The ref alone grants nothing.
 
 export type OrderSummary = {
   ref: string;
@@ -23,22 +30,46 @@ export type ManageOrderResult =
   | { ok: true; order: OrderSummary }
   | { ok: false; error: string };
 
-const manageSchema = z.object({
-  ref: z.string().regex(ORDER_REF_RE),
-  token: z.string().min(20).max(100),
-});
+const refSchema = z
+  .string()
+  .max(40)
+  .transform((ref) => normalizeRef(ref, "TLO"))
+  .pipe(z.string().regex(ORDER_REF_RE));
 
-// Same message for an unknown ref and a wrong token, so refs can't be probed.
-const NOT_FOUND = "We couldn't find that order. Please check your link.";
+const manageSchema = z.union([
+  z.object({ ref: refSchema, token: z.string().min(20).max(100) }),
+  z.object({ ref: refSchema, email: z.string().trim().min(3).max(200) }),
+]);
+
+export type ManageOrderCredentials =
+  | { ref: string; token: string }
+  | { ref: string; email: string };
+
+// Same message for an unknown ref and a wrong token or email, so refs can't
+// be probed.
+const NOT_FOUND_LINK = "We couldn't find that order. Please check your link.";
+const NOT_FOUND_EMAIL =
+  "We couldn't find an order with those details. Check the reference and use the email you ordered with.";
+
+function notFound(raw: unknown): string {
+  return typeof raw === "object" && raw !== null && "email" in raw
+    ? NOT_FOUND_EMAIL
+    : NOT_FOUND_LINK;
+}
 
 async function authorise(repo: OrderRepository, raw: unknown) {
   const parsed = manageSchema.safeParse(raw);
   if (!parsed.success) return null;
-  const order = await repo.getOrderByRef(parsed.data.ref);
-  if (!order || !tokenMatches(parsed.data.token, order.cancelTokenHash)) {
-    return null;
-  }
-  return order;
+  const credentials = parsed.data;
+  const order = await repo.getOrderByRef(credentials.ref);
+  if (!order) return null;
+  const allowed =
+    "token" in credentials
+      ? tokenMatches(credentials.token, order.cancelTokenHash)
+      : // Older orders without an email can only use their link.
+        order.client.email !== undefined &&
+        sameEmail(credentials.email, order.client.email);
+  return allowed ? order : null;
 }
 
 export async function findManagedOrder(
@@ -46,7 +77,7 @@ export async function findManagedOrder(
   raw: unknown,
 ): Promise<ManageOrderResult> {
   const order = await authorise(repo, raw);
-  if (!order) return { ok: false, error: NOT_FOUND };
+  if (!order) return { ok: false, error: notFound(raw) };
   return {
     ok: true,
     order: {
@@ -67,7 +98,7 @@ export async function cancelManagedOrder(
   now: Date,
 ): Promise<ManageOrderResult> {
   const order = await authorise(repo, raw);
-  if (!order) return { ok: false, error: NOT_FOUND };
+  if (!order) return { ok: false, error: notFound(raw) };
   if (!canCustomerCancel(order)) {
     return {
       ok: false,

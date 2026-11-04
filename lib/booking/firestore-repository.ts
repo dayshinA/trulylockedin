@@ -276,6 +276,9 @@ export class FirestoreBookingRepository implements BookingRepository {
         cancelTokenHash: input.cancelTokenHash,
         source: input.mode === "owner" ? "admin" : "online",
         memberId: input.memberId,
+        referencePhotos: input.referencePhotos?.length
+          ? input.referencePhotos
+          : undefined,
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -345,6 +348,20 @@ export class FirestoreBookingRepository implements BookingRepository {
       }
       await batch.commit();
     }
+  }
+
+  async listBookingsWithReferencePhotos() {
+    // `!= null` matches documents that have the field (single-field index).
+    const snap = await this.bookingsCol
+      .where("referencePhotos", "!=", null)
+      .get();
+    return snap.docs.map(parseBooking);
+  }
+
+  async clearReferencePhotos(id: string) {
+    await this.bookingsCol
+      .doc(id)
+      .update({ referencePhotos: FieldValue.delete() });
   }
 
   private transition(

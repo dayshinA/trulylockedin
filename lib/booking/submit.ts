@@ -77,6 +77,7 @@ export type SubmitBookingResult =
         start: LocalTime;
         end: LocalTime;
         status: BookingStatus;
+        referencePhotoCount: number;
       };
       // Only ever returned here; the store keeps its hash.
       cancelToken: string;
@@ -146,6 +147,7 @@ export async function submitBooking(
         email: request.email,
         notes: request.notes,
       },
+      referencePhotos: request.referencePhotos,
       ref: createBookingRef(),
       cancelTokenHash: hashToken(cancelToken),
       now: context.now,
@@ -171,6 +173,7 @@ export async function submitBooking(
         start: booking.start,
         end: booking.end,
         status: booking.status,
+        referencePhotoCount: booking.referencePhotos?.length ?? 0,
       },
       cancelToken,
     };

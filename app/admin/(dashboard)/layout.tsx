@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { after } from "next/server";
 import { Suspense } from "react";
 
 import { Logo } from "@/components/site/logo";
 import { verifyAdmin } from "@/lib/auth/dal";
+import { maybeCleanUpReferencePhotos } from "@/lib/booking/reference-cleanup";
 import { AdminNavItems, CurrentAdminNavItems } from "./_components/admin-nav";
 import { AdminMobileMenu } from "./_components/mobile-menu";
 import { signOut } from "./actions";
@@ -50,6 +52,8 @@ export default function DashboardLayout({ children }: LayoutProps<"/admin">) {
 
 async function AdminGate({ children }: { children: React.ReactNode }) {
   await verifyAdmin();
+  // Background housekeeping while the owner is here (throttled).
+  after(maybeCleanUpReferencePhotos);
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-10 pb-20 sm:px-6 sm:pt-14">
       {children}

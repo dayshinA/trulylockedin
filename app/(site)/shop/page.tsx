@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BookCta } from "@/components/site/book-cta";
+import { FindCallout } from "@/components/site/find-callout";
 import { PageIntro } from "@/components/site/page-intro";
 import { ProductGrid } from "@/components/site/product-grid";
 import { ShopNotes } from "@/components/site/shop-notes";
@@ -24,6 +25,12 @@ export default async function ShopPage() {
       <section className="px-4 pb-24 sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-10">
           {products.length > 0 && <ShopNotes notes={shop.notes} columns />}
+          <FindCallout
+            title="Already ordered?"
+            text="See whether your order is ready to collect or has been posted."
+            href="/shop/order/find"
+            label="Find my order"
+          />
           {products.length > 0 ? (
             <ProductGrid products={products} />
           ) : (

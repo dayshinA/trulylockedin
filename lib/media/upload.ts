@@ -1,6 +1,6 @@
 import type { UploadKind } from "./limits";
 
-// Browser side of an admin upload: ask /api/cloudinary/sign for a signature,
+// Browser side of an upload (admin media, or a client's reference photo): ask /api/cloudinary/sign for a signature,
 // then post the file straight to Cloudinary. XMLHttpRequest rather than fetch,
 // because fetch can't report upload progress.
 
@@ -61,10 +61,11 @@ function post(
 
 async function sign(
   file: File,
+  signUrl: string,
 ): Promise<{ url: string; fields: Record<string, string> }> {
   let response: Response;
   try {
-    response = await fetch("/api/cloudinary/sign", {
+    response = await fetch(signUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: file.name, type: file.type, size: file.size }),
@@ -85,11 +86,14 @@ async function sign(
   return body as { url: string; fields: Record<string, string> };
 }
 
+// signUrl: the admin route by default; the booking form passes
+// /api/booking/reference-photo/sign.
 export async function uploadMedia(
   file: File,
   onProgress: (fraction: number) => void,
+  signUrl = "/api/cloudinary/sign",
 ): Promise<UploadedAsset> {
-  const { url, fields } = await sign(file);
+  const { url, fields } = await sign(file, signUrl);
   const form = new FormData();
   for (const [key, value] of Object.entries(fields)) form.append(key, value);
   form.append("file", file);
