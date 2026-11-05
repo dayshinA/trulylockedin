@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { verifyAdmin } from "@/lib/auth/dal";
+import { notifyOrder } from "@/lib/email/order-emails";
 import { orderStatusSchema } from "@/lib/shop/schemas";
 import { orderRepository } from "@/lib/shop/server";
 
@@ -23,7 +24,8 @@ export async function setOrderStatusAction(formData: FormData) {
     status,
     new Date(),
   );
-  if (!result.ok) console.warn("Order status change refused", id, status, result.reason);
+  if (result.ok) notifyOrder({ kind: "status_changed", id });
+  else console.warn("Order status change refused", id, status, result.reason);
   refresh();
 }
 

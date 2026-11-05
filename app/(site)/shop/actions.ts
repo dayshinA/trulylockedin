@@ -2,6 +2,7 @@
 
 import { getMember } from "@/lib/auth/member-dal";
 import { clientKey } from "@/lib/client-key";
+import { notifyOrder } from "@/lib/email/order-emails";
 import { rememberMemberPhone } from "@/lib/members/remember-phone";
 import { createRateLimiter } from "@/lib/rate-limit";
 import {
@@ -39,7 +40,14 @@ export async function placeOrder(
     limiter: orderLimiter,
     memberId: member?.uid,
   });
-  if (result.ok && member) await rememberMemberPhone(member, input.phone);
+  if (result.ok) {
+    notifyOrder({
+      kind: "created",
+      ref: result.order.ref,
+      cancelToken: result.cancelToken,
+    });
+    if (member) await rememberMemberPhone(member, input.phone);
+  }
   return result;
 }
 
@@ -56,5 +64,9 @@ export async function cancelMyOrder(
   input: ManageOrderCredentials,
 ): Promise<ManageOrderResult> {
   if (!(await lookupAllowed(input))) return TOO_MANY_LOOKUPS;
-  return cancelManagedOrder(orderRepository(), input, new Date());
+  const result = await cancelManagedOrder(orderRepository(), input, new Date());
+  if (result.ok) {
+    notifyOrder({ kind: "customer_cancelled", by: { ref: result.order.ref } });
+  }
+  return result;
 }

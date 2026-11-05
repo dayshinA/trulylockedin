@@ -6,6 +6,7 @@ import { z } from "zod";
 import { verifyAdmin } from "@/lib/auth/dal";
 import { parseManualBookingForm } from "@/lib/booking/admin-forms";
 import { bookingStatusSchema, docIdSchema } from "@/lib/booking/schemas";
+import { notifyBooking } from "@/lib/email/booking-emails";
 import { bookingRepository } from "@/lib/booking/server";
 import {
   createBookingRef,
@@ -36,8 +37,8 @@ export async function setBookingStatusAction(formData: FormData) {
     status === "cancelled"
       ? await repo.cancelBooking(id, now)
       : await repo.updateBookingStatus(id, status, now);
-  if (!result.ok)
-    console.warn("Status change refused", id, status, result.reason);
+  if (result.ok) notifyBooking({ kind: "status_changed", id });
+  else console.warn("Status change refused", id, status, result.reason);
   refresh();
 }
 
@@ -101,6 +102,9 @@ export async function createManualBookingAction(
   }
 
   const { booking } = result;
+  // Emails the client (if they gave an email); the owner made it, so no
+  // owner email.
+  notifyBooking({ kind: "created", ref: booking.ref, cancelToken });
   if (input.adminNotes) {
     await repo.updateAdminNotes(booking.id, input.adminNotes, now);
   }

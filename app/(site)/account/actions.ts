@@ -18,6 +18,8 @@ import {
 import { docIdSchema } from "@/lib/booking/schemas";
 import { bookingRepository } from "@/lib/booking/server";
 import { clientKey } from "@/lib/client-key";
+import { notifyBooking } from "@/lib/email/booking-emails";
+import { notifyOrder } from "@/lib/email/order-emails";
 import { adminDb } from "@/lib/firebase/admin";
 import { deleteMember } from "@/lib/members/delete";
 import {
@@ -170,7 +172,10 @@ export async function cancelBookingAsMember(
       id.data,
       new Date(),
     );
-    if (result.ok) refresh();
+    if (result.ok) {
+      notifyBooking({ kind: "client_cancelled", by: { id: id.data } });
+      refresh();
+    }
     return result;
   } catch (error) {
     console.error("cancelBookingAsMember failed", error);
@@ -195,7 +200,10 @@ export async function cancelOrderAsMember(
       id.data,
       new Date(),
     );
-    if (result.ok) refresh();
+    if (result.ok) {
+      notifyOrder({ kind: "customer_cancelled", by: { id: id.data } });
+      refresh();
+    }
     return result;
   } catch (error) {
     console.error("cancelOrderAsMember failed", error);

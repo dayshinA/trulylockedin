@@ -15,6 +15,7 @@ import {
   type SubmitBookingResult,
 } from "@/lib/booking/submit";
 import { clientKey } from "@/lib/client-key";
+import { notifyBooking } from "@/lib/email/booking-emails";
 import { rememberMemberPhone } from "@/lib/members/remember-phone";
 import { createRateLimiter } from "@/lib/rate-limit";
 
@@ -54,7 +55,14 @@ export async function createBooking(
     memberId: member?.uid,
   });
 
-  if (result.ok && member) await rememberMemberPhone(member, input.phone);
+  if (result.ok) {
+    notifyBooking({
+      kind: "created",
+      ref: result.booking.ref,
+      cancelToken: result.cancelToken,
+    });
+    if (member) await rememberMemberPhone(member, input.phone);
+  }
   return result;
 }
 
@@ -71,5 +79,9 @@ export async function cancelMyBooking(
   input: ManageCredentials,
 ): Promise<ManageResult> {
   if (!(await lookupAllowed(input))) return TOO_MANY_LOOKUPS;
-  return cancelManagedBooking(bookingRepository(), input, new Date());
+  const result = await cancelManagedBooking(bookingRepository(), input, new Date());
+  if (result.ok) {
+    notifyBooking({ kind: "client_cancelled", by: { ref: result.booking.ref } });
+  }
+  return result;
 }
