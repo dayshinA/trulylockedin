@@ -7,7 +7,7 @@ import {
 } from "@/lib/booking/request";
 import { createCancelToken, createOrderRef, hashToken } from "@/lib/booking/tokens";
 import type { RateLimiter } from "@/lib/rate-limit";
-import type { DeliveryAddress, OrderItem } from "@/types/shop";
+import type { DeliveryAddress, Order, OrderItem, PaymentMethod } from "@/types/shop";
 import { deliveryFormSchema } from "./address";
 import type { OrderRepository } from "./order-repository";
 import { MAX_ORDER_LINES, MAX_QUANTITY, productIdSchema } from "./schemas";
@@ -32,6 +32,8 @@ export const orderRequestSchema = bookingRequestSchema
     phone: phoneSchema,
     email: emailSchema,
     fulfilment: z.enum(["collection", "delivery"]).default("collection"),
+    // Only collection can be paid in the salon; delivery is always online.
+    payment: z.enum(["online", "in_store"]).default("online"),
     lines: z
       .array(lineSchema)
       .min(1, "Your basket is empty")
@@ -60,6 +62,9 @@ export type SubmitOrderResult =
       };
       // Only ever returned here; the store keeps its hash.
       cancelToken: string;
+      // Paying online: send the customer to Stripe's payment page. The order
+      // waits (awaiting_payment, hidden) until it's paid.
+      checkoutUrl?: string;
     }
   | {
       ok: false;
@@ -78,6 +83,8 @@ export async function submitOrder(
     limiter: RateLimiter;
     // From the member session, never from `raw`.
     memberId?: string;
+    // Makes the Stripe payment page for an order paid online.
+    startCheckout: (order: Order) => Promise<{ id: string; url: string }>;
   },
 ): Promise<SubmitOrderResult> {
   // Honeypot first: bots get a dull, uninformative failure.
@@ -121,7 +128,9 @@ export async function submitOrder(
       fieldErrors,
     };
   }
-  const { lines, name, phone, email, notes } = parsed.data;
+  const { lines, name, phone, email, notes, fulfilment } = parsed.data;
+  const paymentMethod: PaymentMethod =
+    fulfilment === "delivery" ? "online" : parsed.data.payment;
 
   try {
     const cancelToken = createCancelToken();
@@ -129,6 +138,7 @@ export async function submitOrder(
       lines,
       client: { name, phone, email, notes },
       delivery: address?.data,
+      paymentMethod,
       ref: createOrderRef(),
       cancelTokenHash: hashToken(cancelToken),
       now: context.now,
@@ -142,8 +152,31 @@ export async function submitOrder(
         unavailable: result.productIds,
       };
     }
-    const { ref, items, totalPence, delivery } = result.order;
-    return { ok: true, order: { ref, items, totalPence, delivery }, cancelToken };
+    const order = result.order;
+    let checkoutUrl: string | undefined;
+    if (order.status === "awaiting_payment") {
+      try {
+        const checkout = await context.startCheckout(order);
+        await repo.attachCheckoutSession(order.id, checkout.id);
+        checkoutUrl = checkout.url;
+      } catch (error) {
+        console.error("Order payment page failed", order.id, error);
+        await repo
+          .releaseUnpaid(order.id)
+          .catch((e) => console.error("Unpaid order not released", order.id, e));
+        return {
+          ok: false,
+          error: "We couldn't open the payment page. Please try again in a moment.",
+        };
+      }
+    }
+    const { ref, items, totalPence, delivery } = order;
+    return {
+      ok: true,
+      order: { ref, items, totalPence, delivery },
+      cancelToken,
+      checkoutUrl,
+    };
   } catch (error) {
     console.error("Order failed", error);
     return { ok: false, error: GENERIC };

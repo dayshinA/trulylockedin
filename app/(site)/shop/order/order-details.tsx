@@ -6,7 +6,12 @@ import { AddressBlock } from "@/components/site/address-block";
 import { DetailRows } from "@/components/site/detail-rows";
 import { OrderLines } from "@/components/site/order-lines";
 import type { OrderSummary } from "@/lib/shop/manage";
-import { orderStatusLabel } from "@/lib/shop/orders";
+import { formatPrice } from "@/lib/format";
+import {
+  orderStatusLabel,
+  paymentLabel,
+  refundablePence,
+} from "@/lib/shop/orders";
 
 // The customer's view of one order, with a two-tap cancel. Shared by the
 // private link (/shop/order/{ref}) and "Find my order" (/shop/order/find).
@@ -39,8 +44,10 @@ export function OrderDetails({
         <OrderLines
           items={order.items}
           totalLabel={
-            order.delivery
-              ? "Total, free delivery"
+            order.payment
+              ? order.delivery
+                ? "Total, free delivery"
+                : "Total"
               : order.status === "collected"
                 ? "Total"
                 : "To pay on collection"
@@ -64,6 +71,7 @@ export function OrderDetails({
                   <AddressBlock key="address" address={order.delivery} />,
                 ]
               : ["Collection", "From the salon"],
+            ["Payment", paymentLabel(order)],
           ]}
         />
       </div>
@@ -77,7 +85,11 @@ export function OrderDetails({
       {order.canCancel ? (
         confirming ? (
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <p className="w-full">Cancel this order?</p>
+            <p className="w-full">
+              Cancel this order?
+              {refundablePence(order) > 0 &&
+                ` We'll refund ${formatPrice(refundablePence(order))} to the card you paid with.`}
+            </p>
             <button
               type="button"
               onClick={cancel}

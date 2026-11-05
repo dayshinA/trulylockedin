@@ -1,6 +1,7 @@
-// The private manage token of a booking that's off paying its deposit on
-// Stripe. The token must never be in a URL Stripe sees, so it waits in this
-// tab's sessionStorage and the thank-you / payment-cancelled pages pick it up.
+// The private manage token of a booking or order that's off paying on
+// Stripe (keyed by its ref, TLI-… or TLO-…). The token must never be in a URL
+// Stripe sees, so it waits in this tab's sessionStorage and the pages Stripe
+// sends the customer back to pick it up.
 
 export type BookingAccess = {
   token: string;
@@ -43,12 +44,16 @@ export function settleBookingAccess(ref: string): void {
   if (access) saveBookingAccess(ref, { ...access, settled: true });
 }
 
-// Bookings this tab sent to Stripe that haven't been paid or released.
-export function unsettledBookings(): { ref: string; token: string }[] {
+// Bookings ("TLI-") or orders ("TLO-") this tab sent to Stripe that haven't
+// been paid or released.
+export function unsettledBookings(
+  refPrefix: "TLI-" | "TLO-",
+): { ref: string; token: string }[] {
   try {
     return Object.keys(sessionStorage)
       .filter((key) => key.startsWith(PREFIX))
       .map((key) => key.slice(PREFIX.length))
+      .filter((ref) => ref.startsWith(refPrefix))
       .flatMap((ref) => {
         const access = readBookingAccess(ref);
         return access && !access.settled ? [{ ref, token: access.token }] : [];

@@ -4,9 +4,14 @@ import {
   fulfilCheckout,
   releaseExpiredCheckout,
 } from "@/lib/booking/deposit";
+import {
+  fulfilOrderCheckout,
+  releaseExpiredOrderCheckout,
+} from "@/lib/shop/payment";
 import { stripe, webhookSecret } from "@/lib/stripe";
 
-// Stripe calls this for deposit payments. Register it for:
+// Stripe calls this for booking deposits and shop orders (told apart by the
+// session's metadata: orderId for orders). Register it for:
 //   checkout.session.completed
 //   checkout.session.async_payment_succeeded
 //   checkout.session.expired
@@ -31,12 +36,18 @@ export async function POST(request: Request) {
   try {
     switch (event.type) {
       case "checkout.session.completed":
-      case "checkout.session.async_payment_succeeded":
-        await fulfilCheckout(event.data.object.id);
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object;
+        if (session.metadata?.orderId) await fulfilOrderCheckout(session.id);
+        else await fulfilCheckout(session.id);
         break;
-      case "checkout.session.expired":
-        await releaseExpiredCheckout(event.data.object);
+      }
+      case "checkout.session.expired": {
+        const session = event.data.object;
+        if (session.metadata?.orderId) await releaseExpiredOrderCheckout(session);
+        else await releaseExpiredCheckout(session);
         break;
+      }
     }
   } catch (error) {
     console.error("Stripe webhook failed", event.type, event.id, error);

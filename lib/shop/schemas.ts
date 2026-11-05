@@ -26,6 +26,7 @@ export const productSchema = z.object({
 });
 
 export const orderStatusSchema = z.enum([
+  "awaiting_payment",
   "pending",
   "ready",
   "collected",
@@ -54,6 +55,18 @@ export const orderSchema = z.object({
     notes: z.string().optional(),
   }),
   delivery: deliveryAddressSchema.optional(),
+  paymentMethod: z.enum(["online", "in_store"]).optional(),
+  payment: z
+    .object({
+      amountPence: z.number().int().min(0),
+      status: z.enum(["awaiting", "paid", "refunded", "refund_failed"]),
+      checkoutSessionId: z.string().optional(),
+      paymentIntentId: z.string().optional(),
+      paidAt: z.iso.datetime().optional(),
+      refundId: z.string().optional(),
+      refundedAt: z.iso.datetime().optional(),
+    })
+    .optional(),
   status: orderStatusSchema,
   cancelTokenHash: z.string(),
   memberId: z.string().optional(),

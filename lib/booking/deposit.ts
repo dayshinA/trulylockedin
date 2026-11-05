@@ -26,6 +26,8 @@ export type FulfilResult =
 // browser). A paid page confirms its booking and sends the emails once.
 export async function fulfilCheckout(sessionId: string): Promise<FulfilResult> {
   const session = await retrieveCheckout(sessionId);
+  // Shop orders use the same Stripe account (lib/shop/payment.ts).
+  if (session.metadata?.orderId) return "ignored";
   const bookingId = session.metadata?.bookingId ?? session.client_reference_id;
   if (!bookingId) return "ignored";
   if (session.payment_status !== "paid") return "unpaid";
@@ -65,7 +67,7 @@ export async function fulfilCheckout(sessionId: string): Promise<FulfilResult> {
         // refund this payment only, never the booking's own deposit.
         console.error("Deposit paid with no booking to keep it", bookingId);
         // Throws on failure, so the webhook answers 500 and Stripe retries.
-        await refundPayment(paymentIntentId, bookingId, paymentIntentId);
+        await refundPayment(paymentIntentId, { bookingId }, paymentIntentId);
       }
       return "refunded";
   }
@@ -88,7 +90,7 @@ export async function refundDeposit(
   try {
     const refundId = await refundPayment(
       deposit.paymentIntentId,
-      booking.id,
+      { bookingId: booking.id },
       // A failed attempt's error is remembered by Stripe for its key.
       deposit.status === "paid" ? "first" : `retry-${now.getTime()}`,
     );
@@ -130,6 +132,7 @@ export async function releaseExpiredCheckout(session: {
   metadata: Record<string, string> | null;
   client_reference_id: string | null;
 }): Promise<void> {
+  if (session.metadata?.orderId) return;
   const bookingId = session.metadata?.bookingId ?? session.client_reference_id;
   if (bookingId) await bookingRepository().releaseHold(bookingId, session.id);
 }

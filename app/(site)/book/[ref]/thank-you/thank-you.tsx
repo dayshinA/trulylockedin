@@ -18,7 +18,7 @@ import { depositRows } from "../../booking-details";
 import {
   readBookingAccess,
   settleBookingAccess,
-} from "../../booking-access";
+} from "@/lib/checkout-access";
 
 type Contact = SiteContent["contact"];
 

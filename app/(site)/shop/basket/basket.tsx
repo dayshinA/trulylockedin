@@ -3,7 +3,7 @@
 import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { AddressBlock } from "@/components/site/address-block";
 import { CopyButton } from "@/components/site/copy-button";
@@ -13,6 +13,11 @@ import { MemberBar } from "@/components/site/member-bar";
 import { OrderLines } from "@/components/site/order-lines";
 import { QuantityStepper } from "@/components/site/quantity-stepper";
 import { ShopNotes } from "@/components/site/shop-notes";
+import {
+  saveBookingAccess,
+  settleBookingAccess,
+  unsettledBookings,
+} from "@/lib/checkout-access";
 import { formatPrice } from "@/lib/format";
 import {
   clearBasket,
@@ -21,8 +26,8 @@ import {
   useBasket,
 } from "@/lib/shop/basket";
 import type { MemberProfile } from "@/types/member";
-import type { DeliveryAddress, OrderItem } from "@/types/shop";
-import { placeOrder } from "../actions";
+import type { DeliveryAddress, OrderItem, PaymentMethod } from "@/types/shop";
+import { abandonOrderPayment, placeOrder } from "../actions";
 
 export type BasketProduct = {
   id: string;
@@ -49,14 +54,31 @@ const FULFILMENT_CHOICES: { value: Fulfilment; title: string; hint: string }[] =
     {
       value: "collection",
       title: "Collect from the salon",
-      hint: "Pay when you collect",
+      hint: "Pay online now, or when you collect",
     },
     {
       value: "delivery",
       title: "Deliver to me",
-      hint: "Free UK delivery",
+      hint: "Free UK delivery, paid online",
     },
   ];
+
+const PAYMENT_CHOICES: { value: PaymentMethod; title: string; hint: string }[] =
+  [
+    {
+      value: "online",
+      title: "Pay online now",
+      hint: "Card, Apple Pay or Google Pay",
+    },
+    {
+      value: "in_store",
+      title: "Pay when you collect",
+      hint: "In the salon",
+    },
+  ];
+
+const radioCard =
+  "flex min-h-14 cursor-pointer items-center gap-3 rounded-sm border border-field px-4 py-3 transition-colors hover:bg-brand/5 has-checked:border-brand has-checked:bg-brand/5";
 
 export function Basket({
   products,
@@ -75,7 +97,40 @@ export function Basket({
   const [placed, setPlaced] = useState<Placed | null>(null);
   const [fulfilment, setFulfilment] = useState<Fulfilment>("collection");
   const delivering = fulfilment === "delivery";
+  const [paymentChoice, setPaymentChoice] = useState<PaymentMethod>("online");
+  // Delivery is always paid online.
+  const payOnline = delivering || paymentChoice === "online";
   const [submitting, startSubmit] = useTransition();
+  // Stays true while the browser leaves for Stripe's payment page.
+  const [redirecting, setRedirecting] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // Back from Stripe without paying (its cancel link, ?unpaid=ref, or the
+  // browser's Back button): drop the unpaid order. The basket is still here.
+  useEffect(() => {
+    function releaseUnpaid(announce: boolean) {
+      for (const held of unsettledBookings("TLO-")) {
+        settleBookingAccess(held.ref);
+        void abandonOrderPayment(held).then(({ outcome }) => {
+          if (outcome === "paid") {
+            router.push(`/shop/order/${encodeURIComponent(held.ref)}`);
+          } else if (announce) {
+            setNotice(
+              "Payment not completed, so your order wasn't placed. Your basket is still here.",
+            );
+          }
+        });
+      }
+    }
+    function onPageShow(event: PageTransitionEvent) {
+      if (!event.persisted) return;
+      setRedirecting(false);
+      releaseUnpaid(true);
+    }
+    releaseUnpaid(new URLSearchParams(window.location.search).has("unpaid"));
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [router]);
 
   const byId = new Map(products.map((p) => [p.id, p]));
   const rows = lines.map((line) => {
@@ -104,6 +159,7 @@ export function Basket({
           quantity,
         })),
         fulfilment,
+        payment: payOnline ? "online" : "in_store",
         addressLine1: form.get("addressLine1"),
         addressLine2: form.get("addressLine2"),
         city: form.get("city"),
@@ -115,7 +171,14 @@ export function Basket({
         website: form.get("website"),
       });
       if (result.ok) {
-        const { order, cancelToken } = result;
+        const { order, cancelToken, checkoutUrl } = result;
+        if (checkoutUrl) {
+          // The basket stays until the payment goes through.
+          saveBookingAccess(order.ref, { token: cancelToken, photos: 0 });
+          setRedirecting(true);
+          window.location.assign(checkoutUrl);
+          return;
+        }
         setPlaced({
           ...order,
           manageUrl: `/shop/order/${order.ref}#t=${cancelToken}`,
@@ -232,6 +295,14 @@ export function Basket({
   return (
     <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_24rem] lg:gap-16">
       <div className="flex flex-col gap-8">
+        {notice && (
+          <p
+            role="status"
+            className="border-l-2 border-accent pl-4 font-semibold text-brand"
+          >
+            {notice}
+          </p>
+        )}
         <ul className="border-t border-line">
           {rows.map(({ productId, quantity, product, available }) => (
             <li
@@ -297,7 +368,11 @@ export function Basket({
 
         <div className="flex items-baseline justify-between text-lg">
           <span>
-            {delivering ? "Total, free delivery" : "Total, paid on collection"}
+            {delivering
+              ? "Total, free delivery"
+              : payOnline
+                ? "Total"
+                : "Total, paid on collection"}
           </span>
           <span className="font-semibold text-brand">{formatPrice(total)}</span>
         </div>
@@ -320,10 +395,7 @@ export function Basket({
               How would you like to get it?
             </legend>
             {FULFILMENT_CHOICES.map((choice) => (
-              <label
-                key={choice.value}
-                className="flex min-h-14 cursor-pointer items-center gap-3 rounded-sm border border-field px-4 py-3 transition-colors hover:bg-brand/5 has-checked:border-brand has-checked:bg-brand/5"
-              >
+              <label key={choice.value} className={radioCard}>
                 <input
                   type="radio"
                   name="fulfilment"
@@ -339,6 +411,30 @@ export function Basket({
               </label>
             ))}
           </fieldset>
+
+          {!delivering && (
+            <fieldset className="flex flex-col gap-3">
+              <legend className="mb-3 text-sm text-muted">
+                How would you like to pay?
+              </legend>
+              {PAYMENT_CHOICES.map((choice) => (
+                <label key={choice.value} className={radioCard}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value={choice.value}
+                    checked={paymentChoice === choice.value}
+                    onChange={() => setPaymentChoice(choice.value)}
+                    className="size-4 accent-brand"
+                  />
+                  <span className="flex flex-col">
+                    <span className="font-semibold">{choice.title}</span>
+                    <span className="text-sm text-muted">{choice.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+          )}
 
           <Field label="Name" error={fieldErrors.name}>
             <input
@@ -441,6 +537,12 @@ export function Basket({
               {formError}
             </p>
           )}
+          {payOnline && (
+            <p className="text-sm text-muted">
+              Next you&rsquo;ll pay {formatPrice(total)} on our secure payment
+              page. Your order is placed once the payment goes through.
+            </p>
+          )}
           {blocked && (
             <p className="text-sm font-semibold text-brand">
               Remove the unavailable items to place your order.
@@ -448,14 +550,16 @@ export function Basket({
           )}
           <button
             type="submit"
-            disabled={submitting || blocked}
+            disabled={submitting || blocked || redirecting}
             className="min-h-12 rounded-full bg-brand px-8 font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted"
           >
-            {submitting
-              ? "Placing order…"
-              : delivering
-                ? "Place order · free delivery"
-                : "Place order · pay on collection"}
+            {redirecting
+              ? "Opening payment…"
+              : submitting
+                ? "Placing order…"
+                : payOnline
+                  ? `Pay ${formatPrice(total)}`
+                  : "Place order · pay on collection"}
           </button>
         </form>
       </div>

@@ -5,6 +5,8 @@ import {
   fulfilmentLabel,
   itemCount,
   orderStatusLabel,
+  paymentLabel,
+  refundablePence,
 } from "@/lib/shop/orders";
 import { CancelButton } from "./cancel-button";
 import { OrderAgain } from "./order-again";
@@ -43,10 +45,21 @@ export function OrderRow({
         <p className="text-sm">
           {order.delivery
             ? `Delivery to ${order.delivery.postcode}`
-            : fulfilmentLabel(order)}
+            : fulfilmentLabel(order)}{" "}
+          · {paymentLabel(order)}
         </p>
       </div>
-      {order.canCancel && <CancelButton kind="order" id={order.id} />}
+      {order.canCancel && (
+        <CancelButton
+          kind="order"
+          id={order.id}
+          warning={
+            refundablePence(order) > 0
+              ? `We'll refund ${formatPrice(refundablePence(order))} to your card.`
+              : undefined
+          }
+        />
+      )}
       {orderAgain && order.reorder.length > 0 && (
         <div className="flex flex-col gap-1">
           <OrderAgain lines={order.reorder} />

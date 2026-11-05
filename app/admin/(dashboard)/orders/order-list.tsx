@@ -12,6 +12,7 @@ import {
 } from "../_components/admin-ui";
 
 const TONE: Record<OrderStatus, BadgeTone> = {
+  awaiting_payment: "muted",
   pending: "attention",
   ready: "accent",
   collected: "muted",
@@ -55,8 +56,15 @@ export function OrderRows({
                 <span className="block truncate text-sm text-muted">
                   {fulfilmentLabel(order)} · {count}{" "}
                   {count === 1 ? "item" : "items"} ·{" "}
-                  {formatPrice(order.totalPence)} ·{" "}
-                  {placedAt.format(new Date(order.createdAt))}
+                  {formatPrice(order.totalPence)}
+                  {order.payment?.status === "paid"
+                    ? " paid online"
+                    : order.payment?.status === "refunded"
+                      ? " refunded"
+                      : order.payment?.status === "refund_failed"
+                        ? " (refund failed)"
+                        : ""}{" "}
+                  · {placedAt.format(new Date(order.createdAt))}
                 </span>
               </span>
               <OrderStatusBadge order={order} />

@@ -4,6 +4,7 @@ import Stripe from "stripe";
 
 import { formatLocalDate } from "@/lib/format";
 import type { Booking } from "@/types/booking";
+import type { Order } from "@/types/shop";
 
 // The salon's Stripe account (sandbox key in development). Deposits use
 // Stripe-hosted Checkout, so card details never reach this site. The API
@@ -91,16 +92,60 @@ export async function expireCheckout(sessionId: string): Promise<boolean> {
   }
 }
 
+// The Stripe payment page for an order paid online. Same lifetime as a
+// deposit page; back to the order page when paid, to the basket if not.
+export async function createOrderCheckout(
+  order: Order,
+  { siteUrl, expiresAt }: { siteUrl: string; expiresAt: number },
+): Promise<{ id: string; url: string }> {
+  const ref = encodeURIComponent(order.ref);
+  const metadata = { orderId: order.id, ref: order.ref };
+  const session = await stripe().checkout.sessions.create(
+    {
+      mode: "payment",
+      // Cards only (with Apple Pay and Google Pay), as for deposits.
+      allowed_payment_method_types: ["card"],
+      line_items: order.items.map((item) => ({
+        quantity: item.quantity,
+        price_data: {
+          currency: "gbp",
+          unit_amount: item.pricePence,
+          product_data: { name: item.name },
+        },
+      })),
+      customer_email: order.client.email,
+      client_reference_id: order.id,
+      metadata,
+      payment_intent_data: { metadata, description: `Order ${order.ref}` },
+      submit_type: "pay",
+      locale: "en-GB",
+      expires_at: expiresAt,
+      success_url: `${siteUrl}/shop/order/${ref}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/shop/basket?unpaid=${ref}`,
+    },
+    { idempotencyKey: `order-checkout-${order.id}` },
+  );
+  if (!session.url) throw new Error("Stripe returned no Checkout URL");
+  return { id: session.id, url: session.url };
+}
+
+// What a payment belongs to, kept on the refund in Stripe.
+export type PaymentOwner = { bookingId: string } | { orderId: string };
+
 // Repeating a call with the same attempt returns the same refund, so a double
 // submit can't refund twice (Stripe also refuses to refund more than was paid).
 export async function refundPayment(
   paymentIntentId: string,
-  bookingId: string,
+  owner: PaymentOwner,
   attempt: string,
 ): Promise<string> {
+  const key =
+    "bookingId" in owner
+      ? `deposit-refund-${owner.bookingId}`
+      : `order-refund-${owner.orderId}`;
   const refund = await stripe().refunds.create(
-    { payment_intent: paymentIntentId, metadata: { bookingId } },
-    { idempotencyKey: `deposit-refund-${bookingId}-${attempt}` },
+    { payment_intent: paymentIntentId, metadata: owner },
+    { idempotencyKey: `${key}-${attempt}` },
   );
   return refund.id;
 }

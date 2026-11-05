@@ -20,6 +20,7 @@ import { bookingRepository } from "@/lib/booking/server";
 import { clientKey } from "@/lib/client-key";
 import { notifyBooking } from "@/lib/email/booking-emails";
 import { notifyOrder } from "@/lib/email/order-emails";
+import { refundOrder } from "@/lib/shop/payment";
 import { adminDb } from "@/lib/firebase/admin";
 import { deleteMember } from "@/lib/members/delete";
 import {
@@ -201,6 +202,9 @@ export async function cancelOrderAsMember(
       new Date(),
     );
     if (result.ok) {
+      // Paid online: the customer gets their money back.
+      const order = await orderRepository().getOrder(id.data);
+      if (order) await refundOrder(order);
       notifyOrder({ kind: "customer_cancelled", by: { id: id.data } });
       refresh();
     }

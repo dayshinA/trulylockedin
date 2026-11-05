@@ -1,6 +1,8 @@
 import type {
   DeliveryAddress,
   Order,
+  OrderPayment,
+  PaymentMethod,
   OrderItem,
   OrderStatus,
   Product,
@@ -19,6 +21,8 @@ export type MemberOrder = {
   totalPence: number;
   status: OrderStatus;
   delivery?: DeliveryAddress;
+  paymentMethod?: PaymentMethod;
+  payment?: Pick<OrderPayment, "amountPence" | "status">;
   createdAt: string;
   canCancel: boolean;
   // The items that can still be bought, for "Order again". Prices and stock
@@ -52,6 +56,11 @@ export async function loadMemberOrders(
     status: order.status,
     delivery: order.delivery,
     createdAt: order.createdAt,
+    paymentMethod: order.paymentMethod,
+    payment: order.payment && {
+      amountPence: order.payment.amountPence,
+      status: order.payment.status,
+    },
     canCancel: canCustomerCancel(order),
     reorder: order.items
       .filter((item) => buyable.has(item.productId))

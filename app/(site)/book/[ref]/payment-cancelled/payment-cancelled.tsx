@@ -7,7 +7,7 @@ import { abandonDeposit } from "../../actions";
 import {
   readBookingAccess,
   settleBookingAccess,
-} from "../../booking-access";
+} from "@/lib/checkout-access";
 
 type State =
   | { kind: "loading" }

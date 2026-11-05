@@ -6,7 +6,13 @@ import {
   sameEmail,
   tokenMatches,
 } from "@/lib/booking/tokens";
-import type { DeliveryAddress, OrderItem, OrderStatus } from "@/types/shop";
+import type {
+  DeliveryAddress,
+  OrderItem,
+  OrderPaymentStatus,
+  OrderStatus,
+  PaymentMethod,
+} from "@/types/shop";
 import type { OrderRepository } from "./order-repository";
 import { canCustomerCancel } from "./orders";
 
@@ -23,6 +29,8 @@ export type OrderSummary = {
   clientName: string;
   // Missing means collection in the salon.
   delivery?: DeliveryAddress;
+  paymentMethod?: PaymentMethod;
+  payment?: { amountPence: number; status: OrderPaymentStatus };
   canCancel: boolean;
 };
 
@@ -72,6 +80,14 @@ async function authorise(repo: OrderRepository, raw: unknown) {
   return allowed ? order : null;
 }
 
+// The full order, for server code acting on the customer's behalf.
+export function findOwnOrder(
+  repo: OrderRepository,
+  credentials: ManageOrderCredentials,
+) {
+  return authorise(repo, credentials);
+}
+
 export async function findManagedOrder(
   repo: OrderRepository,
   raw: unknown,
@@ -87,6 +103,11 @@ export async function findManagedOrder(
       status: order.status,
       clientName: order.client.name,
       delivery: order.delivery,
+      paymentMethod: order.paymentMethod,
+      payment: order.payment && {
+        amountPence: order.payment.amountPence,
+        status: order.payment.status,
+      },
       canCancel: canCustomerCancel(order),
     },
   };

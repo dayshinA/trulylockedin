@@ -27,10 +27,38 @@ export type Product = {
 };
 
 // orders/{id} — an order to collect in the salon, or to post (`delivery`).
-//   pending → ready → collected; pending | ready → cancelled.
+//   (awaiting_payment →) pending → ready → collected; pending | ready → cancelled.
 // For a delivery, "ready" means posted and "collected" means delivered; the
 // labels in lib/shop/orders.ts say so.
-export type OrderStatus = "pending" | "ready" | "collected" | "cancelled";
+// awaiting_payment: sent to Stripe to pay and not paid yet. Hidden from every
+// list, and deleted if the payment page expires or is abandoned.
+export type OrderStatus =
+  | "awaiting_payment"
+  | "pending"
+  | "ready"
+  | "collected"
+  | "cancelled";
+
+// Delivery is always paid online; collection can be paid online or in the
+// salon.
+export type PaymentMethod = "online" | "in_store";
+
+export type OrderPaymentStatus =
+  | "awaiting"
+  | "paid"
+  | "refunded"
+  | "refund_failed";
+
+// An online (Stripe) payment. Orders paid in the salon have none.
+export type OrderPayment = {
+  amountPence: number;
+  status: OrderPaymentStatus;
+  checkoutSessionId?: string;
+  paymentIntentId?: string;
+  paidAt?: string;
+  refundId?: string;
+  refundedAt?: string;
+};
 
 // A UK postal address. The postcode is stored upper-case with one space.
 export type DeliveryAddress = {
@@ -66,6 +94,9 @@ export type Order = {
   // Where to post it. Missing means the customer collects in the salon, which
   // is also what every order placed before delivery existed means.
   delivery?: DeliveryAddress;
+  // Missing on orders before online payment: paid in the salon.
+  paymentMethod?: PaymentMethod;
+  payment?: OrderPayment;
   status: OrderStatus;
   // sha256 of the token in the customer's private order link.
   cancelTokenHash: string;

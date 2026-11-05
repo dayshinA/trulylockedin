@@ -22,7 +22,7 @@ import {
   saveBookingAccess,
   settleBookingAccess,
   unsettledBookings,
-} from "./booking-access";
+} from "@/lib/checkout-access";
 import { DayGrid } from "./day-grid";
 import {
   photosBusy,
@@ -115,7 +115,7 @@ export function BookingFlow({
   // the time this tab was holding, or it would block the client's own retry.
   useEffect(() => {
     function releaseHolds() {
-      for (const held of unsettledBookings()) {
+      for (const held of unsettledBookings("TLI-")) {
         settleBookingAccess(held.ref);
         void abandonDeposit(held);
       }

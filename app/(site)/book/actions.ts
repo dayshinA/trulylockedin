@@ -1,7 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
-
 import { getMember } from "@/lib/auth/member-dal";
 import { abandonCheckout, fulfilCheckout } from "@/lib/booking/deposit";
 import { holdTimes } from "@/lib/booking/deposit-rules";
@@ -23,6 +21,7 @@ import { clientKey } from "@/lib/client-key";
 import { notifyBooking } from "@/lib/email/booking-emails";
 import { rememberMemberPhone } from "@/lib/members/remember-phone";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { siteOrigin } from "@/lib/site-origin";
 import { createDepositCheckout } from "@/lib/stripe";
 
 // Per-process; see lib/rate-limit.ts.
@@ -46,17 +45,6 @@ export async function getSlots(input: {
   date: string;
 }): Promise<FindSlotsResult> {
   return findSlots(bookingRepository(), input, new Date());
-}
-
-// Where Stripe sends the client back to. Server Action requests carry an
-// Origin that Next has already checked against the host.
-async function siteOrigin(): Promise<string> {
-  const origin = (await headers()).get("origin");
-  return (
-    origin ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "http://localhost:3000"
-  ).replace(/\/+$/, "");
 }
 
 // Guests and members use the same form. A signed-in member's bookings are

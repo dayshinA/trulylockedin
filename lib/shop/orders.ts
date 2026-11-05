@@ -3,7 +3,10 @@ import type { OrderRepository } from "./order-repository";
 
 // Order rules shared by the public pages, the admin and the repository.
 
+// awaiting_payment only changes through the Stripe payment
+// (FirestoreOrderRepository.confirmPayment / releaseUnpaid).
 const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  awaiting_payment: [],
   pending: ["ready", "cancelled"],
   ready: ["collected", "cancelled", "pending"],
   collected: [],
@@ -30,6 +33,7 @@ type Fulfilled = Pick<Order, "delivery">;
 const posted = (order: Fulfilled) => order.delivery !== undefined;
 
 const CUSTOMER_LABELS: Record<OrderStatus, string> = {
+  awaiting_payment: "Waiting for payment",
   pending: "Received, being prepared",
   ready: "Ready to collect",
   collected: "Collected",
@@ -42,6 +46,7 @@ const CUSTOMER_DELIVERY_LABELS: Record<OrderStatus, string> = {
 };
 
 const ADMIN_LABELS: Record<OrderStatus, string> = {
+  awaiting_payment: "Awaiting payment",
   pending: "New",
   ready: "Ready",
   collected: "Collected",
@@ -54,6 +59,7 @@ const ADMIN_DELIVERY_LABELS: Record<OrderStatus, string> = {
 };
 
 const ACTIONS: Record<OrderStatus, string> = {
+  awaiting_payment: "Await payment",
   pending: "Back to new",
   ready: "Mark ready to collect",
   collected: "Mark collected",
@@ -79,6 +85,28 @@ export const orderStatusAction = (order: Fulfilled, status: OrderStatus) =>
 
 export const fulfilmentLabel = (order: Fulfilled) =>
   posted(order) ? "Delivery" : "Collection";
+
+// Paid online (and not refunded): what a refund would give back.
+export const refundablePence = (order: Pick<Order, "payment">) =>
+  order.payment?.status === "paid" || order.payment?.status === "refund_failed"
+    ? order.payment.amountPence
+    : 0;
+
+// One line on how the order is paid, for the customer and the owner.
+export function paymentLabel(order: Pick<Order, "payment" | "paymentMethod">) {
+  const payment = order.payment;
+  if (!payment) return "Pay in the salon when you collect";
+  switch (payment.status) {
+    case "awaiting":
+      return "Online payment not completed";
+    case "paid":
+      return "Paid online";
+    case "refunded":
+      return "Paid online, refunded";
+    case "refund_failed":
+      return "Paid online, refund in progress";
+  }
+}
 
 // Admin list views. "collected" holds delivered orders too.
 export const ORDER_VIEWS = ["open", "collected", "cancelled"] as const;
