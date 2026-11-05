@@ -19,6 +19,8 @@ type SeedService = {
   optionsSelectionMode: OptionsSelectionMode;
   optionsRequired: boolean;
   description?: string;
+  // Defaults to true; the wash services don't take a deposit.
+  depositRequired?: boolean;
   options: SeedOption[];
 };
 
@@ -149,8 +151,8 @@ const CATALOGUE: { name: string; services: SeedService[] }[] = [
     name: "Other Hair Services",
     services: [
       plain("Shea Butter Hair treatment", 40, 60),
-      plain("Wash Blow Dry", 40, 30),
-      plain("Wash Blowdry + Cut", 50, 60),
+      plain("Wash Blow Dry", 40, 30, { depositRequired: false }),
+      plain("Wash Blowdry + Cut", 50, 60, { depositRequired: false }),
     ],
   },
 ];
@@ -177,6 +179,7 @@ export const SEED_SERVICES: Service[] = CATALOGUE.flatMap(
       priceFromPence: s.price * 100,
       ...(s.priceLabel ? { priceLabel: s.priceLabel } : {}),
       durationMin: s.durationMinutes,
+      depositRequired: s.depositRequired ?? true,
       active: true,
       onlineBooking: true,
       optionsSelectionMode: s.optionsSelectionMode,

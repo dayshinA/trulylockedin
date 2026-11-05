@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { RateLimiter } from "@/lib/rate-limit";
 import type {
+  Booking,
   BookingRejection,
   BookingStatus,
   LocalDate,
@@ -81,6 +82,9 @@ export type SubmitBookingResult =
       };
       // Only ever returned here; the store keeps its hash.
       cancelToken: string;
+      // Set when a deposit is due: send the client to Stripe's payment page.
+      // The booking is held (awaiting_deposit) until it's paid.
+      checkoutUrl?: string;
     }
   | {
       ok: false;
@@ -99,6 +103,8 @@ export async function submitBooking(
     limiter: RateLimiter;
     // From the member session, never from `raw`.
     memberId?: string;
+    // Makes the Stripe payment page for a booking held for its deposit.
+    startCheckout: (booking: Booking) => Promise<{ id: string; url: string }>;
   },
 ): Promise<SubmitBookingResult> {
   // Honeypot first: bots get a dull, uninformative failure.
@@ -162,8 +168,27 @@ export async function submitBooking(
     }
 
     const { booking } = result;
+    let checkoutUrl: string | undefined;
+    if (booking.status === "awaiting_deposit") {
+      try {
+        const checkout = await context.startCheckout(booking);
+        await repo.attachCheckoutSession(booking.id, checkout.id);
+        checkoutUrl = checkout.url;
+      } catch (error) {
+        console.error("Deposit payment page failed", booking.id, error);
+        await repo
+          .releaseHold(booking.id)
+          .catch((e) => console.error("Hold not released", booking.id, e));
+        return {
+          ok: false,
+          error:
+            "We couldn't open the payment page. Please try again in a moment.",
+        };
+      }
+    }
     return {
       ok: true,
+      checkoutUrl,
       booking: {
         ref: booking.ref,
         serviceName: booking.service.name,

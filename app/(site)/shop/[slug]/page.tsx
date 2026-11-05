@@ -26,7 +26,7 @@ export async function generateMetadata({
           product.description ||
           `${product.name}, ${formatPrice(product.pricePence)}`,
       }
-    : { title: "Shop" };
+    : { title: "Page not found" };
 }
 
 export default function ProductPage({ params }: PageProps<"/shop/[slug]">) {

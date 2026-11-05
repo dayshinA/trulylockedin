@@ -166,6 +166,11 @@ export function ServiceForm({
         label="Bookable online"
         defaultChecked={service?.onlineBooking ?? true}
       />
+      <Checkbox
+        name="depositRequired"
+        label="Takes a deposit when booked online (the amount is set under Availability → Booking rules)"
+        defaultChecked={service?.depositRequired ?? true}
+      />
 
       <FormMessage state={state} />
       <SubmitButton pending={pending}>

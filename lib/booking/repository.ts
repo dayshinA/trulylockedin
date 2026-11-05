@@ -1,5 +1,6 @@
 import type {
   BookedTime,
+  BookingDeposit,
   BookingMode,
   Booking,
   BookingClient,
@@ -46,6 +47,22 @@ export type CreateBookingResult =
   | { ok: true; booking: Booking }
   | { ok: false; reason: BookingRejection };
 
+// What a completed Stripe payment page reports for a deposit.
+export type DepositPayment = {
+  checkoutSessionId: string;
+  paymentIntentId: string;
+  amountPence: number;
+};
+
+export type ConfirmDepositResult =
+  // This call confirmed it (send the emails).
+  | { kind: "confirmed"; booking: Booking }
+  // Already confirmed by this payment (webhook and return page both call).
+  | { kind: "already"; booking: Booking }
+  // The payment can't be kept: the hold is gone, or its time was taken after
+  // the hold lapsed. The booking (if any) is now cancelled; refund the payment.
+  | { kind: "refund"; booking: Booking | null };
+
 export type StatusChangeResult =
   | { ok: true; booking: Booking }
   | { ok: false; reason: "not_found" | "invalid_transition" };
@@ -56,10 +73,12 @@ export interface BookingRepository {
   getSettings(): Promise<BookingSettings>;
   getWeeklyHours(): Promise<WeeklyHours>;
   getOverride(date: LocalDate): Promise<DateOverride | null>;
-  // Full bookings for a date (admin views), ordered by start time.
+  // Full bookings for a date (admin views), ordered by start time. Like every
+  // list below, it leaves out bookings still awaiting their deposit.
   getBookingsForDate(date: LocalDate): Promise<Booking[]>;
-  // Times that block availability on a date; cancelled bookings excluded.
-  getBookedTimes(date: LocalDate): Promise<BookedTime[]>;
+  // Times that block availability on a date at `now`; cancelled bookings and
+  // lapsed deposit holds excluded.
+  getBookedTimes(date: LocalDate, now: Date): Promise<BookedTime[]>;
   getBooking(id: string): Promise<Booking | null>;
   // Inactive services are returned too; callers decide (availability rejects them).
   getService(id: string): Promise<Service | null>;
@@ -78,8 +97,27 @@ export interface BookingRepository {
   ): Promise<StatusChangeResult>;
   // Atomic: re-reads rules and bookings, runs validateBookingRequest, and writes
   // only if it passes. Concurrent requests for overlapping times: one wins,
-  // the rest get "slot_taken".
+  // the rest get "slot_taken". An online booking for a service that takes a
+  // deposit is created as awaiting_deposit, holding its time until
+  // holdExpiresAt.
   createBooking(input: CreateBookingInput): Promise<CreateBookingResult>;
+  // The Stripe payment page made for a held booking.
+  attachCheckoutSession(id: string, checkoutSessionId: string): Promise<void>;
+  // Atomic. Safe to call repeatedly and concurrently for the same payment.
+  confirmDeposit(
+    id: string,
+    payment: DepositPayment,
+    now: Date,
+  ): Promise<ConfirmDepositResult>;
+  // Deletes a booking still awaiting its deposit and frees its time. With a
+  // session id, only if that's the booking's payment page. Returns the
+  // released booking, or null if there was nothing to release.
+  releaseHold(id: string, checkoutSessionId?: string): Promise<Booking | null>;
+  updateDeposit(
+    id: string,
+    deposit: BookingDeposit,
+    now: Date,
+  ): Promise<void>;
   // Enforces rules.canTransition. Use cancelBooking for cancellations.
   updateBookingStatus(
     id: string,
@@ -153,7 +191,7 @@ export async function loadAvailableSlots(
     repo.getSettings(),
     repo.getWeeklyHours(),
     repo.getOverride(date),
-    repo.getBookedTimes(date),
+    repo.getBookedTimes(date, now),
   ]);
   return getAvailableSlots({
     date,

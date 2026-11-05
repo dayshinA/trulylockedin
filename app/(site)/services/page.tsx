@@ -4,7 +4,7 @@ import { Reveal } from "@/components/motion/reveal";
 import { BookCta } from "@/components/site/book-cta";
 import { PageIntro } from "@/components/site/page-intro";
 import { ServiceRow } from "@/components/site/service-row";
-import { getServiceCatalogue } from "@/lib/data/public";
+import { getDepositPence, getServiceCatalogue } from "@/lib/data/public";
 
 export const metadata: Metadata = {
   title: "Services & prices",
@@ -13,7 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ServicesPage() {
-  const groups = await getServiceCatalogue();
+  const [groups, depositPence] = await Promise.all([
+    getServiceCatalogue(),
+    getDepositPence(),
+  ]);
 
   return (
     <main className="flex flex-col">
@@ -43,7 +46,11 @@ export default async function ServicesPage() {
                 className={`border-t border-line ${groups.length > 1 ? "" : "md:col-span-2"}`}
               >
                 {category.services.map((service) => (
-                  <ServiceRow key={service.id} service={service} />
+                  <ServiceRow
+                    key={service.id}
+                    service={service}
+                    depositPence={depositPence}
+                  />
                 ))}
               </Reveal>
             </section>

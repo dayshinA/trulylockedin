@@ -88,6 +88,9 @@ export default async function ServicesPage() {
                             <Badge tone="muted">Not online</Badge>
                           )
                         )}
+                        {!service.depositRequired && (
+                          <Badge tone="muted">No deposit</Badge>
+                        )}
                       </Link>
                     </li>
                   ))}

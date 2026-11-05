@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { penceToPounds } from "@/lib/booking/admin-forms";
 import {
   WEEKDAYS,
   type BookingSettings,
@@ -9,7 +10,6 @@ import {
   type WeeklyHours,
 } from "@/types/booking";
 import {
-  Checkbox,
   Field,
   FormMessage,
   inputClass,
@@ -223,11 +223,18 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
           />
         </Field>
       </div>
-      <Checkbox
-        name="autoConfirm"
-        label="Confirm online bookings automatically (otherwise you confirm each one)"
-        defaultChecked={settings.autoConfirm}
-      />
+      <Field
+        label="Deposit (£)"
+        hint="Paid online when booking a service that takes a deposit. Paying it confirms the booking. 0 turns deposits off."
+        error={errors.depositPence}
+      >
+        <input
+          name="deposit"
+          inputMode="decimal"
+          defaultValue={penceToPounds(settings.depositPence)}
+          className={`${inputClass} sm:max-w-40`}
+        />
+      </Field>
       <FormMessage state={state} />
       <SubmitButton pending={pending}>Save booking rules</SubmitButton>
     </form>

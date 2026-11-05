@@ -6,7 +6,6 @@ import { addDays, localToUtcMs, todayLocal } from "./time";
 
 export const BOOKING_VIEWS = [
   "upcoming",
-  "pending",
   "past",
   "cancelled",
 ] as const;
@@ -19,13 +18,11 @@ function startOfDayIso(date: LocalDate, timeZone: string): string {
   return new Date(localToUtcMs(date, "00:00", timeZone)!).toISOString();
 }
 
-const isOpen = (b: Booking) =>
-  b.status === "pending" || b.status === "confirmed";
+const isOpen = (b: Booking) => b.status === "confirmed";
 
 export type Overview = {
   today: LocalDate;
   todays: Booking[];
-  pending: Booking[];
   upcoming: Booking[];
 };
 
@@ -39,15 +36,11 @@ export async function loadOverview(
     fromUtc: startOfDayIso(today, timezone),
   });
   const weekEnd = addDays(today, OVERVIEW_DAYS);
-  const nowIso = now.toISOString();
 
   return {
     today,
     todays: bookings.filter(
       (b) => b.date === today && b.status !== "cancelled",
-    ),
-    pending: bookings.filter(
-      (b) => b.status === "pending" && b.endUtc > nowIso,
     ),
     upcoming: bookings.filter(
       (b) => b.date > today && b.date <= weekEnd && isOpen(b),
@@ -75,11 +68,9 @@ export async function loadBookingList(
 
   const bookings = await repo.listBookings({ fromUtc: todayStart });
   const filtered = bookings.filter((b) =>
-    view === "pending"
-      ? b.status === "pending"
-      : view === "cancelled"
-        ? b.status === "cancelled"
-        : b.status !== "cancelled",
+    view === "cancelled"
+      ? b.status === "cancelled"
+      : b.status !== "cancelled",
   );
   return { today, bookings: filtered };
 }

@@ -14,7 +14,7 @@ import {
 } from "../_components/admin-ui";
 
 const TONE: Record<BookingStatus, BadgeTone> = {
-  pending: "attention",
+  awaiting_deposit: "attention",
   confirmed: "accent",
   cancelled: "struck",
   completed: "muted",

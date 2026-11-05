@@ -4,8 +4,9 @@ import { ChevronDown } from "lucide-react";
 import { useEffect } from "react";
 
 import { OptionPicker } from "@/components/site/option-picker";
+import { depositFor } from "@/lib/booking/deposit-rules";
 import { quoteService } from "@/lib/booking/quote";
-import { formatDuration, formatPriceFrom } from "@/lib/format";
+import { formatDuration, formatPrice, formatPriceFrom } from "@/lib/format";
 import type { Service } from "@/types/booking";
 
 export type BookableService = Pick<
@@ -16,6 +17,7 @@ export type BookableService = Pick<
   | "priceFromPence"
   | "priceLabel"
   | "depositNote"
+  | "depositRequired"
   | "options"
   | "optionsSelectionMode"
   | "optionsRequired"
@@ -62,6 +64,7 @@ export function ServicePicker({
   onToggleService,
   onOptionsChange,
   onContinue,
+  depositPence,
 }: {
   catalogue: BookableCategory[];
   openCategoryIds: string[];
@@ -71,6 +74,7 @@ export function ServicePicker({
   onToggleService: (service: BookableService) => void;
   onOptionsChange: (optionIds: string[]) => void;
   onContinue: () => void;
+  depositPence: number;
 }) {
   const openServiceId = service?.id;
 
@@ -125,6 +129,7 @@ export function ServicePicker({
                     onToggle={() => onToggleService(s)}
                     onOptionsChange={onOptionsChange}
                     onContinue={onContinue}
+                    depositPence={depositPence}
                   />
                 ))}
               </ul>
@@ -143,6 +148,7 @@ function ServiceItem({
   onToggle,
   onOptionsChange,
   onContinue,
+  depositPence,
 }: {
   service: BookableService;
   open: boolean;
@@ -150,9 +156,11 @@ function ServiceItem({
   onToggle: () => void;
   onOptionsChange: (optionIds: string[]) => void;
   onContinue: () => void;
+  depositPence: number;
 }) {
   const panelId = `service-${service.id}`;
   const totals = totalsOf(service, optionIds);
+  const deposit = depositFor(depositPence, service, totals.pricePence);
   const hasOptions = service.options.length > 0;
 
   return (
@@ -193,6 +201,12 @@ function ServiceItem({
           )}
           {service.priceLabel && (
             <p className="max-w-prose text-sm text-muted">{service.priceLabel}</p>
+          )}
+          {deposit > 0 && (
+            <p className="max-w-prose text-sm text-ink">
+              {formatPrice(deposit)} non-refundable deposit to book, paid
+              online. It comes off the price on the day.
+            </p>
           )}
           {service.depositNote && (
             <p className="max-w-prose text-sm text-ink">{service.depositNote}</p>

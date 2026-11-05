@@ -17,14 +17,12 @@ export const metadata: Metadata = {
 
 const VIEW_LABELS: Record<BookingView, string> = {
   upcoming: "Upcoming",
-  pending: "To confirm",
   past: "Past 30 days",
   cancelled: "Cancelled",
 };
 
 const EMPTY: Record<BookingView, string> = {
   upcoming: "No upcoming bookings.",
-  pending: "Nothing waiting for confirmation.",
   past: "No bookings in the last 30 days.",
   cancelled: "No upcoming cancellations.",
 };

@@ -1,5 +1,4 @@
 import type {
-  BookingMode,
   BookingSettings,
   BookingStatus,
   DateOverride,
@@ -58,8 +57,10 @@ export function blockedIntervals(
   });
 }
 
+// awaiting_deposit only changes through the Stripe payment
+// (FirestoreBookingRepository.confirmDeposit / releaseHold), never by hand.
 const TRANSITIONS: Record<BookingStatus, readonly BookingStatus[]> = {
-  pending: ["confirmed", "cancelled"],
+  awaiting_deposit: [],
   confirmed: ["cancelled", "completed", "no_show"],
   cancelled: [],
   completed: [],
@@ -78,14 +79,7 @@ export function canClientCancel(
   now: Date,
 ): boolean {
   return (
-    (booking.status === "pending" || booking.status === "confirmed") &&
+    booking.status === "confirmed" &&
     meetsMinNotice(Date.parse(booking.startUtc), settings, now)
   );
-}
-
-export function initialStatus(
-  settings: BookingSettings,
-  mode: BookingMode = "client",
-): BookingStatus {
-  return mode === "owner" || settings.autoConfirm ? "confirmed" : "pending";
 }

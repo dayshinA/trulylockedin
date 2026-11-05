@@ -11,6 +11,7 @@ import {
 import type {
   BookedTime,
   Booking,
+  BookingDeposit,
   BookingSettings,
   BookingStatus,
   DateOverride,
@@ -20,20 +21,23 @@ import type {
   WeeklyHours,
 } from "@/types/booking";
 import { DEFAULT_BOOKING_SETTINGS } from "./defaults";
-import { occupiesTime } from "./overlap";
+import { depositFor, holdTimes } from "./deposit-rules";
+import { blocksTime, clashesWithBookings, occupiesTime } from "./overlap";
 import {
   BookingNotConfiguredError,
   sortCategories,
   sortServices,
   type BookingRepository,
   type CreateBookingInput,
+  type ConfirmDepositResult,
   type CreateBookingResult,
   type DeleteCategoryResult,
+  type DepositPayment,
   type SaveResult,
   type StatusChangeResult,
 } from "./repository";
 import { quoteForBooking } from "./quote";
-import { canTransition, initialStatus } from "./rules";
+import { canTransition } from "./rules";
 import {
   bookedTimeSchema,
   bookingSchema,
@@ -88,12 +92,22 @@ function parseOverride(snap: DocumentSnapshot): DateOverride | null {
   return dateOverrideSchema.parse({ date: snap.id, ...snap.data() });
 }
 
-function parseBookedTimes(snap: DocumentSnapshot): BookedTime[] {
+function parseDayEntries(snap: DocumentSnapshot): [string, BookedTime][] {
   const day = snap.data() as Partial<BookingDay> | undefined;
-  return Object.values(day?.bookings ?? {})
-    .map((entry) => bookedTimeSchema.parse(entry))
-    .filter((entry) => occupiesTime(entry.status));
+  return Object.entries(day?.bookings ?? {}).map(([id, entry]) => [
+    id,
+    bookedTimeSchema.parse(entry),
+  ]);
 }
+
+function parseBookedTimes(snap: DocumentSnapshot, nowMs: number): BookedTime[] {
+  return parseDayEntries(snap)
+    .map(([, entry]) => entry)
+    .filter((entry) => blocksTime(entry, nowMs));
+}
+
+// Holds are the client's private business until the deposit is paid.
+const listed = (booking: Booking) => booking.status !== "awaiting_deposit";
 
 function parseBooking(snap: DocumentSnapshot): Booking {
   return bookingSchema.parse({ ...snap.data(), id: snap.id });
@@ -140,12 +154,13 @@ export class FirestoreBookingRepository implements BookingRepository {
     const snap = await this.bookingsCol.where("date", "==", date).get();
     return snap.docs
       .map(parseBooking)
+      .filter(listed)
       .sort((a, b) => a.startUtc.localeCompare(b.startUtc));
   }
 
-  async getBookedTimes(date: LocalDate) {
+  async getBookedTimes(date: LocalDate, now: Date) {
     if (!parseLocalDate(date)) return [];
-    return parseBookedTimes(await this.dayRef(date).get());
+    return parseBookedTimes(await this.dayRef(date).get(), now.getTime());
   }
 
   async getService(id: string) {
@@ -195,7 +210,7 @@ export class FirestoreBookingRepository implements BookingRepository {
     let query = this.bookingsCol.where("startUtc", ">=", fromUtc);
     if (toUtc) query = query.where("startUtc", "<", toUtc);
     const snap = await query.orderBy("startUtc").get();
-    return snap.docs.map(parseBooking);
+    return snap.docs.map(parseBooking).filter(listed);
   }
 
   async updateAdminNotes(
@@ -247,7 +262,7 @@ export class FirestoreBookingRepository implements BookingRepository {
         service: { active: input.service.active, durationMin: quote.durationMin },
         weekly: parseWeekly(weeklySnap),
         override: parseOverride(overrideSnap),
-        bookings: parseBookedTimes(daySnap),
+        bookings: parseBookedTimes(daySnap, input.now.getTime()),
         settings,
         now: input.now,
         mode: input.mode,
@@ -256,6 +271,11 @@ export class FirestoreBookingRepository implements BookingRepository {
 
       const bookingRef = this.bookingsCol.doc();
       const timestamp = input.now.toISOString();
+      const depositPence =
+        input.mode === "owner"
+          ? 0
+          : depositFor(settings.depositPence, input.service, quote.pricePence);
+      const hold = depositPence > 0 ? holdTimes(input.now) : null;
       const booking: Booking = {
         id: bookingRef.id,
         ref: input.ref,
@@ -272,13 +292,17 @@ export class FirestoreBookingRepository implements BookingRepository {
         startUtc: result.slot.startUtc,
         endUtc: result.slot.endUtc,
         client: input.client,
-        status: initialStatus(settings, input.mode),
+        status: hold ? "awaiting_deposit" : "confirmed",
         cancelTokenHash: input.cancelTokenHash,
         source: input.mode === "owner" ? "admin" : "online",
         memberId: input.memberId,
         referencePhotos: input.referencePhotos?.length
           ? input.referencePhotos
           : undefined,
+        deposit: hold
+          ? { amountPence: depositPence, status: "awaiting" }
+          : undefined,
+        holdExpiresAt: hold?.holdExpiresAt,
         createdAt: timestamp,
         updatedAt: timestamp,
       };
@@ -290,17 +314,132 @@ export class FirestoreBookingRepository implements BookingRepository {
         {
           date: input.date,
           bookings: {
-            [id]: {
+            [id]: stripUndefined({
               startUtc: booking.startUtc,
               endUtc: booking.endUtc,
               status: booking.status,
-            },
+              holdExpiresAt: booking.holdExpiresAt,
+            }),
           },
         },
         { merge: true },
       );
       return { ok: true, booking: stripUndefined(booking) };
     });
+  }
+
+  async attachCheckoutSession(id: string, checkoutSessionId: string) {
+    if (!docIdSchema.safeParse(id).success) return;
+    await this.bookingsCol
+      .doc(id)
+      .update({ "deposit.checkoutSessionId": checkoutSessionId });
+  }
+
+  confirmDeposit(
+    id: string,
+    payment: DepositPayment,
+    now: Date,
+  ): Promise<ConfirmDepositResult> {
+    if (!docIdSchema.safeParse(id).success) {
+      return Promise.resolve({ kind: "refund", booking: null });
+    }
+    return this.db.runTransaction(async (tx) => {
+      const bookingRef = this.bookingsCol.doc(id);
+      const snap = await tx.get(bookingRef);
+      if (!snap.exists) return { kind: "refund", booking: null } as const;
+      const booking = parseBooking(snap);
+
+      if (booking.status !== "awaiting_deposit") {
+        return booking.deposit?.paymentIntentId === payment.paymentIntentId
+          ? ({ kind: "already", booking } as const)
+          : ({ kind: "refund", booking } as const);
+      }
+
+      const dayRef = this.dayRef(booking.date);
+      const [settingsSnap, daySnap] = await tx.getAll(this.settingsRef, dayRef);
+      const settings = parseSettings(settingsSnap);
+      const nowMs = now.getTime();
+      // Normally the hold kept the time free. If it lapsed first (a very late
+      // webhook), another booking may have taken it since.
+      const others = parseDayEntries(daySnap)
+        .filter(([otherId, entry]) => otherId !== id && blocksTime(entry, nowMs))
+        .map(([, entry]) => entry);
+      const taken = clashesWithBookings(
+        {
+          startMs: Date.parse(booking.startUtc),
+          endMs: Date.parse(booking.endUtc),
+        },
+        others,
+        settings.bufferMin,
+      );
+
+      const updatedAt = now.toISOString();
+      const deposit: BookingDeposit = {
+        ...booking.deposit,
+        amountPence: payment.amountPence,
+        status: "paid",
+        checkoutSessionId: payment.checkoutSessionId,
+        paymentIntentId: payment.paymentIntentId,
+        paidAt: updatedAt,
+      };
+      const status = taken ? "cancelled" : "confirmed";
+      tx.update(bookingRef, {
+        status,
+        deposit,
+        holdExpiresAt: FieldValue.delete(),
+        updatedAt,
+      });
+      tx.set(
+        dayRef,
+        {
+          bookings: {
+            [id]: taken
+              ? FieldValue.delete()
+              : { status, holdExpiresAt: FieldValue.delete() },
+          },
+        },
+        { merge: true },
+      );
+      const updated = stripUndefined<Booking>({
+        ...booking,
+        status,
+        deposit,
+        holdExpiresAt: undefined,
+        updatedAt,
+      });
+      return taken
+        ? ({ kind: "refund", booking: updated } as const)
+        : ({ kind: "confirmed", booking: updated } as const);
+    });
+  }
+
+  releaseHold(id: string, checkoutSessionId?: string) {
+    if (!docIdSchema.safeParse(id).success) return Promise.resolve(null);
+    return this.db.runTransaction(async (tx) => {
+      const bookingRef = this.bookingsCol.doc(id);
+      const snap = await tx.get(bookingRef);
+      if (!snap.exists) return null;
+      const booking = parseBooking(snap);
+      if (booking.status !== "awaiting_deposit") return null;
+      const sessionId = booking.deposit?.checkoutSessionId;
+      if (checkoutSessionId && sessionId && sessionId !== checkoutSessionId) {
+        return null;
+      }
+      tx.delete(bookingRef);
+      tx.set(
+        this.dayRef(booking.date),
+        { bookings: { [id]: FieldValue.delete() } },
+        { merge: true },
+      );
+      return booking;
+    });
+  }
+
+  async updateDeposit(id: string, deposit: BookingDeposit, now: Date) {
+    if (!docIdSchema.safeParse(id).success) return;
+    await this.bookingsCol
+      .doc(id)
+      .update({ deposit: stripUndefined(deposit), updatedAt: now.toISOString() });
   }
 
   updateBookingStatus(
@@ -318,7 +457,7 @@ export class FirestoreBookingRepository implements BookingRepository {
   // Equality only, so Firestore's automatic index covers it; callers sort.
   async listBookingsByMember(memberId: string) {
     const snap = await this.bookingsCol.where("memberId", "==", memberId).get();
-    return snap.docs.map(parseBooking);
+    return snap.docs.map(parseBooking).filter(listed);
   }
 
   async countBookingsByMember() {

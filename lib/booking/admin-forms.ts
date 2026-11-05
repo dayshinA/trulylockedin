@@ -200,6 +200,7 @@ export function parseServiceForm(
     imagePublicId: v.imagePublicId || undefined,
     active: checked(form, "active"),
     onlineBooking: checked(form, "onlineBooking"),
+    depositRequired: checked(form, "depositRequired"),
     optionsSelectionMode:
       text(form, "optionsSelectionMode") === "single" ? "single" : "multiple",
     optionsRequired,
@@ -274,13 +275,20 @@ export function parseSettingsForm(
   form: Form,
   current: BookingSettings,
 ): Parsed<BookingSettings> {
+  const depositPence = poundsToPence(text(form, "deposit") || "0");
+  if (depositPence === null || depositPence > 100_000) {
+    return {
+      ok: false,
+      fieldErrors: { depositPence: ["Enter an amount like 30 or 30.50"] },
+    };
+  }
   const parsed = bookingSettingsSchema.safeParse({
     timezone: current.timezone,
+    depositPence,
     slotIntervalMin: Number(text(form, "slotIntervalMin")),
     bufferMin: Number(text(form, "bufferMin")),
     minNoticeHours: Number(text(form, "minNoticeHours")),
     maxAdvanceDays: Number(text(form, "maxAdvanceDays")),
-    autoConfirm: checked(form, "autoConfirm"),
   });
   return parsed.success ? { ok: true, value: parsed.data } : fail(parsed.error);
 }

@@ -21,9 +21,12 @@ const ACTIONS = {
 export function CancelButton({
   kind,
   id,
+  warning,
 }: {
   kind: keyof typeof ACTIONS;
   id: string;
+  // Shown with the question, e.g. that a deposit won't be returned.
+  warning?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +48,10 @@ export function CancelButton({
     <div className="flex flex-col gap-2">
       {confirming ? (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
-          <span className="text-ink">{action.question}</span>
+          <span className="text-ink">
+            {action.question}
+            {warning && ` ${warning}`}
+          </span>
           <button
             type="button"
             onClick={cancel}

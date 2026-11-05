@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
+import { depositFor } from "@/lib/booking/deposit-rules";
 import { quoteService } from "@/lib/booking/quote";
 import { addDays } from "@/lib/booking/time";
 import { Field, inputClass } from "@/components/site/form-field";
@@ -11,11 +12,17 @@ import { MemberBar } from "@/components/site/member-bar";
 import {
   formatDuration,
   formatLocalDate,
+  formatPrice,
   formatPriceFrom,
 } from "@/lib/format";
 import type { Slot } from "@/types/booking";
 import type { MemberProfile } from "@/types/member";
-import { createBooking, getSlots } from "./actions";
+import { abandonDeposit, createBooking, getSlots } from "./actions";
+import {
+  saveBookingAccess,
+  settleBookingAccess,
+  unsettledBookings,
+} from "./booking-access";
 import { DayGrid } from "./day-grid";
 import {
   photosBusy,
@@ -39,6 +46,7 @@ export function BookingFlow({
   catalogue,
   today,
   maxAdvanceDays,
+  depositPence,
   initialServiceId,
   initialOptionIds = [],
   member,
@@ -46,6 +54,7 @@ export function BookingFlow({
   catalogue: BookableCategory[];
   today: string;
   maxAdvanceDays: number;
+  depositPence: number;
   initialServiceId?: string;
   initialOptionIds?: string[];
   member: MemberProfile | null;
@@ -80,7 +89,12 @@ export function BookingFlow({
   const uploading = photosBusy(photos);
   const [loadingSlots, startSlots] = useTransition();
   const [submitting, startSubmit] = useTransition();
+  // Stays true while the browser leaves for Stripe's payment page.
+  const [redirecting, setRedirecting] = useState(false);
   const router = useRouter();
+  const deposit = service
+    ? depositFor(depositPence, service, totalsOf(service, optionIds).pricePence)
+    : 0;
   // Ignore slot responses for a day the client has already moved away from.
   const latestRequest = useRef(0);
   const flowRef = useRef<HTMLDivElement>(null);
@@ -96,6 +110,25 @@ export function BookingFlow({
       window.scrollBy({ top: top - HEADER_CLEARANCE_PX, behavior: "instant" });
     }
   }, [step]);
+
+  // Back from Stripe's payment page with the browser's Back button: release
+  // the time this tab was holding, or it would block the client's own retry.
+  useEffect(() => {
+    function releaseHolds() {
+      for (const held of unsettledBookings()) {
+        settleBookingAccess(held.ref);
+        void abandonDeposit(held);
+      }
+    }
+    function onPageShow(event: PageTransitionEvent) {
+      if (!event.persisted) return;
+      setRedirecting(false);
+      releaseHolds();
+    }
+    releaseHolds();
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   // Arriving on the time step (see initialSelection): fetch today's times once.
   useEffect(() => {
@@ -201,7 +234,16 @@ export function BookingFlow({
       });
 
       if (result.ok) {
-        const { booking, cancelToken } = result;
+        const { booking, cancelToken, checkoutUrl } = result;
+        if (checkoutUrl) {
+          saveBookingAccess(booking.ref, {
+            token: cancelToken,
+            photos: booking.referencePhotoCount,
+          });
+          setRedirecting(true);
+          window.location.assign(checkoutUrl);
+          return;
+        }
         const fragment = new URLSearchParams({ t: cancelToken });
         if (booking.referencePhotoCount > 0) {
           fragment.set("photos", String(booking.referencePhotoCount));
@@ -229,6 +271,7 @@ export function BookingFlow({
       optionIds={optionIds}
       date={step !== "service" ? date : null}
       slot={step === "details" ? slot : null}
+      deposit={deposit}
       onChangeService={step !== "service" ? () => setStep("service") : null}
       onChangeTime={step === "details" ? () => setStep("time") : null}
     />
@@ -268,6 +311,7 @@ export function BookingFlow({
               onContinue={() => {
                 if (service) goToTimes(service, optionIds);
               }}
+              depositPence={depositPence}
             />
           </section>
         )}
@@ -434,16 +478,34 @@ export function BookingFlow({
                 </p>
               )}
 
+              {deposit > 0 && (
+                <p className="max-w-prose text-sm text-muted">
+                  Next you&rsquo;ll pay a{" "}
+                  <span className="font-semibold text-ink">
+                    {formatPrice(deposit)} deposit
+                  </span>{" "}
+                  on our secure payment page (card, Apple Pay or Google Pay).
+                  Paying it confirms your booking, and it comes off the price
+                  on the day. It&rsquo;s non-refundable if you cancel or
+                  don&rsquo;t come, but we&rsquo;ll refund it if we have to
+                  cancel.
+                </p>
+              )}
+
               <button
                 type="submit"
-                disabled={submitting || uploading}
+                disabled={submitting || uploading || redirecting}
                 className="min-h-12 rounded-full bg-brand px-10 font-semibold text-on-brand transition-colors hover:bg-brand-hover disabled:bg-line disabled:text-muted sm:w-fit"
               >
-                {submitting
-                  ? "Booking…"
-                  : uploading
-                    ? "Uploading photos…"
-                    : "Request booking"}
+                {redirecting
+                  ? "Opening payment…"
+                  : submitting
+                    ? "Booking…"
+                    : uploading
+                      ? "Uploading photos…"
+                      : deposit > 0
+                        ? `Pay ${formatPrice(deposit)} deposit`
+                        : "Confirm booking"}
               </button>
             </form>
           </section>
@@ -546,6 +608,7 @@ function Summary({
   optionIds,
   date,
   slot,
+  deposit,
   onChangeService,
   onChangeTime,
 }: {
@@ -553,6 +616,7 @@ function Summary({
   optionIds: string[];
   date: string | null;
   slot: Slot | null;
+  deposit: number;
   onChangeService: (() => void) | null;
   onChangeTime: (() => void) | null;
 }) {
@@ -574,6 +638,11 @@ function Summary({
                 {formatDuration(totals.durationMin)} ·{" "}
                 {formatPriceFrom(totals.pricePence)}
               </span>
+              {deposit > 0 && (
+                <span className="block text-muted">
+                  {formatPrice(deposit)} deposit to book
+                </span>
+              )}
             </>
           ) : (
             <span className="text-muted">Not chosen yet</span>

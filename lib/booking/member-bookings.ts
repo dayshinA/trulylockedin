@@ -21,13 +21,15 @@ export type MemberBooking = {
   start: LocalTime;
   end: LocalTime;
   status: BookingStatus;
+  // A paid deposit, kept if the client cancels.
+  depositPaidPence: number | null;
   canCancel: boolean;
   // Null when the service can't be booked online any more.
   bookAgainHref: string | null;
 };
 
 export type MemberBookings = {
-  // Pending or confirmed and not yet started, soonest first.
+  // Confirmed and not yet started, soonest first.
   upcoming: MemberBooking[];
   // Everything else, most recent first.
   past: MemberBooking[];
@@ -71,13 +73,15 @@ export async function loadMemberBookings(
       start: booking.start,
       end: booking.end,
       status: booking.status,
+      depositPaidPence:
+        booking.deposit?.status === "paid" ? booking.deposit.amountPence : null,
       canCancel: canClientCancel(booking, settings, now),
       bookAgainHref: service ? bookAgainHref(service.id, optionIds) : null,
     };
   };
 
   const isUpcoming = (b: Booking) =>
-    (b.status === "pending" || b.status === "confirmed") &&
+    b.status === "confirmed" &&
     Date.parse(b.startUtc) > now.getTime();
 
   return {

@@ -9,8 +9,8 @@ import { formatLocalDate, formatPrice } from "@/lib/format";
 
 // What the client hears about each status, under the details.
 const STATUS_NOTES: Record<BookingSummary["status"], string> = {
-  pending:
-    "We've got your request and will confirm it shortly. Check back here to see when it's confirmed.",
+  awaiting_deposit:
+    "We're waiting for your deposit payment to go through. If you left the payment page, this time will be released shortly.",
   confirmed: "Your appointment is confirmed. See you then!",
   cancelled: "This booking has been cancelled.",
   completed: "Thanks for visiting us.",
@@ -65,6 +65,7 @@ export function BookingDetails({
               `${formatLocalDate(booking.date, "long")}, ${booking.start}–${booking.end}`,
             ],
             ["Price from", formatPrice(booking.pricePence)],
+            ...depositRows(booking),
             ...(booking.notes
               ? ([
                   [
@@ -94,7 +95,16 @@ export function BookingDetails({
       {booking.canCancel ? (
         confirming ? (
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <p className="w-full">Cancel this appointment?</p>
+            <p className="w-full">
+              Cancel this appointment?
+              {booking.deposit?.status === "paid" && (
+                <>
+                  {" "}
+                  Your {formatPrice(booking.deposit.amountPence)} deposit is
+                  non-refundable, so it won&rsquo;t be returned.
+                </>
+              )}
+            </p>
             <button
               type="button"
               onClick={cancel}
@@ -131,4 +141,29 @@ export function BookingDetails({
       )}
     </section>
   );
+}
+
+// Deposit and what's left to pay, once a deposit was taken.
+export function depositRows(
+  booking: Pick<BookingSummary, "deposit" | "pricePence">,
+): [string, string][] {
+  const deposit = booking.deposit;
+  if (!deposit || deposit.status === "awaiting") return [];
+  if (deposit.status === "paid") {
+    return [
+      ["Deposit paid", formatPrice(deposit.amountPence)],
+      [
+        "Left to pay",
+        `${formatPrice(Math.max(0, booking.pricePence - deposit.amountPence))} from, at your appointment`,
+      ],
+    ];
+  }
+  return [
+    [
+      "Deposit",
+      deposit.status === "refunded"
+        ? `${formatPrice(deposit.amountPence)} refunded`
+        : `${formatPrice(deposit.amountPence)}, refund in progress`,
+    ],
+  ];
 }

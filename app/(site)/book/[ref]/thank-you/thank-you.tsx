@@ -13,7 +13,12 @@ import { localToUtcMs } from "@/lib/booking/time";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { LOCALE, SITE_NAME, TIMEZONE } from "@/lib/site";
 import type { SiteContent } from "@/types/cms";
-import { getMyBooking } from "../../actions";
+import { confirmDepositReturn, getMyBooking } from "../../actions";
+import { depositRows } from "../../booking-details";
+import {
+  readBookingAccess,
+  settleBookingAccess,
+} from "../../booking-access";
 
 type Contact = SiteContent["contact"];
 
@@ -22,14 +27,21 @@ type State =
   | { kind: "error"; message: string }
   | { kind: "ready"; booking: BookingSummary };
 
-// #t={token}&photos={n}: the token never reaches the server's logs.
-function readFragment() {
+// #t={token}&photos={n}: the token never reaches the server's logs. Back
+// from a deposit payment there's no fragment (Stripe must not see the token):
+// it waits in sessionStorage instead, and ?session_id names the payment.
+function readAccess(bookingRef: string) {
   const params = new URLSearchParams(window.location.hash.slice(1));
+  const stored = readBookingAccess(bookingRef);
   return {
-    token: params.get("t") ?? "",
-    photos: Number(params.get("photos")) || 0,
+    token: params.get("t") ?? stored?.token ?? "",
+    photos: Number(params.get("photos")) || stored?.photos || 0,
+    sessionId: new URLSearchParams(window.location.search).get("session_id"),
   };
 }
+
+const PAID_NO_LINK =
+  "Thank you, your deposit has been paid. We've emailed your confirmation. To see your booking on this device, use Find my booking with your reference and email.";
 
 export function ThankYou({
   bookingRef,
@@ -48,17 +60,32 @@ export function ThankYou({
   useEffect(() => {
     // Arriving from the form, the page would otherwise open where the form was.
     window.scrollTo({ top: 0, behavior: "instant" });
-    const current = readFragment();
+    const current = readAccess(bookingRef);
     let active = true;
-    getMyBooking({ ref: bookingRef, token: current.token }).then((result) => {
+    (async () => {
+      // Confirms the booking if Stripe's webhook hasn't yet.
+      if (current.sessionId) await confirmDepositReturn(current.sessionId);
+      const result = await getMyBooking({
+        ref: bookingRef,
+        token: current.token,
+      });
       if (!active) return;
+      if (result.ok && result.booking.status !== "awaiting_deposit") {
+        settleBookingAccess(bookingRef);
+      }
       setFragment(current);
       setState(
         result.ok
           ? { kind: "ready", booking: result.booking }
-          : { kind: "error", message: result.error },
+          : {
+              kind: "error",
+              message:
+                current.sessionId && !current.token
+                  ? PAID_NO_LINK
+                  : result.error,
+            },
       );
-    });
+    })();
     return () => {
       active = false;
     };
@@ -167,8 +194,8 @@ export function ThankYou({
 // (and as the Suspense fallback), so the headline never jumps.
 export function ThankYouHero({ booking }: { booking?: BookingSummary | null }) {
   const firstName = booking?.clientName.trim().split(/\s+/)[0];
-  const confirmed = booking?.status === "confirmed";
   const cancelled = booking?.status === "cancelled";
+  const paying = booking?.status === "awaiting_deposit";
 
   return (
     <section className="surface-burgundy relative overflow-hidden px-4 pt-32 pb-36 sm:px-6 sm:pt-40 sm:pb-44">
@@ -180,9 +207,9 @@ export function ThankYouHero({ booking }: { booking?: BookingSummary | null }) {
           {booking
             ? cancelled
               ? "Booking cancelled"
-              : confirmed
-                ? "You're booked in"
-                : "Request received"
+              : paying
+                ? "Checking your payment"
+                : "You're booked in"
             : "Booking received"}
           <span aria-hidden className="h-0.5 w-8 bg-accent" />
         </p>
@@ -196,10 +223,13 @@ export function ThankYouHero({ booking }: { booking?: BookingSummary | null }) {
         >
           {booking &&
             (cancelled
-              ? "This booking has since been cancelled. We hope to see you another time."
-              : confirmed
-                ? `${firstName}, your appointment is confirmed. We can't wait to see you.`
-                : `${firstName}, we've got your request. We'll confirm your time shortly.`)}
+              ? booking.deposit?.status === "refunded" ||
+                booking.deposit?.status === "refund_failed"
+                ? "Your payment arrived after this time was released, so we couldn't keep it. Your deposit is being refunded."
+                : "This booking has since been cancelled. We hope to see you another time."
+              : paying
+                ? `${firstName}, we're waiting for Stripe to confirm your deposit. Refresh this page in a minute; we'll also email you once it's through.`
+                : `${firstName}, your appointment is confirmed. We can't wait to see you.`)}
         </p>
       </div>
     </section>
@@ -262,6 +292,11 @@ function Ticket({
                 {formatPrice(booking.pricePence)}
               </span>
             </TicketItem>
+            {depositRows(booking).map(([label, value]) => (
+              <TicketItem key={label} label={label}>
+                {value}
+              </TicketItem>
+            ))}
             <TicketItem label="Status">
               <span className="inline-flex items-start gap-2">
                 <span
@@ -395,26 +430,26 @@ function NextSteps({
   bookingNotes: string[];
 }) {
   if (booking.status === "cancelled") return null;
-  const confirmed = booking.status === "confirmed";
+  const paying = booking.status === "awaiting_deposit";
 
   const steps: { title: string; body: React.ReactNode }[] = [
-    confirmed
+    paying
       ? {
-          title: "Your time is held",
-          body: "Your appointment is confirmed and the chair is yours. Pop it in your calendar so it doesn't sneak up on you.",
-        }
-      : {
-          title: "We'll confirm your time",
+          title: "We're confirming your payment",
           body: (
             <>
-              Every request is looked at personally. Check its status any time
-              with your reference on{" "}
+              Your time is held while Stripe confirms your deposit. Check it
+              any time with your reference on{" "}
               <TextLink href="/book/find" inline>
                 Find my booking
               </TextLink>
               .
             </>
           ),
+        }
+      : {
+          title: "Your time is held",
+          body: "Your appointment is confirmed and the chair is yours. Pop it in your calendar so it doesn't sneak up on you.",
         },
     {
       title: "Before your visit",
@@ -691,7 +726,6 @@ function calendarEvent(
     details: [
       service,
       `Booking reference: ${booking.ref}`,
-      booking.status === "pending" ? "Awaiting confirmation." : "",
     ]
       .filter(Boolean)
       .join("\n"),

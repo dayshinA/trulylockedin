@@ -13,6 +13,17 @@ export function occupiesTime(status: BookingStatus): boolean {
   return status !== "cancelled";
 }
 
+// A deposit hold stops blocking its time once it lapses, even if its
+// booking is never cleaned up.
+export function blocksTime(entry: BookedTime, nowMs: number): boolean {
+  if (!occupiesTime(entry.status)) return false;
+  return !(
+    entry.status === "awaiting_deposit" &&
+    entry.holdExpiresAt !== undefined &&
+    Date.parse(entry.holdExpiresAt) <= nowMs
+  );
+}
+
 // Both sides carry the trailing buffer, which is exactly "each appointment is
 // followed by bufferMin before the next one may start", in either order.
 export function clashesWithBookings(

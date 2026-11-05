@@ -1,7 +1,7 @@
 import type { BookingStatus } from "@/types/booking";
 
 export const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending: "Awaiting confirmation",
+  awaiting_deposit: "Awaiting deposit",
   confirmed: "Confirmed",
   cancelled: "Cancelled",
   completed: "Completed",
@@ -10,7 +10,7 @@ export const STATUS_LABELS: Record<BookingStatus, string> = {
 
 // Admin button labels for moving a booking to each status.
 export const STATUS_ACTIONS: Record<BookingStatus, string> = {
-  pending: "Mark pending",
+  awaiting_deposit: "Hold for deposit",
   confirmed: "Confirm",
   cancelled: "Cancel booking",
   completed: "Mark completed",

@@ -27,7 +27,7 @@ export default async function AdminOverviewPage() {
   const configured = await isBookingConfigured(adminDb());
   if (!configured) return <BookingSetup />;
 
-  const [{ today, todays, pending, upcoming }, newOrders] = await Promise.all([
+  const [{ today, todays, upcoming }, newOrders] = await Promise.all([
     loadOverview(bookingRepository(), new Date()),
     orderRepository().listOrders({ statuses: ["pending"] }),
   ]);
@@ -43,12 +43,6 @@ export default async function AdminOverviewPage() {
           </Link>
         }
       />
-
-      {pending.length > 0 && (
-        <Section title="To confirm" count={pending.length}>
-          <BookingsByDate bookings={pending} today={today} empty="" />
-        </Section>
-      )}
 
       {newOrders.length > 0 && (
         <Section

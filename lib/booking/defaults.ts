@@ -8,7 +8,7 @@ export const DEFAULT_BOOKING_SETTINGS: BookingSettings = {
   bufferMin: 15,
   minNoticeHours: 24,
   maxAdvanceDays: 56,
-  autoConfirm: false,
+  depositPence: 3000,
 };
 
 // Placeholder opening hours until the owner sets their own.

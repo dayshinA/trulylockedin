@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { verifyAdmin } from "@/lib/auth/dal";
 import { parseManualBookingForm } from "@/lib/booking/admin-forms";
+import { refundDeposit } from "@/lib/booking/deposit";
 import { bookingStatusSchema, docIdSchema } from "@/lib/booking/schemas";
 import { notifyBooking } from "@/lib/email/booking-emails";
 import { bookingRepository } from "@/lib/booking/server";
@@ -21,10 +22,11 @@ import { invalid, type FormState } from "../_components/form-state";
 
 const statusInput = z.object({
   id: docIdSchema,
-  status: bookingStatusSchema.exclude(["pending"]),
+  status: bookingStatusSchema.exclude(["awaiting_deposit", "confirmed"]),
 });
 
 // Invalid transitions are refused by the repository (rules.canTransition).
+// The salon cancelling refunds a paid deposit (a client cancelling doesn't).
 export async function setBookingStatusAction(formData: FormData) {
   await verifyAdmin();
   const parsed = statusInput.safeParse(Object.fromEntries(formData));
@@ -37,8 +39,23 @@ export async function setBookingStatusAction(formData: FormData) {
     status === "cancelled"
       ? await repo.cancelBooking(id, now)
       : await repo.updateBookingStatus(id, status, now);
-  if (result.ok) notifyBooking({ kind: "status_changed", id });
-  else console.warn("Status change refused", id, status, result.reason);
+  if (result.ok) {
+    if (status === "cancelled") await refundDeposit(result.booking);
+    // Emails read the booking afresh, so they include the refund.
+    notifyBooking({ kind: "status_changed", id });
+  } else {
+    console.warn("Status change refused", id, status, result.reason);
+  }
+  refresh();
+}
+
+// After a refund failed (e.g. not enough Stripe balance yet).
+export async function retryRefundAction(formData: FormData) {
+  await verifyAdmin();
+  const id = docIdSchema.safeParse(formData.get("id"));
+  if (!id.success) return;
+  const booking = await bookingRepository().getBooking(id.data);
+  if (booking?.status === "cancelled") await refundDeposit(booking);
   refresh();
 }
 

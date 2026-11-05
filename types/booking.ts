@@ -44,7 +44,9 @@ export type BookingSettings = {
   minNoticeHours: number;
   // Last bookable date is today + maxAdvanceDays (salon-local).
   maxAdvanceDays: number;
-  autoConfirm: boolean;
+  // Online deposit taken through Stripe for services with depositRequired.
+  // 0 turns deposits off.
+  depositPence: number;
 };
 
 // serviceCategories/{id}
@@ -81,6 +83,9 @@ export type Service = {
   // Null when it varies. Slots can't be worked out, so it can't be booked yet.
   durationMin: number | null;
   depositNote?: string;
+  // Online bookings pay settings.depositPence through Stripe before they're
+  // confirmed. Missing on older docs means true.
+  depositRequired: boolean;
   imagePublicId?: string;
   active: boolean;
   onlineBooking: boolean;
@@ -103,7 +108,11 @@ export type BookedService = {
 };
 
 export type BookingStatus =
-  | "pending"
+  // Holding the time while the client pays the deposit on Stripe. Hidden from
+  // every list; deleted if the payment page expires or is abandoned.
+  | "awaiting_deposit"
+  // Every booking is confirmed once made (and, with a deposit, paid); the
+  // salon cancels if it can't keep it.
   | "confirmed"
   | "cancelled"
   | "completed"
@@ -122,6 +131,18 @@ export type BookingClient = {
   phone?: string;
   email?: string;
   notes?: string;
+};
+
+export type DepositStatus = "awaiting" | "paid" | "refunded" | "refund_failed";
+
+export type BookingDeposit = {
+  amountPence: number;
+  status: DepositStatus;
+  checkoutSessionId?: string;
+  paymentIntentId?: string;
+  paidAt?: string;
+  refundId?: string;
+  refundedAt?: string;
 };
 
 export type Booking = {
@@ -146,6 +167,11 @@ export type Booking = {
   // Cloudinary public ids of the client's reference photos (private assets in
   // REFERENCE_FOLDER). Removed once the photos are deleted after the visit.
   referencePhotos?: string[];
+  // Online bookings for services that take a deposit.
+  deposit?: BookingDeposit;
+  // While awaiting_deposit: after this the time is free again, even if the
+  // Stripe "expired" webhook never arrives.
+  holdExpiresAt?: string;
   adminNotes?: string;
   createdAt: string;
   updatedAt: string;
@@ -153,7 +179,10 @@ export type Booking = {
 
 // What availability needs to know about an existing booking. Firestore keeps
 // these per date in bookingDays/{date} as the transaction's contention point.
-export type BookedTime = Pick<Booking, "startUtc" | "endUtc" | "status">;
+export type BookedTime = Pick<
+  Booking,
+  "startUtc" | "endUtc" | "status" | "holdExpiresAt"
+>;
 
 export type Slot = {
   start: LocalTime;

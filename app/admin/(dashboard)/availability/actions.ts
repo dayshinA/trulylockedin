@@ -36,6 +36,7 @@ export async function saveBookingRulesAction(
   const parsed = parseSettingsForm(formData, await repo.getSettings());
   if (!parsed.ok) return invalid(parsed.fieldErrors, parsed.message);
   await repo.saveSettings(parsed.value);
+  updateTag(PUBLIC_TAGS.bookingSettings);
   refresh();
   return { status: "success", message: "Booking rules saved." };
 }

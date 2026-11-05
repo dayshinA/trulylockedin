@@ -1,17 +1,28 @@
 import Link from "next/link";
 
 import { CldImage } from "@/components/media/cld";
+import { depositFor } from "@/lib/booking/deposit-rules";
 import {
   formatDuration,
   formatOptionPrice,
+  formatPrice,
   formatPriceFrom,
 } from "@/lib/format";
 import type { Service } from "@/types/booking";
 
 // One entry of the full price list on /services.
-export function ServiceRow({ service }: { service: Service }) {
+export function ServiceRow({
+  service,
+  depositPence,
+}: {
+  service: Service;
+  depositPence: number;
+}) {
   // Without a duration there are no slots to offer, so it's booked by asking.
   const bookable = service.onlineBooking && service.durationMin !== null;
+  const deposit = bookable
+    ? depositFor(depositPence, service, service.priceFromPence)
+    : 0;
 
   return (
     <article className="flex gap-5 border-b border-line py-8 sm:gap-8">
@@ -43,6 +54,11 @@ export function ServiceRow({ service }: { service: Service }) {
         </p>
         {service.description && (
           <p className="mt-3 max-w-prose text-muted">{service.description}</p>
+        )}
+        {deposit > 0 && (
+          <p className="mt-2 text-sm text-ink">
+            {formatPrice(deposit)} deposit to book online
+          </p>
         )}
         {service.depositNote && (
           <p className="mt-2 text-sm text-ink">{service.depositNote}</p>

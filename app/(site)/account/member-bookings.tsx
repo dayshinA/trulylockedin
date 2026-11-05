@@ -31,10 +31,22 @@ export function BookingRow({
           <span className="text-accent-ink">
             {formatPrice(booking.pricePence)}
           </span>{" "}
+          {booking.depositPaidPence &&
+            ` · ${formatPrice(booking.depositPaidPence)} deposit paid`}{" "}
           · Ref <span className="font-mono">{booking.ref}</span>
         </p>
       </div>
-      {booking.canCancel && <CancelButton kind="booking" id={booking.id} />}
+      {booking.canCancel && (
+        <CancelButton
+          kind="booking"
+          id={booking.id}
+          warning={
+            booking.depositPaidPence
+              ? `Your ${formatPrice(booking.depositPaidPence)} deposit is non-refundable, so it won't be returned.`
+              : undefined
+          }
+        />
+      )}
       {bookAgain && booking.bookAgainHref && (
         <Link
           href={booking.bookAgainHref}

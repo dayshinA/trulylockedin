@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import type { BookingStatus, LocalDate, LocalTime } from "@/types/booking";
+import type {
+  BookingStatus,
+  DepositStatus,
+  LocalDate,
+  LocalTime,
+} from "@/types/booking";
 import type { BookingRepository } from "./repository";
 import { canClientCancel } from "./rules";
 import {
@@ -26,6 +31,7 @@ export type BookingSummary = {
   clientName: string;
   pricePence: number;
   notes?: string;
+  deposit?: { amountPence: number; status: DepositStatus };
   canCancel: boolean;
 };
 
@@ -71,6 +77,14 @@ async function authorise(repo: BookingRepository, raw: unknown) {
   return allowed ? booking : null;
 }
 
+// The full booking, for server code acting on the client's behalf.
+export function findOwnBooking(
+  repo: BookingRepository,
+  credentials: ManageCredentials,
+) {
+  return authorise(repo, credentials);
+}
+
 function notFound(raw: unknown): string {
   return typeof raw === "object" && raw !== null && "email" in raw
     ? NOT_FOUND_EMAIL
@@ -98,6 +112,10 @@ export async function findManagedBooking(
       clientName: booking.client.name,
       pricePence: booking.service.priceFromPence,
       notes: booking.client.notes,
+      deposit: booking.deposit && {
+        amountPence: booking.deposit.amountPence,
+        status: booking.deposit.status,
+      },
       canCancel: canClientCancel(booking, settings, now),
     },
   };

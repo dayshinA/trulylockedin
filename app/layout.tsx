@@ -24,12 +24,18 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
+  // Makes the link-preview image (app/opengraph-image.tsx) an absolute URL.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  ),
   title: {
     default: `${SITE_NAME} | Locs & Hair Studio`,
     template: `%s | ${SITE_NAME}`,
   },
   description:
     "Loc installation, retwists, maintenance and styling. View the work and book your appointment online.",
+  openGraph: { siteName: SITE_NAME, locale: "en_GB", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

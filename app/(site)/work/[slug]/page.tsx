@@ -18,7 +18,7 @@ export async function generateMetadata({
         title: item.title,
         description: item.description || `${item.title} — ${item.category}`,
       }
-    : { title: "Work" };
+    : { title: "Page not found" };
 }
 
 export default function WorkItemPage({ params }: PageProps<"/work/[slug]">) {

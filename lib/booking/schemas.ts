@@ -59,11 +59,11 @@ export const bookingSettingsSchema = z.object({
     .min(0)
     .max(24 * 60),
   maxAdvanceDays: z.number().int().min(0).max(730),
-  autoConfirm: z.boolean(),
+  depositPence: z.number().int().min(0).max(100_000),
 });
 
 export const bookingStatusSchema = z.enum([
-  "pending",
+  "awaiting_deposit",
   "confirmed",
   "cancelled",
   "completed",
@@ -74,6 +74,7 @@ export const bookedTimeSchema = z.object({
   startUtc: z.iso.datetime(),
   endUtc: z.iso.datetime(),
   status: bookingStatusSchema,
+  holdExpiresAt: z.iso.datetime().optional(),
 });
 
 // Firestore document ids we generate or accept from clients: no slashes or dots.
@@ -103,6 +104,7 @@ export const serviceSchema = z.object({
   priceLabel: z.string().optional(),
   durationMin: z.number().int().positive().nullable(),
   depositNote: z.string().optional(),
+  depositRequired: z.boolean().default(true),
   imagePublicId: mediaPublicIdSchema.optional(),
   active: z.boolean(),
   onlineBooking: z.boolean(),
@@ -144,6 +146,18 @@ export const bookingSchema = z.object({
   source: z.enum(["online", "admin"]).optional(),
   memberId: z.string().optional(),
   referencePhotos: z.array(z.string()).optional(),
+  deposit: z
+    .object({
+      amountPence: z.number().int().min(0),
+      status: z.enum(["awaiting", "paid", "refunded", "refund_failed"]),
+      checkoutSessionId: z.string().optional(),
+      paymentIntentId: z.string().optional(),
+      paidAt: z.iso.datetime().optional(),
+      refundId: z.string().optional(),
+      refundedAt: z.iso.datetime().optional(),
+    })
+    .optional(),
+  holdExpiresAt: z.iso.datetime().optional(),
   adminNotes: z.string().optional(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

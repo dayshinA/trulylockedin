@@ -9,8 +9,12 @@ import { bookingRepository } from "@/lib/booking/server";
 import { utcMsToLocal } from "@/lib/booking/time";
 import { REFERENCE_RETENTION_DAYS } from "@/lib/booking/reference-photos";
 import { formatDuration, formatLocalDate, formatPrice } from "@/lib/format";
-import type { BookingStatus } from "@/types/booking";
-import { saveAdminNotesAction, setBookingStatusAction } from "../actions";
+import type { Booking, BookingStatus } from "@/types/booking";
+import {
+  retryRefundAction,
+  saveAdminNotesAction,
+  setBookingStatusAction,
+} from "../actions";
 import { inputClass } from "../../_components/admin-form";
 import {
   Badge,
@@ -28,8 +32,7 @@ export const metadata: Metadata = {
 };
 
 // Order the owner sees the buttons in; only allowed transitions are shown.
-const NEXT_STATUSES: Exclude<BookingStatus, "pending">[] = [
-  "confirmed",
+const NEXT_STATUSES: Exclude<BookingStatus, "awaiting_deposit" | "confirmed">[] = [
   "completed",
   "no_show",
   "cancelled",
@@ -111,6 +114,7 @@ export default async function BookingDetailPage({
               ] as [string, string][])
             : []),
           ["Price from", formatPrice(booking.service.priceFromPence)],
+          ...depositRows(booking, settings.timezone),
           [
             "Reference",
             <span key="ref" className="font-mono">
@@ -184,26 +188,67 @@ export default async function BookingDetailPage({
         </section>
       )}
 
+      {booking.deposit?.status === "refund_failed" && (
+        <div className="flex flex-col gap-3 border-l-2 border-ink pl-4">
+          <p>
+            The {formatPrice(booking.deposit.amountPence)} deposit refund
+            didn&rsquo;t go through. This usually means there isn&rsquo;t
+            enough in your Stripe balance yet. Try again later, or refund it
+            from the payment in your Stripe Dashboard.
+          </p>
+          <form action={retryRefundAction}>
+            <input type="hidden" name="id" value={booking.id} />
+            <button type="submit" className={outlineButton}>
+              Try the refund again
+            </button>
+          </form>
+        </div>
+      )}
+
       {actions.length > 0 && (
         <div className="flex flex-wrap gap-3">
-          {actions.map((status) => (
-            <form key={status} action={setBookingStatusAction}>
-              <input type="hidden" name="id" value={booking.id} />
-              <input type="hidden" name="status" value={status} />
-              <button
-                type="submit"
-                className={
-                  status === "confirmed"
-                    ? primaryButton
-                    : status === "cancelled" || status === "no_show"
+          {actions.map((status) =>
+            status === "cancelled" && booking.deposit?.status === "paid" ? (
+              <details key={status} className="w-full">
+                <summary className={`${dangerButton} w-fit list-none [&::-webkit-details-marker]:hidden`}>
+                  {STATUS_ACTIONS.cancelled}
+                </summary>
+                <div className="mt-4 flex flex-col gap-3">
+                  <p>
+                    {client.name} paid a{" "}
+                    {formatPrice(booking.deposit.amountPence)} deposit.
+                    Cancelling from here refunds it to their card. If they
+                    asked to cancel, they lose their deposit: keep the booking
+                    and tell them to cancel through their booking link, or mark
+                    it as a no-show.
+                  </p>
+                  <form action={setBookingStatusAction}>
+                    <input type="hidden" name="id" value={booking.id} />
+                    <input type="hidden" name="status" value="cancelled" />
+                    <button type="submit" className={dangerButton}>
+                      Cancel and refund{" "}
+                      {formatPrice(booking.deposit.amountPence)}
+                    </button>
+                  </form>
+                </div>
+              </details>
+            ) : (
+              <form key={status} action={setBookingStatusAction}>
+                <input type="hidden" name="id" value={booking.id} />
+                <input type="hidden" name="status" value={status} />
+                <button
+                  type="submit"
+                  className={
+                    status === "cancelled" || status === "no_show"
                       ? dangerButton
                       : outlineButton
-                }
-              >
-                {STATUS_ACTIONS[status]}
-              </button>
-            </form>
-          ))}
+                  }
+                >
+                  {STATUS_ACTIONS[status]}
+                </button>
+              </form>
+            ),
+          )}
         </div>
       )}
 
@@ -225,4 +270,34 @@ export default async function BookingDetailPage({
       </form>
     </div>
   );
+}
+
+function depositRows(
+  booking: Booking,
+  timeZone: string,
+): [string, string][] {
+  const deposit = booking.deposit;
+  if (!deposit) return [];
+  const amount = formatPrice(deposit.amountPence);
+  const at = (iso?: string) => {
+    if (!iso) return "";
+    const local = utcMsToLocal(Date.parse(iso), timeZone);
+    return ` on ${formatLocalDate(local.date)} at ${local.time}`;
+  };
+  switch (deposit.status) {
+    case "awaiting":
+      return [["Deposit", `${amount}, not paid yet`]];
+    case "paid":
+      return [
+        ["Deposit", `${amount} paid online${at(deposit.paidAt)}`],
+        [
+          "Left to pay",
+          `${formatPrice(Math.max(0, booking.service.priceFromPence - deposit.amountPence))} from`,
+        ],
+      ];
+    case "refunded":
+      return [["Deposit", `${amount} refunded${at(deposit.refundedAt)}`]];
+    case "refund_failed":
+      return [["Deposit", `${amount} paid, refund failed`]];
+  }
 }

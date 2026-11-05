@@ -25,7 +25,7 @@ export default function BookPage({ searchParams }: PageProps<"/book">) {
       <FindCallout
         className="mt-8"
         title="Already booked?"
-        text="Check whether your appointment has been confirmed, or cancel it."
+        text="See the details of your appointment, or cancel it."
         href="/book/find"
         label="Find my booking"
       />
@@ -51,6 +51,7 @@ async function BookingLoader({
   let catalogue: BookableCategory[];
   let today: string;
   let maxAdvanceDays: number;
+  let depositPence: number;
   try {
     const [categories, all, settings] = await Promise.all([
       repo.listCategories(),
@@ -73,6 +74,7 @@ async function BookingLoader({
                   priceFromPence: s.priceFromPence,
                   priceLabel: s.priceLabel,
                   depositNote: s.depositNote,
+                  depositRequired: s.depositRequired,
                   options: s.options,
                   optionsSelectionMode: s.optionsSelectionMode,
                   optionsRequired: s.optionsRequired,
@@ -84,6 +86,7 @@ async function BookingLoader({
       .filter((category) => category.services.length > 0);
     today = todayLocal(new Date(), settings.timezone);
     maxAdvanceDays = settings.maxAdvanceDays;
+    depositPence = settings.depositPence;
   } catch (error) {
     console.error("Booking page failed to load", error);
     return <Unavailable />;
@@ -96,6 +99,7 @@ async function BookingLoader({
       catalogue={catalogue}
       today={today}
       maxAdvanceDays={maxAdvanceDays}
+      depositPence={depositPence}
       // From "Book this" links on /services and "Book again" on /account.
       // Unknown or hidden services and options are ignored.
       initialServiceId={typeof requested === "string" ? requested : undefined}

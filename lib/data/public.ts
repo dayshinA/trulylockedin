@@ -31,6 +31,7 @@ export const PUBLIC_TAGS = {
   hours: "opening-hours",
   portfolio: "portfolio",
   products: "products",
+  bookingSettings: "booking-settings",
 } as const;
 
 // Sections the owner has saved replace the placeholder section as a whole
@@ -79,6 +80,18 @@ export async function getOpeningHours(): Promise<WeeklyHours | null> {
     return await bookingRepository().getWeeklyHours();
   } catch {
     return null;
+  }
+}
+
+// The online deposit, for the price list. /book reads settings live.
+export async function getDepositPence(): Promise<number> {
+  "use cache";
+  cacheLife("max");
+  cacheTag(PUBLIC_TAGS.bookingSettings);
+  try {
+    return (await bookingRepository().getSettings()).depositPence;
+  } catch {
+    return 0;
   }
 }
 
