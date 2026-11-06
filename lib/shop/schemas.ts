@@ -70,6 +70,7 @@ export const orderSchema = z.object({
   status: orderStatusSchema,
   cancelTokenHash: z.string(),
   memberId: z.string().optional(),
+  termsVersion: z.string().optional(),
   adminNotes: z.string().optional(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

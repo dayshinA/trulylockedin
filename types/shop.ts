@@ -103,6 +103,9 @@ export type Order = {
   // Set when a signed-in member placed the order (members/{uid}). Only ever
   // taken from the session on the server, never from form data.
   memberId?: string;
+  // The "Last updated" date (yyyy-mm-dd) of the terms the customer ticked to
+  // agree to. Missing on older orders.
+  termsVersion?: string;
   adminNotes?: string;
   createdAt: string;
   updatedAt: string;

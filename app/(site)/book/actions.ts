@@ -1,6 +1,7 @@
 "use server";
 
 import { getMember } from "@/lib/auth/member-dal";
+import { getSiteContent } from "@/lib/data/public";
 import { abandonCheckout, fulfilCheckout } from "@/lib/booking/deposit";
 import { holdTimes } from "@/lib/booking/deposit-rules";
 import {
@@ -55,7 +56,9 @@ export async function createBooking(
   const member = await getMember();
   const now = new Date();
   const siteUrl = await siteOrigin();
+  const { terms } = await getSiteContent();
   const result = await submitBooking(bookingRepository(), input, {
+    termsVersion: terms.updatedOn,
     now,
     clientKey: await clientKey(),
     limiter: bookingLimiter,

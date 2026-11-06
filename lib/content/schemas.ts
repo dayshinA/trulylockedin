@@ -86,6 +86,26 @@ export const seoSchema = z.object({
   description: line(300, "Enter a short description"),
 });
 
+export const LEGAL_BODY_MAX = 40_000;
+
+const legalBodySchema = z
+  .string()
+  .trim()
+  .min(50, "Write the full text here")
+  .max(LEGAL_BODY_MAX, `At most ${LEGAL_BODY_MAX.toLocaleString("en-GB")} characters`);
+
+const updatedOnSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const termsSchema = z.object({
+  updatedOn: updatedOnSchema,
+  body: legalBodySchema,
+});
+
+export const privacySchema = termsSchema.extend({
+  controllerName: line(120, "Enter your full legal name"),
+  contactEmail: z.email("Enter a valid email address").max(200),
+});
+
 export const SECTION_SCHEMAS = {
   hero: heroSchema,
   about: aboutSchema,
@@ -94,6 +114,8 @@ export const SECTION_SCHEMAS = {
   policies: policiesSchema,
   shop: shopSchema,
   seo: seoSchema,
+  privacy: privacySchema,
+  terms: termsSchema,
 } satisfies { [K in keyof SiteContent]: z.ZodType<SiteContent[K]> };
 
 export type SiteSection = keyof SiteContent;

@@ -91,6 +91,7 @@ export class FirestoreOrderRepository implements OrderRepository {
         status: online ? "awaiting_payment" : "pending",
         cancelTokenHash: input.cancelTokenHash,
         memberId: input.memberId,
+        termsVersion: input.termsVersion,
         createdAt: now,
         updatedAt: now,
       };

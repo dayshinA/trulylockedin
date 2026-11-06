@@ -167,6 +167,9 @@ export type Booking = {
   // Cloudinary public ids of the client's reference photos (private assets in
   // REFERENCE_FOLDER). Removed once the photos are deleted after the visit.
   referencePhotos?: string[];
+  // Online bookings: the "Last updated" date (yyyy-mm-dd) of the terms the
+  // client ticked to agree to. Missing on owner bookings and older ones.
+  termsVersion?: string;
   // Online bookings for services that take a deposit.
   deposit?: BookingDeposit;
   // While awaiting_deposit: after this the time is free again, even if the

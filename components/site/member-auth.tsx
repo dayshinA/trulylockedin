@@ -9,6 +9,7 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { startMemberSession } from "@/app/(site)/account/actions";
@@ -226,6 +227,20 @@ export function MemberAuth({
         >
           {pending ? "Please wait…" : SUBMIT_LABELS[mode]}
         </button>
+        {mode !== "reset" && (
+          <p className="text-xs text-muted">
+            We use your details to run your account, bookings and orders. See
+            our{" "}
+            <Link
+              href="/privacy"
+              target="_blank"
+              className="font-semibold text-brand underline decoration-accent underline-offset-4 hover:text-brand-hover"
+            >
+              privacy notice
+            </Link>
+            .
+          </p>
+        )}
       </form>
 
       <div className="flex flex-col items-start gap-2 text-sm">

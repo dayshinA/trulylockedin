@@ -4,3 +4,11 @@ allowBuilds:
   "@firebase/util": false
   protobufjs: false
   esbuild: false
+
+# Security patches for transitive dependencies (pnpm audit, 2026-11-05).
+# firebase pins grpc-js ~1.9 for client Firestore, which this app never loads;
+# glob 14 is the patched line for glob/minimatch pulled in via firebase-admin
+# and react-email.
+overrides:
+  "@grpc/grpc-js": ">=1.14.6"
+  glob: ">=14.0.2"

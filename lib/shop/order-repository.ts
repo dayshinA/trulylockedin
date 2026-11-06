@@ -20,6 +20,8 @@ export type CreateOrderInput = {
   now: Date;
   // The signed-in member placing the order.
   memberId?: string;
+  // The terms version the customer agreed to.
+  termsVersion: string;
 };
 
 export type CreateOrderResult =

@@ -88,8 +88,22 @@ export async function Footer() {
         </div>
 
         <div className="mt-8 flex flex-wrap justify-between gap-x-4 gap-y-1 border-t border-line pt-4 text-xs text-muted">
-          <p>© {SITE_NAME}</p>
-          <p>
+          <p className="flex flex-wrap items-center gap-x-4">
+            <span>© {SITE_NAME}</span>
+            <Link
+              href="/privacy"
+              className="inline-flex min-h-11 items-center transition-colors hover:text-ink"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="inline-flex min-h-11 items-center transition-colors hover:text-ink"
+            >
+              Terms &amp; returns
+            </Link>
+          </p>
+          <p className="inline-flex min-h-11 items-center">
             By appointment only
             {contact.area && ` · ${contact.area}`}
           </p>

@@ -79,6 +79,11 @@ export const bookingRequestSchema = z.object({
   email: emailSchema,
   notes: optionalText(1000),
   referencePhotos: referencePhotosSchema,
+  // The "I agree to the terms" box. Required server-side too, so the stored
+  // termsVersion always means the client ticked it.
+  acceptTerms: z.literal(true, {
+    error: "Please tick the box to agree to the terms",
+  }),
   website: z.string().optional(),
 });
 

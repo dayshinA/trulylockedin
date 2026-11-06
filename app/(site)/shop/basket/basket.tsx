@@ -13,6 +13,7 @@ import { MemberBar } from "@/components/site/member-bar";
 import { OrderLines } from "@/components/site/order-lines";
 import { QuantityStepper } from "@/components/site/quantity-stepper";
 import { ShopNotes } from "@/components/site/shop-notes";
+import { TermsConsent } from "@/components/site/terms-consent";
 import {
   saveBookingAccess,
   settleBookingAccess,
@@ -168,6 +169,7 @@ export function Basket({
         phone: form.get("phone"),
         email: form.get("email"),
         notes: form.get("notes"),
+        acceptTerms: form.get("acceptTerms") === "on",
         website: form.get("website"),
       });
       if (result.ok) {
@@ -531,6 +533,10 @@ export function Basket({
               <input name="website" tabIndex={-1} autoComplete="off" />
             </label>
           </div>
+
+          <TermsConsent error={fieldErrors.acceptTerms}>
+            , including returns,
+          </TermsConsent>
 
           {formError && (
             <p role="alert" className="text-sm font-semibold text-brand">

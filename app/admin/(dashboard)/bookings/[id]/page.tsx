@@ -147,6 +147,14 @@ export default async function BookingDetailPage({
               "Client, online, as a guest"
             ),
           ],
+          ...(booking.termsVersion
+            ? ([
+                [
+                  "Agreed to",
+                  `Terms last updated ${formatLocalDate(booking.termsVersion)}`,
+                ],
+              ] as [string, string][])
+            : []),
         ]}
       />
 

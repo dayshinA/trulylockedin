@@ -9,9 +9,11 @@ import {
   heroSchema,
   highlightSchema,
   policiesSchema,
+  privacySchema,
   seoSchema,
   shopSchema,
   testimonialSchema,
+  termsSchema,
   testimonialsSchema,
 } from "./schemas";
 
@@ -213,4 +215,29 @@ export function parseShopForm(form: Form): Parsed<SiteContent["shop"]> {
 
 export function parseSeoForm(form: Form): Parsed<SiteContent["seo"]> {
   return result(seoSchema.safeParse({ description: text(form, "description") }));
+}
+
+// Legal pages. `today` (salon-local yyyy-mm-dd) becomes the "Last updated"
+// date and, for the terms, the version clients agree to from then on.
+export function parsePrivacyForm(
+  form: Form,
+  today: string,
+): Parsed<SiteContent["privacy"]> {
+  return result(
+    privacySchema.safeParse({
+      controllerName: text(form, "controllerName"),
+      contactEmail: text(form, "contactEmail"),
+      body: text(form, "body"),
+      updatedOn: today,
+    }),
+  );
+}
+
+export function parseTermsForm(
+  form: Form,
+  today: string,
+): Parsed<SiteContent["terms"]> {
+  return result(
+    termsSchema.safeParse({ body: text(form, "body"), updatedOn: today }),
+  );
 }

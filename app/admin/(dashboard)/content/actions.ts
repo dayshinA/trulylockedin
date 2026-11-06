@@ -10,15 +10,19 @@ import {
   parseContactForm,
   parseHeroForm,
   parsePoliciesForm,
+  parsePrivacyForm,
   parseSeoForm,
   parseShopForm,
+  parseTermsForm,
   parseTestimonialsForm,
 } from "@/lib/content/forms";
 import type { SiteSection } from "@/lib/content/schemas";
 import { readSiteContent, saveSiteSection } from "@/lib/content/store";
 import { PUBLIC_TAGS } from "@/lib/data/public";
 import { adminDb } from "@/lib/firebase/admin";
+import { todayLocal } from "@/lib/booking/time";
 import { referencedPublicIds } from "@/lib/media/references";
+import { TIMEZONE } from "@/lib/site";
 import type { SiteContent } from "@/types/cms";
 import { invalid, type FormState } from "../_components/form-state";
 
@@ -93,4 +97,24 @@ export async function saveShopAction(
 export async function saveSeoAction(_previous: FormState, formData: FormData) {
   await verifyAdmin();
   return save("seo", parseSeoForm(formData));
+}
+
+const today = () => todayLocal(new Date(), TIMEZONE);
+
+export async function savePrivacyAction(
+  _previous: FormState,
+  formData: FormData,
+) {
+  await verifyAdmin();
+  return save("privacy", parsePrivacyForm(formData, today()));
+}
+
+// Bookings and orders made after this save record the new date as the terms
+// version the client agreed to.
+export async function saveTermsAction(
+  _previous: FormState,
+  formData: FormData,
+) {
+  await verifyAdmin();
+  return save("terms", parseTermsForm(formData, today()));
 }

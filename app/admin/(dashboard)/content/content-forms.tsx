@@ -11,15 +11,17 @@ import {
   SubmitButton,
   useAdminForm,
 } from "../_components/admin-form";
-import { outlineButton } from "../_components/admin-ui";
+import { outlineButton, textLink } from "../_components/admin-ui";
 import type { FormState } from "../_components/form-state";
 import {
   saveAboutAction,
   saveContactAction,
   saveHeroAction,
   savePoliciesAction,
+  savePrivacyAction,
   saveSeoAction,
   saveShopAction,
+  saveTermsAction,
   saveTestimonialsAction,
 } from "./actions";
 import { HeroPortraitField } from "./hero-portrait-field";
@@ -446,6 +448,106 @@ export function SeoForm({ seo }: { seo: SiteContent["seo"] }) {
             className={textareaClass}
           />
         </Field>
+      )}
+    </SectionForm>
+  );
+}
+
+// How the legal text box is written; mirrors lib/content/legal-text.ts.
+function LegalFormatHelp({ href }: { href: string }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-sm bg-surface p-4 text-sm text-muted">
+      <p className="font-semibold text-ink">How to format the text</p>
+      <ul className="flex flex-col gap-1 pl-5">
+        <li className="list-disc">
+          Start a line with <code className="text-ink">## </code> for a heading
+        </li>
+        <li className="list-disc">
+          Start a line with <code className="text-ink">- </code> for a bullet
+          point
+        </li>
+        <li className="list-disc">Leave a blank line between paragraphs</li>
+        <li className="list-disc">Web and email addresses become links</li>
+      </ul>
+      <p>
+        Saving sets &ldquo;Last updated&rdquo; to today.{" "}
+        <a href={href} target="_blank" className={textLink}>
+          View the page ↗
+        </a>
+      </p>
+    </div>
+  );
+}
+
+const legalTextareaClass = `${textareaClass} min-h-96 font-mono text-sm leading-relaxed`;
+
+export function PrivacyForm({
+  privacy,
+}: {
+  privacy: SiteContent["privacy"];
+}) {
+  return (
+    <SectionForm action={savePrivacyAction}>
+      {(errors) => (
+        <>
+          <Field
+            label="Your full legal name"
+            hint="As a sole trader you are the “data controller”. Shown in “Who we are” on the Privacy and Terms pages."
+            error={errors.controllerName}
+          >
+            <input
+              name="controllerName"
+              defaultValue={privacy.controllerName}
+              autoComplete="name"
+              className={inputClass}
+            />
+          </Field>
+          <Field
+            label="Email for privacy requests"
+            hint="Also shown as the contact email on the Terms page"
+            error={errors.contactEmail}
+          >
+            <input
+              name="contactEmail"
+              type="email"
+              defaultValue={privacy.contactEmail}
+              className={inputClass}
+            />
+          </Field>
+          <LegalFormatHelp href="/privacy" />
+          <Field label="Privacy notice" error={errors.body}>
+            <textarea
+              name="body"
+              rows={28}
+              defaultValue={privacy.body}
+              className={legalTextareaClass}
+            />
+          </Field>
+        </>
+      )}
+    </SectionForm>
+  );
+}
+
+export function TermsForm({ terms }: { terms: SiteContent["terms"] }) {
+  return (
+    <SectionForm action={saveTermsAction}>
+      {(errors) => (
+        <>
+          <LegalFormatHelp href="/terms" />
+          <Field
+            label="Terms & returns"
+            hint="Clients tick a box agreeing to these before they book or order. Each booking and order records the date of the version they agreed to."
+            error={errors.body}
+          >
+            <textarea
+              name="body"
+              rows={28}
+              defaultValue={terms.body}
+              className={legalTextareaClass}
+            />
+          </Field>
+        </>
       )}
     </SectionForm>
   );

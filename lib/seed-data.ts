@@ -1,4 +1,5 @@
 import type { SiteContent } from "@/types/cms";
+import { PRIVACY_DRAFT, TERMS_DRAFT } from "./content/legal-drafts";
 
 export {
   DEFAULT_BOOKING_SETTINGS,
@@ -79,5 +80,15 @@ export const SEED_SITE_CONTENT: SiteContent = {
   seo: {
     description:
       "Loc installation, retwists, maintenance and styling. View the work and book your appointment online.",
+  },
+  privacy: {
+    controllerName: "",
+    contactEmail: "trulylockedinuk@gmail.com",
+    updatedOn: "2026-11-05",
+    body: PRIVACY_DRAFT,
+  },
+  terms: {
+    updatedOn: "2026-11-05",
+    body: TERMS_DRAFT,
   },
 };

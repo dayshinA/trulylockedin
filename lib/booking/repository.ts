@@ -41,6 +41,8 @@ export type CreateBookingInput = {
   memberId?: string;
   // Already checked to be in REFERENCE_FOLDER (bookingRequestSchema).
   referencePhotos?: string[];
+  // Online bookings: the terms version the client agreed to.
+  termsVersion?: string;
 };
 
 export type CreateBookingResult =

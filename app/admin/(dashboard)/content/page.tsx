@@ -10,8 +10,10 @@ import {
   ContactForm,
   HeroForm,
   PoliciesForm,
+  PrivacyForm,
   SeoForm,
   ShopForm,
+  TermsForm,
   TestimonialsForm,
 } from "./content-forms";
 
@@ -51,6 +53,16 @@ const SECTIONS: {
     title: "Search engines",
     where: "The short description Google and link previews show",
   },
+  {
+    id: "privacy",
+    title: "Privacy notice",
+    where: "The Privacy page (/privacy), linked from the footer, booking, checkout and account sign-up",
+  },
+  {
+    id: "terms",
+    title: "Terms & returns",
+    where: "The Terms page (/terms): deposits, cancellations, shop orders and returns",
+  },
 ];
 
 // Live read (not the cached public one), so the forms always show what's stored.
@@ -66,6 +78,8 @@ export default async function ContentPage() {
     policies: <PoliciesForm policies={content.policies} />,
     shop: <ShopForm shop={content.shop} />,
     seo: <SeoForm seo={content.seo} />,
+    privacy: <PrivacyForm privacy={content.privacy} />,
+    terms: <TermsForm terms={content.terms} />,
   };
 
   return (

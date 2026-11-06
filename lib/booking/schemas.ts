@@ -146,6 +146,7 @@ export const bookingSchema = z.object({
   source: z.enum(["online", "admin"]).optional(),
   memberId: z.string().optional(),
   referencePhotos: z.array(z.string()).optional(),
+  termsVersion: z.string().optional(),
   deposit: z
     .object({
       amountPence: z.number().int().min(0),

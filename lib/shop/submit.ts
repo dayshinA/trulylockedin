@@ -27,7 +27,7 @@ const lineSchema = z.object({
 // / "ready" messages) and an email (with the ref it finds the order again on
 // /shop/order/find).
 export const orderRequestSchema = bookingRequestSchema
-  .pick({ name: true, notes: true, website: true })
+  .pick({ name: true, notes: true, website: true, acceptTerms: true })
   .extend({
     phone: phoneSchema,
     email: emailSchema,
@@ -83,6 +83,8 @@ export async function submitOrder(
     limiter: RateLimiter;
     // From the member session, never from `raw`.
     memberId?: string;
+    // The terms' "Last updated" date, recorded as the version agreed to.
+    termsVersion: string;
     // Makes the Stripe payment page for an order paid online.
     startCheckout: (order: Order) => Promise<{ id: string; url: string }>;
   },
@@ -143,6 +145,7 @@ export async function submitOrder(
       cancelTokenHash: hashToken(cancelToken),
       now: context.now,
       memberId: context.memberId,
+      termsVersion: context.termsVersion,
     });
     if (!result.ok) {
       return {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { verifyAdmin } from "@/lib/auth/dal";
-import { formatPrice } from "@/lib/format";
+import { formatLocalDate, formatPrice } from "@/lib/format";
 import { AddressBlock } from "@/components/site/address-block";
 import {
   canTransitionOrder,
@@ -198,6 +198,14 @@ export default async function OrderDetailPage({
               "A guest"
             ),
           ],
+          ...(order.termsVersion
+            ? ([
+                [
+                  "Agreed to",
+                  `Terms last updated ${formatLocalDate(order.termsVersion)}`,
+                ],
+              ] as [string, string][])
+            : []),
         ]}
       />
 

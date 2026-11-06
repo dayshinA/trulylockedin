@@ -1,6 +1,7 @@
 "use server";
 
 import { getMember } from "@/lib/auth/member-dal";
+import { getSiteContent } from "@/lib/data/public";
 import { clientKey } from "@/lib/client-key";
 import { notifyOrder } from "@/lib/email/order-emails";
 import { rememberMemberPhone } from "@/lib/members/remember-phone";
@@ -45,7 +46,9 @@ export async function placeOrder(
   const member = await getMember();
   const now = new Date();
   const siteUrl = await siteOrigin();
+  const { terms } = await getSiteContent();
   const result = await submitOrder(orderRepository(), input, {
+    termsVersion: terms.updatedOn,
     now,
     clientKey: await clientKey(),
     limiter: orderLimiter,

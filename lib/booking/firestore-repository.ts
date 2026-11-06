@@ -299,6 +299,7 @@ export class FirestoreBookingRepository implements BookingRepository {
         referencePhotos: input.referencePhotos?.length
           ? input.referencePhotos
           : undefined,
+        termsVersion: input.mode === "owner" ? undefined : input.termsVersion,
         deposit: hold
           ? { amountPence: depositPence, status: "awaiting" }
           : undefined,

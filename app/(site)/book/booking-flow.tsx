@@ -9,6 +9,7 @@ import { quoteService } from "@/lib/booking/quote";
 import { addDays } from "@/lib/booking/time";
 import { Field, inputClass } from "@/components/site/form-field";
 import { MemberBar } from "@/components/site/member-bar";
+import { TermsConsent } from "@/components/site/terms-consent";
 import {
   formatDuration,
   formatLocalDate,
@@ -230,6 +231,7 @@ export function BookingFlow({
         email: form.get("email"),
         notes: form.get("notes"),
         referencePhotos: uploadedPhotoIds(photos),
+        acceptTerms: form.get("acceptTerms") === "on",
         website: form.get("website"),
       });
 
@@ -471,6 +473,10 @@ export function BookingFlow({
                   <input name="website" tabIndex={-1} autoComplete="off" />
                 </label>
               </div>
+
+              <TermsConsent error={fieldErrors.acceptTerms}>
+                {deposit > 0 && ", including the non-refundable deposit,"}
+              </TermsConsent>
 
               {formError && (
                 <p role="alert" className="text-sm font-semibold text-brand">

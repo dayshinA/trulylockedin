@@ -61,4 +61,24 @@ export type SiteContent = {
   seo: {
     description: string;
   };
+  privacy: PrivacyNotice;
+  terms: LegalDocument;
+};
+
+// A long page of legal text the owner edits as one block (see
+// lib/content/legal-text.ts for the format: "## " headings, "- " bullets,
+// blank lines between paragraphs).
+export type LegalDocument = {
+  // Salon-local yyyy-mm-dd, set on every save. For the terms it doubles as the
+  // version a client agreed to (Booking.termsVersion / Order.termsVersion).
+  updatedOn: string;
+  body: string;
+};
+
+export type PrivacyNotice = LegalDocument & {
+  // The sole trader's legal name: the data controller. Empty in the
+  // placeholder; the admin form requires it.
+  controllerName: string;
+  // Where privacy requests go.
+  contactEmail: string;
 };

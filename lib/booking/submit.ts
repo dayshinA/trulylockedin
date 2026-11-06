@@ -103,6 +103,8 @@ export async function submitBooking(
     limiter: RateLimiter;
     // From the member session, never from `raw`.
     memberId?: string;
+    // The terms' "Last updated" date, recorded as the version agreed to.
+    termsVersion: string;
     // Makes the Stripe payment page for a booking held for its deposit.
     startCheckout: (booking: Booking) => Promise<{ id: string; url: string }>;
   },
@@ -158,6 +160,7 @@ export async function submitBooking(
       cancelTokenHash: hashToken(cancelToken),
       now: context.now,
       memberId: context.memberId,
+      termsVersion: context.termsVersion,
     });
     if (!result.ok) {
       return {

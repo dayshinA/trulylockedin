@@ -341,7 +341,7 @@ export function parseOverrideForm(form: Form): Parsed<DateOverride> {
 }
 
 // Owner bookings usually come in by phone: phone required, email optional.
-const manualSchema = bookingRequestSchema.omit({ website: true }).extend({
+const manualSchema = bookingRequestSchema.omit({ website: true, acceptTerms: true }).extend({
   phone: phoneSchema,
   email: optionalEmailSchema,
   // Owner can pick any minute, not just the slot grid.
