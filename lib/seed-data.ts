@@ -3,6 +3,7 @@ import { PRIVACY_DRAFT, TERMS_DRAFT } from "./content/legal-drafts";
 
 export {
   DEFAULT_BOOKING_SETTINGS,
+  DEFAULT_DAY_RULES,
   DEFAULT_WEEKLY_HOURS,
 } from "@/lib/booking/defaults";
 export { SEED_CATEGORIES, SEED_SERVICES } from "@/lib/booking/seed-catalogue";

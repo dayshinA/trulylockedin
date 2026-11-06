@@ -4,13 +4,14 @@ import type {
   DateOverride,
   LocalDate,
   TimeWindow,
-  WeeklyHours,
+  WeeklySchedule,
 } from "@/types/booking";
 import type { Interval } from "./overlap";
 import {
   addDays,
   localToUtcMs,
   MINUTE_MS,
+  parseLocalTime,
   todayLocal,
   weekdayOf,
 } from "./time";
@@ -37,23 +38,89 @@ export function meetsMinNotice(
 // Override closed → none; override windows → those; else the weekday's hours.
 export function openingWindows(
   date: LocalDate,
-  weekly: WeeklyHours,
+  weekly: WeeklySchedule,
   override: DateOverride | null,
 ): TimeWindow[] {
   if (override?.closed) return [];
   if (override?.windows) return override.windows;
-  return weekly[weekdayOf(date)] ?? [];
+  return weekly.hours[weekdayOf(date)] ?? [];
 }
 
-export function blockedIntervals(
+// A start at or after premiumFrom on its schedule date, or any start after
+// midnight (the late night carries on), is a premium time.
+export function isPremiumTime(
+  slot: { date: LocalDate; start: string },
+  scheduleDate: LocalDate,
+  settings: Pick<BookingSettings, "premiumFrom">,
+): boolean {
+  if (settings.premiumFrom === null) return false;
+  return slot.date > scheduleDate || slot.start >= settings.premiumFrom;
+}
+
+export type DayRulesResolved = { stepMin: number; chairs: number };
+
+// Special date → weekday → the defaults in settings, field by field.
+export function dayRulesFor(
   date: LocalDate,
+  weekly: WeeklySchedule,
   override: DateOverride | null,
   settings: BookingSettings,
+): DayRulesResolved {
+  const day = weekly.rules[weekdayOf(date)];
+  return {
+    stepMin: override?.stepMin ?? day?.stepMin ?? settings.slotIntervalMin,
+    chairs: override?.chairs ?? day?.chairs ?? settings.chairs,
+  };
+}
+
+// A window as UTC instants. A closing time earlier than the opening (or
+// "00:00") is on the next morning.
+export function windowBounds(
+  date: LocalDate,
+  window: TimeWindow,
+  timeZone: string,
+): Interval | null {
+  const overnight = parseLocalTime(window.end)! <= parseLocalTime(window.start)!;
+  const startMs = localToUtcMs(date, window.start, timeZone);
+  const endMs = localToUtcMs(
+    overnight ? addDays(date, 1) : date,
+    window.end,
+    timeZone,
+  );
+  return startMs === null || endMs === null ? null : { startMs, endMs };
+}
+
+// A time typed for a schedule date: on a day that closes after midnight,
+// times up to that closing time are the next morning ("01:00" on a
+// 13:00–03:00 Wednesday is Thursday 01:00).
+export function scheduleTimeToMs(
+  date: LocalDate,
+  time: string,
+  windows: readonly TimeWindow[],
+  timeZone: string,
+): number | null {
+  const last = windows.at(-1);
+  const minutes = parseLocalTime(time);
+  if (minutes === null) return null;
+  const nextMorning =
+    last !== undefined &&
+    parseLocalTime(last.end)! <= parseLocalTime(last.start)! &&
+    minutes < parseLocalTime(last.end)!;
+  return localToUtcMs(nextMorning ? addDays(date, 1) : date, time, timeZone);
+}
+
+// Each blocked time blocks one start-time gap from that time.
+export function blockedIntervals(
+  date: LocalDate,
+  windows: readonly TimeWindow[],
+  override: DateOverride | null,
+  settings: BookingSettings,
+  stepMin: number,
 ): Interval[] {
   return (override?.blockedSlots ?? []).flatMap((time) => {
-    const startMs = localToUtcMs(date, time, settings.timezone);
+    const startMs = scheduleTimeToMs(date, time, windows, settings.timezone);
     if (startMs === null) return [];
-    return [{ startMs, endMs: startMs + settings.slotIntervalMin * MINUTE_MS }];
+    return [{ startMs, endMs: startMs + stepMin * MINUTE_MS }];
   });
 }
 

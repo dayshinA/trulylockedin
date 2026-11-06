@@ -3,11 +3,14 @@
 import { useState } from "react";
 
 import { penceToPounds } from "@/lib/booking/admin-forms";
+import { formatDuration } from "@/lib/format";
 import {
   WEEKDAYS,
   type BookingSettings,
+  type DayRules,
+  type TimeWindow,
   type Weekday,
-  type WeeklyHours,
+  type WeeklySchedule,
 } from "@/types/booking";
 import {
   Field,
@@ -37,6 +40,62 @@ const DAY_NAMES: Record<Weekday, string> = {
 const WEEK_ORDER: Weekday[] = [...WEEKDAYS.slice(1), WEEKDAYS[0]];
 
 const timeClass = `${inputClass} w-28`;
+const selectClass = `${inputClass} w-auto`;
+
+const GAP_CHOICES = [30, 45, 60, 90, 120, 180];
+const CHAIR_CHOICES = [1, 2, 3, 4];
+
+// Keeps a stored value selectable even if it isn't one of the usual choices.
+const withValue = (choices: number[], value?: number) =>
+  value === undefined || choices.includes(value)
+    ? choices
+    : [...choices, value].sort((a, b) => a - b);
+
+// "Every" and "Chairs" for a day or a special date. Empty = the default.
+function DayRuleSelects({
+  prefix,
+  rules,
+  defaultLabel,
+}: {
+  prefix: string;
+  rules?: DayRules;
+  defaultLabel: { stepMin: string; chairs: string };
+}) {
+  return (
+    <div className="flex flex-wrap gap-3">
+      <label className="flex items-center gap-2 text-sm text-muted">
+        Every
+        <select
+          name={`${prefix}stepMin`}
+          defaultValue={rules?.stepMin ?? ""}
+          className={selectClass}
+        >
+          <option value="">{defaultLabel.stepMin}</option>
+          {withValue(GAP_CHOICES, rules?.stepMin).map((m) => (
+            <option key={m} value={m}>
+              {formatDuration(m)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex items-center gap-2 text-sm text-muted">
+        Chairs
+        <select
+          name={`${prefix}chairs`}
+          defaultValue={rules?.chairs ?? ""}
+          className={selectClass}
+        >
+          <option value="">{defaultLabel.chairs}</option>
+          {withValue(CHAIR_CHOICES, rules?.chairs).map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
 
 function TimePair({
   prefix,
@@ -74,9 +133,19 @@ function TimePair({
   );
 }
 
-export function WeeklyHoursForm({ weekly }: { weekly: WeeklyHours }) {
+export function WeeklyHoursForm({
+  weekly,
+  settings,
+}: {
+  weekly: WeeklySchedule;
+  settings: BookingSettings;
+}) {
   const { state, pending, onSubmit } = useAdminForm(saveWeeklyHoursAction);
   const errors = state.fieldErrors ?? {};
+  const defaultLabel = {
+    stepMin: `Default (${formatDuration(settings.slotIntervalMin)})`,
+    chairs: `Default (${settings.chairs})`,
+  };
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
@@ -85,14 +154,28 @@ export function WeeklyHoursForm({ weekly }: { weekly: WeeklyHours }) {
           <DayRow
             key={day}
             day={day}
-            windows={weekly[day]}
+            windows={weekly.hours[day]}
+            rules={weekly.rules[day]}
+            defaultLabel={defaultLabel}
             error={errors[day]}
           />
         ))}
       </div>
-      <p className="text-xs text-muted">
-        Add a second time range for a break (e.g. 09:00–13:00 and 14:00–18:00).
-      </p>
+      <ul className="flex list-disc flex-col gap-1 pl-5 text-xs text-muted">
+        <li>
+          A closing time earlier than the opening time (like 03:00) means the
+          next morning.
+        </li>
+        <li>
+          Add a second time range for a break (e.g. 13:00–17:00 and
+          18:00–03:00).
+        </li>
+        <li>
+          &ldquo;Every&rdquo; is the gap between start times: pick 2 hours on
+          days you work alone. &ldquo;Chairs&rdquo; is how many clients can be
+          in at the same time. Clients never see the chairs.
+        </li>
+      </ul>
       <FormMessage state={state} />
       <SubmitButton pending={pending}>Save opening hours</SubmitButton>
     </form>
@@ -102,10 +185,14 @@ export function WeeklyHoursForm({ weekly }: { weekly: WeeklyHours }) {
 function DayRow({
   day,
   windows,
+  rules,
+  defaultLabel,
   error,
 }: {
   day: Weekday;
-  windows: WeeklyHours[Weekday];
+  windows: TimeWindow[];
+  rules?: DayRules;
+  defaultLabel: { stepMin: string; chairs: string };
   error?: string[];
 }) {
   const [open, setOpen] = useState(windows.length > 0);
@@ -132,12 +219,12 @@ function DayRow({
         {!open && <span className="text-sm text-muted">Closed</span>}
       </div>
       {open && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <TimePair
             prefix={prefix}
             n={1}
-            start={windows[0]?.start ?? "09:00"}
-            end={windows[0]?.end ?? "17:00"}
+            start={windows[0]?.start ?? "13:00"}
+            end={windows[0]?.end ?? "21:00"}
             label={DAY_NAMES[day]}
           />
           {split ? (
@@ -157,6 +244,11 @@ function DayRow({
               + Add a break
             </button>
           )}
+          <DayRuleSelects
+            prefix={prefix}
+            rules={rules}
+            defaultLabel={defaultLabel}
+          />
         </div>
       )}
       {error?.[0] && <FieldError>{error[0]}</FieldError>}
@@ -172,8 +264,8 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field
-          label="Time slots every"
-          hint="How often start times are offered"
+          label="Default gap between start times"
+          hint="Used on days where you haven't picked one"
           error={errors.slotIntervalMin}
         >
           <select
@@ -181,14 +273,51 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
             defaultValue={settings.slotIntervalMin}
             className={inputClass}
           >
-            {[15, 30, 45, 60].map((m) => (
+            {withValue(GAP_CHOICES, settings.slotIntervalMin).map((m) => (
               <option key={m} value={m}>
-                {m} minutes
+                {formatDuration(m)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Break between clients (minutes)" error={errors.bufferMin}>
+        <Field
+          label="Default chairs"
+          hint="Clients who can be in at once, on days where you haven't picked"
+          error={errors.chairs}
+        >
+          <select
+            name="chairs"
+            defaultValue={settings.chairs}
+            className={inputClass}
+          >
+            {CHAIR_CHOICES.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field
+          label="Time between two clients' starts (minutes)"
+          hint="Two clients never start closer together than this"
+          error={errors.staggerMin}
+        >
+          <input
+            name="staggerMin"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={240}
+            step={5}
+            defaultValue={settings.staggerMin}
+            className={inputClass}
+          />
+        </Field>
+        <Field
+          label="Break after each client (minutes)"
+          hint="Free time before that chair takes the next client"
+          error={errors.bufferMin}
+        >
           <input
             name="bufferMin"
             type="number"
@@ -202,7 +331,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
         </Field>
         <Field
           label="Minimum notice (hours)"
-          hint="Also how late clients can cancel online"
+          hint="How soon a client can book. Also how late they can cancel online"
           error={errors.minNoticeHours}
         >
           <input
@@ -215,7 +344,11 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
             className={inputClass}
           />
         </Field>
-        <Field label="Bookings open (days ahead)" error={errors.maxAdvanceDays}>
+        <Field
+          label="Bookings open (days ahead)"
+          hint="Clients can book up to this many days from today"
+          error={errors.maxAdvanceDays}
+        >
           <input
             name="maxAdvanceDays"
             type="number"
@@ -227,6 +360,19 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
           />
         </Field>
       </div>
+      <Field
+        label="Premium from"
+        hint="Start times from this time (and after midnight) use each service's premium price, if it has one. Clear it to turn premium times off."
+        error={errors.premiumFrom}
+      >
+        <input
+          name="premiumFrom"
+          type="time"
+          step={300}
+          defaultValue={settings.premiumFrom ?? ""}
+          className={`${inputClass} sm:max-w-40`}
+        />
+      </Field>
       <Field
         label="Deposit (£)"
         hint="Paid online when booking a service that takes a deposit. Paying it confirms the booking. 0 turns deposits off."
@@ -286,12 +432,26 @@ export function OverrideForm({ today }: { today: string }) {
       </fieldset>
 
       {kind === "hours" && (
-        <Field label="Opening hours that day" error={errors.start1}>
-          <span className="flex flex-col gap-2">
-            <TimePair prefix="" n={1} label="That day" />
-            <TimePair prefix="" n={2} label="That day second session" />
-          </span>
-        </Field>
+        <fieldset
+          data-invalid={errors.start1?.[0] ? "" : undefined}
+          className="flex flex-col gap-3 text-sm"
+        >
+          <legend className="mb-2 text-muted">Opening hours that day</legend>
+          <TimePair prefix="" n={1} label="That day" />
+          <TimePair prefix="" n={2} label="That day second session" />
+          <DayRuleSelects
+            prefix=""
+            defaultLabel={{ stepMin: "Same as usual", chairs: "Same as usual" }}
+          />
+          {errors.start1?.[0] ? (
+            <FieldError>{errors.start1[0]}</FieldError>
+          ) : (
+            <span className="text-xs text-muted">
+              Replaces that day&rsquo;s weekly hours. Leave the gap and chairs
+              on &ldquo;Same as usual&rdquo; to keep the weekday&rsquo;s.
+            </span>
+          )}
+        </fieldset>
       )}
 
       {kind !== "closed" && (

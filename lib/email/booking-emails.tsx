@@ -117,7 +117,10 @@ function appointmentRows(b: Booking): EmailRow[] {
     { label: "Service", value: serviceLines(b) },
     { label: "When", value: when(b) },
     { label: "Length", value: formatDuration(b.service.durationMin) },
-    { label: "Price from", value: formatPrice(b.service.priceFromPence) },
+    {
+      label: "Price from",
+      value: `${formatPrice(b.service.priceFromPence)}${b.service.premium ? " (premium time)" : ""}`,
+    },
     ...depositRows(b),
   ];
 }

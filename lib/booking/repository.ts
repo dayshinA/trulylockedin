@@ -13,7 +13,7 @@ import type {
   Service,
   ServiceCategory,
   Slot,
-  WeeklyHours,
+  WeeklySchedule,
 } from "@/types/booking";
 import { getAvailableSlots, type AvailabilityInput } from "./availability";
 import { addDays } from "./time";
@@ -44,6 +44,9 @@ export type CreateBookingInput = {
   referencePhotos?: string[];
   // Online bookings: the terms version the client agreed to.
   termsVersion?: string;
+  // Owner bookings: charge the service's premium price. Online bookings get
+  // it from the start time instead.
+  premium?: boolean;
 };
 
 export type CreateBookingResult =
@@ -74,13 +77,14 @@ export type StatusChangeResult =
 // Implementation: firestore-repository.ts.
 export interface BookingRepository {
   getSettings(): Promise<BookingSettings>;
-  getWeeklyHours(): Promise<WeeklyHours>;
+  getWeekly(): Promise<WeeklySchedule>;
   getOverride(date: LocalDate): Promise<DateOverride | null>;
   // Full bookings for a date (admin views), ordered by start time. Like every
   // list below, it leaves out bookings still awaiting their deposit.
   getBookingsForDate(date: LocalDate): Promise<Booking[]>;
-  // Times that block availability on a date at `now`; cancelled bookings and
-  // lapsed deposit holds excluded.
+  // Times that can block availability on a schedule date at `now`: that
+  // date's bookings and the dates either side (appointments run past
+  // midnight). Cancelled bookings and lapsed deposit holds excluded.
   getBookedTimes(date: LocalDate, now: Date): Promise<BookedTime[]>;
   // The same for every date in [from, to], in one read; dates without
   // bookings are missing from the map.
@@ -106,8 +110,9 @@ export interface BookingRepository {
     now: Date,
   ): Promise<StatusChangeResult>;
   // Atomic: re-reads rules and bookings, runs validateBookingRequest, and writes
-  // only if it passes. Concurrent requests for overlapping times: one wins,
-  // the rest get "slot_taken". An online booking for a service that takes a
+  // only if it passes. Concurrent requests that would overfill the chairs: one
+  // wins, the rest get "slot_taken". The booking is stored under its real date
+  // (the next day for a start after midnight). An online booking for a service that takes a
   // deposit is created as awaiting_deposit, holding its time until
   // holdExpiresAt.
   createBooking(input: CreateBookingInput): Promise<CreateBookingResult>;
@@ -149,7 +154,7 @@ export interface BookingRepository {
 
   // Admin config writes. They never change bookings that already exist.
   saveSettings(settings: BookingSettings): Promise<void>;
-  saveWeeklyHours(weekly: WeeklyHours): Promise<void>;
+  saveWeekly(weekly: WeeklySchedule): Promise<void>;
   // Overrides dated fromDate or later, in date order.
   listOverrides(fromDate: LocalDate): Promise<DateOverride[]>;
   // Replaces the whole override for its date.
@@ -199,7 +204,7 @@ export async function loadAvailableSlots(
 ): Promise<Slot[]> {
   const [settings, weekly, override, bookings] = await Promise.all([
     repo.getSettings(),
-    repo.getWeeklyHours(),
+    repo.getWeekly(),
     repo.getOverride(date),
     repo.getBookedTimes(date, now),
   ]);
@@ -232,9 +237,10 @@ export async function loadOpenDays(
 ): Promise<LocalDate[]> {
   const [settings, weekly, overrides, booked] = await Promise.all([
     repo.getSettings(),
-    repo.getWeeklyHours(),
+    repo.getWeekly(),
     repo.listOverrides(from),
-    repo.getBookedTimesBetween(from, to, now),
+    // One day either side: appointments can run past midnight.
+    repo.getBookedTimesBetween(addDays(from, -1), addDays(to, 1), now),
   ]);
   const overrideFor = new Map(overrides.map((o) => [o.date, o]));
   const open: LocalDate[] = [];
@@ -244,7 +250,7 @@ export async function loadOpenDays(
       service,
       weekly,
       override: overrideFor.get(date) ?? null,
-      bookings: booked.get(date) ?? [],
+      bookings: [-1, 0, 1].flatMap((d) => booked.get(addDays(date, d)) ?? []),
       settings,
       now,
     });

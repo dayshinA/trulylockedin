@@ -3,6 +3,8 @@ export type LocalDate = string;
 // Salon-local wall-clock time, "HH:mm" ("24:00" allowed as a window end).
 export type LocalTime = string;
 
+// Opening to closing. An end earlier than the start (e.g. 13:00–03:00) closes
+// the next morning; only a day's last window may do that.
 export type TimeWindow = {
   start: LocalTime;
   end: LocalTime;
@@ -22,6 +24,20 @@ export type Weekday = (typeof WEEKDAYS)[number];
 // availability/weekly — an empty list means closed that day.
 export type WeeklyHours = Record<Weekday, TimeWindow[]>;
 
+// Per-day booking rules. Missing fields use the defaults in BookingSettings.
+export type DayRules = {
+  // Gap between offered start times.
+  stepMin?: number;
+  // Clients who can be in at the same time. Admin-only: never shown publicly.
+  chairs?: number;
+};
+
+// availability/weekly: the opening times per weekday plus `rules`.
+export type WeeklySchedule = {
+  hours: WeeklyHours;
+  rules: Partial<Record<Weekday, DayRules>>;
+};
+
 // availability/overrides/dates/{date}
 export type DateOverride = {
   date: LocalDate;
@@ -29,16 +45,21 @@ export type DateOverride = {
   closed?: boolean;
   // Replaces the weekly windows for this date.
   windows?: TimeWindow[];
-  // Each blocks one slotIntervalMin cell from that time: no appointment may run through it.
+  // Each blocks one start-time gap (the day's stepMin) from that time: no appointment may run through it.
   blockedSlots?: LocalTime[];
   // Extra start times offered even outside the windows (still checked for clashes).
   extraSlots?: LocalTime[];
-};
+} & DayRules;
 
 // settings/main (booking rules part)
 export type BookingSettings = {
   timezone: string;
+  // Default gap between start times (DayRules.stepMin overrides it per day).
   slotIntervalMin: number;
+  // Default number of chairs (DayRules.chairs overrides it per day).
+  chairs: number;
+  // Two clients never start closer together than this.
+  staggerMin: number;
   // Gap required after each appointment before the next one starts.
   bufferMin: number;
   minNoticeHours: number;
@@ -47,6 +68,9 @@ export type BookingSettings = {
   // Online deposit taken through Stripe for services with depositRequired.
   // 0 turns deposits off.
   depositPence: number;
+  // Starts at or after this time (and any after midnight) are premium:
+  // services with a premiumPricePence charge it instead. null = off.
+  premiumFrom: LocalTime | null;
 };
 
 // serviceCategories/{id}
@@ -78,6 +102,9 @@ export type Service = {
   description: string;
   // Base price; selected options are added to it (see quote.ts).
   priceFromPence: number;
+  // Replaces the base price for premium start times (settings.premiumFrom).
+  // Missing: premium times cost the normal price.
+  premiumPricePence?: number;
   // Shown next to the price, e.g. "Up to 100 locs".
   priceLabel?: string;
   // Null when it varies. Slots can't be worked out, so it can't be booked yet.
@@ -105,6 +132,8 @@ export type BookedService = {
   durationMin: number;
   priceFromPence: number;
   options?: ServiceOption[];
+  // Booked at a premium time at the service's premium price.
+  premium?: true;
 };
 
 export type BookingStatus =
@@ -188,10 +217,16 @@ export type BookedTime = Pick<
 >;
 
 export type Slot = {
+  // The start's real local date: the day after the schedule's date for starts
+  // after midnight (a 13:00–03:00 day offers 01:00 the next morning).
+  date: LocalDate;
   start: LocalTime;
   end: LocalTime;
   startUtc: string;
   endUtc: string;
+  // A premium time (settings.premiumFrom); only services with a premium
+  // price cost more then.
+  premium?: true;
 };
 
 export type BookingRejection =
@@ -205,6 +240,4 @@ export type BookingRejection =
   | "not_a_slot"
   | "too_soon"
   | "blocked"
-  | "slot_taken"
-  // Owner bookings only: the appointment would run past midnight.
-  | "outside_day";
+  | "slot_taken";

@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { verifyAdmin } from "@/lib/auth/dal";
 import { bookingRepository } from "@/lib/booking/server";
 import { todayLocal } from "@/lib/booking/time";
-import { formatLocalDate } from "@/lib/format";
-import type { DateOverride } from "@/types/booking";
+import { formatDuration, formatLocalDate } from "@/lib/format";
+import type { BookingSettings, DateOverride } from "@/types/booking";
 import {
   Badge,
   outlineButton,
@@ -28,7 +28,7 @@ export default async function AvailabilityPage() {
   const settings = await repo.getSettings();
   const today = todayLocal(new Date(), settings.timezone);
   const [weekly, overrides] = await Promise.all([
-    repo.getWeeklyHours(),
+    repo.getWeekly(),
     repo.listOverrides(today),
   ]);
 
@@ -38,8 +38,13 @@ export default async function AvailabilityPage() {
         When clients can book online. Changes never move existing bookings.
       </PageHeader>
 
-      <Section title="Opening hours">
-        <WeeklyHoursForm weekly={weekly} />
+      <HowItWorks settings={settings} />
+
+      <Section
+        title="Opening hours"
+        description="Opening and closing time for each day, the gap between start times, and how many chairs are free."
+      >
+        <WeeklyHoursForm weekly={weekly} settings={settings} />
       </Section>
 
       <Section
@@ -87,7 +92,10 @@ export default async function AvailabilityPage() {
         </details>
       </Section>
 
-      <Section title="Booking rules">
+      <Section
+        title="Booking rules"
+        description="Defaults for every day, plus the rules every online booking follows."
+      >
         <BookingRulesForm settings={settings} />
       </Section>
     </div>
@@ -102,6 +110,10 @@ function describeOverride(override: DateOverride): string {
       `Open ${override.windows.map((w) => `${w.start}–${w.end}`).join(", ")}`,
     );
   }
+  if (override.stepMin) parts.push(`every ${formatDuration(override.stepMin)}`);
+  if (override.chairs) {
+    parts.push(`${override.chairs} chair${override.chairs === 1 ? "" : "s"}`);
+  }
   if (override.blockedSlots?.length) {
     parts.push(`Blocked ${override.blockedSlots.join(", ")}`);
   }
@@ -109,4 +121,35 @@ function describeOverride(override: DateOverride): string {
     parts.push(`Extra ${override.extraSlots.join(", ")}`);
   }
   return parts.join(" · ") || "Normal hours";
+}
+
+// A worked example with the salon's own numbers, so the rules read as a day.
+function HowItWorks({ settings }: { settings: BookingSettings }) {
+  const { bufferMin, staggerMin, chairs } = settings;
+  return (
+    <aside className="flex flex-col gap-3 border-l-2 border-brand bg-surface px-5 py-4 text-sm">
+      <h2 className="font-display text-2xl font-semibold">
+        How booking times work
+      </h2>
+      <ul className="flex list-disc flex-col gap-1.5 pl-5 text-muted">
+        <li>
+          Clients pick from start times offered every &ldquo;gap&rdquo; from
+          opening. Every appointment must finish by closing time, so long
+          services get fewer start times.
+        </li>
+        <li>
+          Up to {chairs} client{chairs === 1 ? "" : "s"} can be in at once
+          (change it per day). Two clients never start less than {staggerMin}{" "}
+          minutes apart, and each chair gets a {bufferMin}-minute break after
+          every client.
+        </li>
+        <li>
+          Example: open 13:00–03:00, every 1 hour, 2 chairs. A 4-hour retwist
+          at 13:00 still leaves 14:00 free for a second client in the other
+          chair; a third client can only start once one of them has finished.
+        </li>
+        <li>Clients never see chairs, only the times that are free.</li>
+      </ul>
+    </aside>
+  );
 }

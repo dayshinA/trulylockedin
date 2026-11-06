@@ -92,6 +92,22 @@ export function ServiceForm({
             className={inputClass}
           />
         </Field>
+        <Field
+          label="Premium price (£, optional)"
+          hint="Charged instead of the base price for late start times (Availability → Booking rules → Premium from). Empty = normal price"
+          error={errors.premiumPrice}
+        >
+          <input
+            name="premiumPrice"
+            inputMode="decimal"
+            defaultValue={
+              service?.premiumPricePence !== undefined
+                ? penceToPounds(service.premiumPricePence)
+                : undefined
+            }
+            className={inputClass}
+          />
+        </Field>
       </div>
 
       <Field

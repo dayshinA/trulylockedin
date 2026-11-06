@@ -9,7 +9,7 @@ import { contactChannels } from "@/components/site/contact-links";
 import { CopyButton } from "@/components/site/copy-button";
 import { STATUS_LABELS } from "@/lib/booking/labels";
 import type { BookingSummary } from "@/lib/booking/manage";
-import { localToUtcMs } from "@/lib/booking/time";
+import { addDays, localToUtcMs } from "@/lib/booking/time";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { LOCALE, SITE_NAME, TIMEZONE } from "@/lib/site";
 import type { SiteContent } from "@/types/cms";
@@ -293,6 +293,9 @@ function Ticket({
               <span className="text-accent-ink">
                 {formatPrice(booking.pricePence)}
               </span>
+              {booking.premium && (
+                <span className="block text-xs text-muted">Premium time</span>
+              )}
             </TicketItem>
             {depositRows(booking).map(([label, value]) => (
               <TicketItem key={label} label={label}>
@@ -712,7 +715,8 @@ function minutesBetween(start: string, end: string): number {
     const [h, m] = time.split(":").map(Number);
     return h * 60 + m;
   };
-  return toMinutes(end) - toMinutes(start);
+  // An end earlier than the start is after midnight.
+  return (toMinutes(end) - toMinutes(start) + 24 * 60) % (24 * 60);
 }
 
 function calendarEvent(
@@ -720,7 +724,10 @@ function calendarEvent(
   location: string,
 ): CalendarEvent | null {
   const startUtc = localToUtcMs(booking.date, booking.start, TIMEZONE);
-  const endUtc = localToUtcMs(booking.date, booking.end, TIMEZONE);
+  // An end earlier than the start is the next morning.
+  const endDate =
+    booking.end <= booking.start ? addDays(booking.date, 1) : booking.date;
+  const endUtc = localToUtcMs(endDate, booking.end, TIMEZONE);
   if (startUtc === null || endUtc === null) return null;
   const service = [booking.serviceName, ...booking.optionNames].join(", ");
   return {

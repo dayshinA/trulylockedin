@@ -15,6 +15,7 @@ export type BookableService = Pick<
   | "name"
   | "description"
   | "priceFromPence"
+  | "premiumPricePence"
   | "priceLabel"
   | "depositNote"
   | "depositRequired"
@@ -29,17 +30,24 @@ export type BookableCategory = {
   services: BookableService[];
 };
 
-// Running totals, including while a required option is still unpicked.
-export function totalsOf(service: BookableService, optionIds: string[]) {
-  const result = quoteService(service, optionIds, "owner");
+// Running totals, including while a required option is still unpicked. At a
+// premium time, with the service's premium price if it has one.
+export function totalsOf(
+  service: BookableService,
+  optionIds: string[],
+  premiumTime = false,
+) {
+  const result = quoteService(service, optionIds, "owner", premiumTime);
   return result.ok
     ? {
         options: result.quote.options,
         pricePence: result.quote.pricePence,
+        premium: result.quote.premium,
         durationMin: result.quote.durationMin ?? service.durationMin,
       }
     : {
         options: [],
+        premium: false,
         pricePence: service.priceFromPence,
         durationMin: service.durationMin,
       };
@@ -65,6 +73,7 @@ export function ServicePicker({
   onOptionsChange,
   onContinue,
   depositPence,
+  premiumFrom,
 }: {
   catalogue: BookableCategory[];
   openCategoryIds: string[];
@@ -75,6 +84,7 @@ export function ServicePicker({
   onOptionsChange: (optionIds: string[]) => void;
   onContinue: () => void;
   depositPence: number;
+  premiumFrom: string | null;
 }) {
   const openServiceId = service?.id;
 
@@ -130,6 +140,7 @@ export function ServicePicker({
                     onOptionsChange={onOptionsChange}
                     onContinue={onContinue}
                     depositPence={depositPence}
+                    premiumFrom={premiumFrom}
                   />
                 ))}
               </ul>
@@ -149,6 +160,7 @@ function ServiceItem({
   onOptionsChange,
   onContinue,
   depositPence,
+  premiumFrom,
 }: {
   service: BookableService;
   open: boolean;
@@ -157,6 +169,7 @@ function ServiceItem({
   onOptionsChange: (optionIds: string[]) => void;
   onContinue: () => void;
   depositPence: number;
+  premiumFrom: string | null;
 }) {
   const panelId = `service-${service.id}`;
   const totals = totalsOf(service, optionIds);
@@ -201,6 +214,13 @@ function ServiceItem({
           )}
           {service.priceLabel && (
             <p className="max-w-prose text-sm text-muted">{service.priceLabel}</p>
+          )}
+          {premiumFrom && service.premiumPricePence !== undefined && (
+            <p className="max-w-prose text-sm text-ink">
+              <span className="font-semibold">Premium time</span> (from{" "}
+              {premiumFrom}, or after midnight):{" "}
+              {formatPriceFrom(service.premiumPricePence)}
+            </p>
           )}
           {deposit > 0 && (
             <p className="max-w-prose text-sm text-ink">

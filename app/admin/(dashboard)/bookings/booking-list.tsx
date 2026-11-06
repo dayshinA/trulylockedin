@@ -41,6 +41,7 @@ export function BookingRows({ bookings }: { bookings: Booking[] }) {
               </span>
             </span>
             <span className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {booking.service.premium && <Badge tone="muted">Premium</Badge>}
               {booking.referencePhotos?.length ? (
                 <Badge tone="muted">Photo</Badge>
               ) : null}

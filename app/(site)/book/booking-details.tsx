@@ -64,7 +64,10 @@ export function BookingDetails({
               "When",
               `${formatLocalDate(booking.date, "long")}, ${booking.start}–${booking.end}`,
             ],
-            ["Price from", formatPrice(booking.pricePence)],
+            [
+              "Price from",
+              `${formatPrice(booking.pricePence)}${booking.premium ? " (premium time)" : ""}`,
+            ],
             ...depositRows(booking),
             ...(booking.notes
               ? ([

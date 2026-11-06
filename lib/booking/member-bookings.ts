@@ -17,6 +17,7 @@ export type MemberBooking = {
   serviceName: string;
   optionNames: string[];
   pricePence: number;
+  premium: boolean;
   date: LocalDate;
   start: LocalTime;
   end: LocalTime;
@@ -69,6 +70,7 @@ export async function loadMemberBookings(
       serviceName: booking.service.name,
       optionNames: (booking.service.options ?? []).map((o) => o.name),
       pricePence: booking.service.priceFromPence,
+      premium: booking.service.premium === true,
       date: booking.date,
       start: booking.start,
       end: booking.end,

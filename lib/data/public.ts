@@ -77,21 +77,26 @@ export async function getOpeningHours(): Promise<WeeklyHours | null> {
   cacheLife("max");
   cacheTag(PUBLIC_TAGS.hours);
   try {
-    return await bookingRepository().getWeeklyHours();
+    return (await bookingRepository().getWeekly()).hours;
   } catch {
     return null;
   }
 }
 
-// The online deposit, for the price list. /book reads settings live.
-export async function getDepositPence(): Promise<number> {
+// The online deposit and premium time, for the price list. /book reads
+// settings live.
+export async function getPriceListRules(): Promise<{
+  depositPence: number;
+  premiumFrom: string | null;
+}> {
   "use cache";
   cacheLife("max");
   cacheTag(PUBLIC_TAGS.bookingSettings);
   try {
-    return (await bookingRepository().getSettings()).depositPence;
+    const { depositPence, premiumFrom } = await bookingRepository().getSettings();
+    return { depositPence, premiumFrom };
   } catch {
-    return 0;
+    return { depositPence: 0, premiumFrom: null };
   }
 }
 

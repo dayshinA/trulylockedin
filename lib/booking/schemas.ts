@@ -15,26 +15,50 @@ export const localTimeSchema = z
   .string()
   .refine((value) => parseLocalTime(value) !== null, "Expected HH:mm");
 
+const minutes = (time: string) => parseLocalTime(time)!;
+// A closing time earlier than the opening means the next morning.
+const isOvernight = (w: { start: string; end: string }) =>
+  minutes(w.end) < minutes(w.start);
+
 export const timeWindowSchema = z
-  .object({ start: localTimeSchema, end: localTimeSchema })
+  .object({
+    start: localTimeSchema.refine((t) => t !== "24:00", "Expected HH:mm"),
+    end: localTimeSchema,
+  })
   .refine(
-    (w) => parseLocalTime(w.start)! < parseLocalTime(w.end)!,
-    "Closing time must be after opening time",
+    (w) => minutes(w.start) !== minutes(w.end),
+    "Closing time can't be the same as opening time",
   );
 
-// A day's windows, in order and not overlapping (touching is fine).
+// A day's windows, in order and not overlapping (touching is fine). Only the
+// last may close after midnight, and not after the day's first opening time.
 export const windowsSchema = z
   .array(timeWindowSchema)
   .max(4)
   .refine(
+    (windows) => windows.slice(0, -1).every((w) => !isOvernight(w)),
+    "Only the last time range can close after midnight",
+  )
+  .refine(
     (windows) =>
       windows.every(
         (w, i) =>
-          i === 0 ||
-          parseLocalTime(windows[i - 1].end)! <= parseLocalTime(w.start)!,
+          i === 0 || minutes(windows[i - 1].end) <= minutes(w.start),
       ),
     "Opening times must be in order and must not overlap",
-  );
+  )
+  .refine((windows) => {
+    const last = windows.at(-1);
+    return !last || !isOvernight(last) || minutes(last.end) <= minutes(windows[0].start);
+  }, "Closing time runs into the next opening");
+
+export const stepMinSchema = z.number().int().min(5).max(240);
+export const chairsSchema = z.number().int().min(1).max(4);
+
+export const dayRulesSchema = z.object({
+  stepMin: stepMinSchema.optional(),
+  chairs: chairsSchema.optional(),
+});
 
 export const weeklyHoursSchema = z.object(
   Object.fromEntries(
@@ -42,17 +66,22 @@ export const weeklyHoursSchema = z.object(
   ) as Record<(typeof WEEKDAYS)[number], z.ZodDefault<typeof windowsSchema>>,
 );
 
+export const weeklyRulesSchema = z.partialRecord(z.enum(WEEKDAYS), dayRulesSchema);
+
 export const dateOverrideSchema = z.object({
   date: localDateSchema,
   closed: z.boolean().optional(),
   windows: windowsSchema.optional(),
   blockedSlots: z.array(localTimeSchema).max(96).optional(),
   extraSlots: z.array(localTimeSchema).max(96).optional(),
+  ...dayRulesSchema.shape,
 });
 
 export const bookingSettingsSchema = z.object({
   timezone: z.string().min(1),
-  slotIntervalMin: z.number().int().min(5).max(240),
+  slotIntervalMin: stepMinSchema,
+  chairs: chairsSchema,
+  staggerMin: z.number().int().min(0).max(240),
   bufferMin: z.number().int().min(0).max(240),
   minNoticeHours: z
     .number()
@@ -60,6 +89,9 @@ export const bookingSettingsSchema = z.object({
     .max(24 * 60),
   maxAdvanceDays: z.number().int().min(0).max(730),
   depositPence: z.number().int().min(0).max(100_000),
+  premiumFrom: localTimeSchema
+    .refine((t) => t !== "24:00", "Expected HH:mm")
+    .nullable(),
 });
 
 export const bookingStatusSchema = z.enum([
@@ -101,6 +133,7 @@ export const serviceSchema = z.object({
   slug: z.string().min(1),
   description: z.string().default(""),
   priceFromPence: z.number().int().min(0),
+  premiumPricePence: z.number().int().min(0).optional(),
   priceLabel: z.string().optional(),
   durationMin: z.number().int().positive().nullable(),
   depositNote: z.string().optional(),
@@ -129,6 +162,7 @@ export const bookingSchema = z.object({
     durationMin: z.number().int().positive(),
     priceFromPence: z.number().int().min(0),
     options: z.array(serviceOptionSchema).optional(),
+    premium: z.literal(true).optional(),
   }),
   date: localDateSchema,
   start: localTimeSchema,

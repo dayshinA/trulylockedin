@@ -18,6 +18,7 @@ import { Field, FormAlert, inputClass } from "@/components/site/form-field";
 import { useErrorFocus } from "@/lib/use-error-focus";
 import { MemberBar } from "@/components/site/member-bar";
 import { TermsConsent } from "@/components/site/terms-consent";
+import { PremiumNotice } from "./premium-notice";
 import {
   formatDuration,
   formatLocalDate,
@@ -62,6 +63,7 @@ export function BookingFlow({
   firstDay,
   maxAdvanceDays,
   depositPence,
+  premiumFrom,
   initialServiceId,
   initialOptionIds = [],
   member,
@@ -72,6 +74,7 @@ export function BookingFlow({
   firstDay: string;
   maxAdvanceDays: number;
   depositPence: number;
+  premiumFrom: string | null;
   initialServiceId?: string;
   initialOptionIds?: string[];
   member: MemberProfile | null;
@@ -118,7 +121,11 @@ export function BookingFlow({
   const [redirecting, setRedirecting] = useState(false);
   const router = useRouter();
   const deposit = service
-    ? depositFor(depositPence, service, totalsOf(service, optionIds).pricePence)
+    ? depositFor(
+        depositPence,
+        service,
+        totalsOf(service, optionIds, !!slot?.premium).pricePence,
+      )
     : 0;
   // Ignore slot responses for a day the client has already moved away from.
   const latestRequest = useRef(0);
@@ -374,6 +381,7 @@ export function BookingFlow({
                 if (service) goToTimes(service, optionIds);
               }}
               depositPence={depositPence}
+              premiumFrom={premiumFrom}
             />
           </section>
         )}
@@ -429,7 +437,19 @@ export function BookingFlow({
                     </p>
                   ) : (
                     <div className="flex flex-col gap-6">
-                      {groupSlots(slots ?? []).map(([label, group]) => (
+                      {premiumFrom &&
+                        service.premiumPricePence !== undefined &&
+                        slots?.some((s) => s.premium) && (
+                          <PremiumNotice
+                            variant="explain"
+                            premiumFrom={premiumFrom}
+                            usualPence={totalsOf(service, optionIds).pricePence}
+                            premiumPence={
+                              totalsOf(service, optionIds, true).pricePence
+                            }
+                          />
+                        )}
+                      {groupSlots(slots ?? [], date).map(([label, group]) => (
                         <div key={label}>
                           <h3 className="text-sm text-muted">{label}</h3>
                           <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -442,9 +462,28 @@ export function BookingFlow({
                                   setFormError(null);
                                   setStep("details");
                                 }}
-                                className="min-h-12 rounded-sm border border-field text-ink transition-colors hover:border-brand hover:bg-brand hover:text-on-brand"
+                                className={`group flex min-h-12 flex-col items-center justify-center rounded-sm border border-field py-1 text-ink transition-colors hover:border-brand hover:bg-brand hover:text-on-brand ${
+                                  s.premium &&
+                                  service.premiumPricePence !== undefined
+                                    ? "surface-warm"
+                                    : ""
+                                }`}
                               >
                                 {s.start}
+                                {s.premium &&
+                                  service.premiumPricePence !== undefined && (
+                                    <>
+                                      <span className="text-[0.625rem] leading-tight font-semibold tracking-wide text-accent-ink uppercase group-hover:text-on-brand">
+                                        Premium
+                                      </span>
+                                      <span className="text-xs leading-tight font-semibold group-hover:text-on-brand">
+                                        {formatPrice(
+                                          totalsOf(service, optionIds, true)
+                                            .pricePence,
+                                        )}
+                                      </span>
+                                    </>
+                                  )}
                               </button>
                             ))}
                           </div>
@@ -470,6 +509,15 @@ export function BookingFlow({
             >
               Your details
             </StepHeading>
+
+            {premiumFrom && totalsOf(service, optionIds, !!slot.premium).premium && (
+              <PremiumNotice
+                variant="selected"
+                premiumFrom={premiumFrom}
+                usualPence={totalsOf(service, optionIds).pricePence}
+                premiumPence={totalsOf(service, optionIds, true).pricePence}
+              />
+            )}
 
             <MemberBar member={member} purpose="booking" />
 
@@ -664,16 +712,26 @@ function StepHeading({
   );
 }
 
-// Splits a day's times into the parts of the day people think in.
-function groupSlots(slots: Slot[]): [string, Slot[]][] {
+// Splits a day's times into the parts of the day people think in. On a day
+// that closes after midnight, the late starts fall on the next date.
+function groupSlots(slots: Slot[], date: string | null): [string, Slot[]][] {
+  const nextDay = slots.find((slot) => slot.date !== date)?.date;
   const groups: [string, Slot[]][] = [
     ["Morning", []],
     ["Afternoon", []],
     ["Evening", []],
+    [
+      nextDay
+        ? `After midnight (${formatLocalDate(nextDay, "chip")})`
+        : "After midnight",
+      [],
+    ],
   ];
   for (const slot of slots) {
     const hour = Number(slot.start.slice(0, 2));
-    groups[hour < 12 ? 0 : hour < 17 ? 1 : 2][1].push(slot);
+    groups[
+      slot.date !== date ? 3 : hour < 12 ? 0 : hour < 17 ? 1 : 2
+    ][1].push(slot);
   }
   return groups.filter(([, group]) => group.length > 0);
 }
@@ -696,7 +754,8 @@ function Summary({
   onChangeService: (() => void) | null;
   onChangeTime: (() => void) | null;
 }) {
-  const totals = service && totalsOf(service, optionIds);
+  const totals = service && totalsOf(service, optionIds, !!slot?.premium);
+  const usual = service && totalsOf(service, optionIds);
   return (
     <div>
       <h2 className="font-display text-2xl font-semibold">Your appointment</h2>
@@ -711,23 +770,44 @@ function Summary({
                 </span>
               )}
               <span className="block text-muted">
-                {formatDuration(totals.durationMin)} ·{" "}
-                {formatPriceFrom(totals.pricePence)}
+                {formatDuration(totals.durationMin)}
               </span>
-              {deposit > 0 && (
-                <span className="block text-muted">
-                  {formatPrice(deposit)} deposit to book
-                </span>
-              )}
             </>
           ) : (
             <span className="text-muted">Not chosen yet</span>
           )}
         </SummaryRow>
+        {service && totals && (
+          <SummaryRow label="Price" onChange={null}>
+            <span className="block text-ink">
+              <span className="font-semibold">
+                {formatPriceFrom(totals.pricePence)}
+              </span>
+              {totals.premium && usual && (
+                <>
+                  {" "}
+                  <span className="text-muted line-through">
+                    {formatPrice(usual.pricePence)}
+                  </span>
+                </>
+              )}
+            </span>
+            {totals.premium && (
+              <span className="mt-1 inline-block rounded-full bg-accent px-2 py-0.5 text-[0.6875rem] font-semibold tracking-wide text-on-accent uppercase">
+                Premium time price
+              </span>
+            )}
+            {deposit > 0 && (
+              <span className="block text-muted">
+                {formatPrice(deposit)} deposit to book
+              </span>
+            )}
+          </SummaryRow>
+        )}
         <SummaryRow label="When" onChange={onChangeTime}>
           {date && slot ? (
             <span className="text-ink">
-              {formatLocalDate(date, "long")}, {slot.start}–{slot.end}
+              {formatLocalDate(slot.date, "long")}, {slot.start}–{slot.end}
             </span>
           ) : date ? (
             <>

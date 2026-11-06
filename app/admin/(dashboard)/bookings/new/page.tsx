@@ -45,6 +45,7 @@ export default async function NewBookingPage() {
             categoryId: s.categoryId,
             name: s.name,
             priceFromPence: s.priceFromPence,
+            premiumPricePence: s.premiumPricePence,
             durationMin: s.durationMin,
             active: s.active,
             options: s.options,
@@ -52,6 +53,7 @@ export default async function NewBookingPage() {
             optionsRequired: s.optionsRequired,
           }))}
           today={todayLocal(new Date(), settings.timezone)}
+          premiumFrom={settings.premiumFrom}
         />
       )}
     </div>

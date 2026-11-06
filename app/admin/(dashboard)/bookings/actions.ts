@@ -108,6 +108,7 @@ export async function createManualBookingAction(
     cancelTokenHash: hashToken(cancelToken),
     now,
     mode: "owner",
+    premium: input.premium,
   });
   if (!result.ok) {
     return {

@@ -30,7 +30,8 @@ export function BookingRow({
           From{" "}
           <span className="text-accent-ink">
             {formatPrice(booking.pricePence)}
-          </span>{" "}
+          </span>
+          {booking.premium && " (premium time)"}{" "}
           {booking.depositPaidPence &&
             ` · ${formatPrice(booking.depositPaidPence)} deposit paid`}{" "}
           · Ref <span className="font-mono">{booking.ref}</span>

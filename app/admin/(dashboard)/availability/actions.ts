@@ -21,7 +21,7 @@ export async function saveWeeklyHoursAction(
   await verifyAdmin();
   const parsed = parseWeeklyForm(formData);
   if (!parsed.ok) return invalid(parsed.fieldErrors, parsed.message);
-  await bookingRepository().saveWeeklyHours(parsed.value);
+  await bookingRepository().saveWeekly(parsed.value);
   updateTag(PUBLIC_TAGS.hours);
   refresh();
   return { status: "success", message: "Opening hours saved." };

@@ -1,10 +1,11 @@
+import { Moon } from "lucide-react";
 import type { Metadata } from "next";
 
 import { Reveal } from "@/components/motion/reveal";
 import { BookCta } from "@/components/site/book-cta";
 import { PageIntro } from "@/components/site/page-intro";
 import { ServiceRow } from "@/components/site/service-row";
-import { getDepositPence, getServiceCatalogue } from "@/lib/data/public";
+import { getPriceListRules, getServiceCatalogue } from "@/lib/data/public";
 
 export const metadata: Metadata = {
   title: "Services & prices",
@@ -13,10 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default async function ServicesPage() {
-  const [groups, depositPence] = await Promise.all([
+  const [groups, { depositPence, premiumFrom }] = await Promise.all([
     getServiceCatalogue(),
-    getDepositPence(),
+    getPriceListRules(),
   ]);
+  const hasPremium =
+    premiumFrom !== null &&
+    groups.some((g) => g.services.some((s) => s.premiumPricePence !== undefined));
 
   return (
     <main className="flex flex-col">
@@ -24,6 +28,25 @@ export default async function ServicesPage() {
         Prices are a starting point and depend on length and density. Every
         appointment includes the time your hair needs.
       </PageIntro>
+
+      {hasPremium && (
+        <div className="px-4 pb-12 sm:px-6">
+          <div className="mx-auto flex max-w-6xl gap-3 border-l-2 border-accent bg-accent/10 px-4 py-4 sm:px-6">
+            <Moon aria-hidden className="mt-1 size-5 shrink-0 text-accent-ink" />
+            <div className="max-w-prose">
+              <h2 className="font-display text-2xl font-semibold">
+                Premium times
+              </h2>
+              <p className="mt-1 text-muted">
+                Appointments starting at {premiumFrom} or later, or after
+                midnight, are premium times. Some services cost a little more
+                then: their premium price is shown below, and again next to the
+                time when you book.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-16 px-4 pb-24 sm:px-6 sm:gap-20">
         {groups.length === 0 ? (
@@ -50,6 +73,7 @@ export default async function ServicesPage() {
                     key={service.id}
                     service={service}
                     depositPence={depositPence}
+                    premiumFrom={premiumFrom}
                   />
                 ))}
               </Reveal>

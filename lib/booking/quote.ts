@@ -9,6 +9,8 @@ export type ServiceQuote = {
   // The selected options, in the service's display order.
   options: ServiceOption[];
   pricePence: number;
+  // The service's premium price was used (a premium time, and it has one).
+  premium: boolean;
   // Null when the service's own duration isn't set: the total isn't known.
   durationMin: number | null;
 };
@@ -20,18 +22,21 @@ export type QuoteResult =
 type Priced = Pick<
   Service,
   | "priceFromPence"
+  | "premiumPricePence"
   | "durationMin"
   | "options"
   | "optionsSelectionMode"
   | "optionsRequired"
 >;
 
-// Final price = base + selected options. Final duration likewise. The owner may
+// Final price = base + selected options. Final duration likewise. At a premium
+// time the base is the service's premium price, if it has one. The owner may
 // leave a required option unpicked: their manual booking form has no picker.
 export function quoteService(
   service: Priced,
   optionIds: readonly string[],
   mode: BookingMode = "client",
+  premiumTime = false,
 ): QuoteResult {
   const selected = new Set(optionIds);
   const options = service.options.filter((option) => selected.has(option.id));
@@ -46,13 +51,15 @@ export function quoteService(
     return { ok: false, reason: "options_required" };
   }
 
+  const premium = premiumTime && service.premiumPricePence !== undefined;
   return {
     ok: true,
     quote: {
       options,
+      premium,
       pricePence: options.reduce(
         (total, option) => total + option.pricePence,
-        service.priceFromPence,
+        premium ? service.premiumPricePence! : service.priceFromPence,
       ),
       durationMin:
         service.durationMin === null
@@ -74,8 +81,9 @@ export function quoteForBooking(
   service: Priced,
   optionIds: readonly string[],
   mode?: BookingMode,
+  premiumTime = false,
 ): BookingQuoteResult {
-  const result = quoteService(service, optionIds, mode);
+  const result = quoteService(service, optionIds, mode, premiumTime);
   if (!result.ok) return result;
   const { durationMin } = result.quote;
   if (durationMin === null) return { ok: false, reason: "service_unavailable" };

@@ -30,6 +30,8 @@ export type BookingSummary = {
   status: BookingStatus;
   clientName: string;
   pricePence: number;
+  // Booked at a premium time at the premium price.
+  premium: boolean;
   notes?: string;
   deposit?: { amountPence: number; status: DepositStatus };
   canCancel: boolean;
@@ -111,6 +113,7 @@ export async function findManagedBooking(
       status: booking.status,
       clientName: booking.client.name,
       pricePence: booking.service.priceFromPence,
+      premium: booking.service.premium === true,
       notes: booking.client.notes,
       deposit: booking.deposit && {
         amountPence: booking.deposit.amountPence,

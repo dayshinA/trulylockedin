@@ -14,9 +14,11 @@ import type { Service } from "@/types/booking";
 export function ServiceRow({
   service,
   depositPence,
+  premiumFrom,
 }: {
   service: Service;
   depositPence: number;
+  premiumFrom: string | null;
 }) {
   // Without a duration there are no slots to offer, so it's booked by asking.
   const bookable = service.onlineBooking && service.durationMin !== null;
@@ -52,6 +54,12 @@ export function ServiceRow({
           {formatDuration(service.durationMin)}
           {service.priceLabel && ` · ${service.priceLabel}`}
         </p>
+        {premiumFrom && service.premiumPricePence !== undefined && (
+          <p className="mt-1 text-sm text-ink">
+            <span className="font-semibold">Premium time</span> (from{" "}
+            {premiumFrom}): {formatPriceFrom(service.premiumPricePence)}
+          </p>
+        )}
         {service.description && (
           <p className="mt-3 max-w-prose text-muted">{service.description}</p>
         )}

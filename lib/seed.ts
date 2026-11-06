@@ -3,7 +3,11 @@ import "server-only";
 import type { Firestore } from "firebase-admin/firestore";
 
 import { seedCatalogue } from "@/lib/booking/seed-catalogue";
-import { DEFAULT_BOOKING_SETTINGS, DEFAULT_WEEKLY_HOURS } from "@/lib/seed-data";
+import {
+  DEFAULT_BOOKING_SETTINGS,
+  DEFAULT_DAY_RULES,
+  DEFAULT_WEEKLY_HOURS,
+} from "@/lib/seed-data";
 
 // Fills in whatever booking data is missing and never overwrites the owner's
 // edits: settings fields are added only if absent, weekly hours only if the doc
@@ -29,7 +33,7 @@ export async function seedBookingData(db: Firestore): Promise<string[]> {
     }
 
     if (!weeklySnap.exists) {
-      tx.set(weeklyRef, DEFAULT_WEEKLY_HOURS);
+      tx.set(weeklyRef, { ...DEFAULT_WEEKLY_HOURS, rules: DEFAULT_DAY_RULES });
       written.push("availability/weekly");
     }
 

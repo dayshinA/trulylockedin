@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { OptionPicker } from "@/components/site/option-picker";
 import { quoteService } from "@/lib/booking/quote";
-import { formatDuration, formatPriceFrom } from "@/lib/format";
+import { formatDuration, formatPrice, formatPriceFrom } from "@/lib/format";
 import type { Service, ServiceCategory } from "@/types/booking";
 import {
   Field,
@@ -23,6 +23,7 @@ type ManualService = Pick<
   | "categoryId"
   | "name"
   | "priceFromPence"
+  | "premiumPricePence"
   | "durationMin"
   | "active"
   | "options"
@@ -34,17 +35,28 @@ export function ManualBookingForm({
   categories,
   services,
   today,
+  premiumFrom,
 }: {
   categories: Pick<ServiceCategory, "id" | "name">[];
   services: ManualService[];
   today: string;
+  premiumFrom: string | null;
 }) {
   const { state, pending, onSubmit } = useAdminForm(createManualBookingAction);
   const errors = state.fieldErrors ?? {};
   const [serviceId, setServiceId] = useState("");
   const [optionIds, setOptionIds] = useState<string[]>([]);
+  const [start, setStart] = useState("");
+  // null = follow the start time; set once the owner ticks or unticks it.
+  const [premiumChoice, setPremiumChoice] = useState<boolean | null>(null);
   const service = services.find((s) => s.id === serviceId);
-  const priced = service && quoteService(service, optionIds, "owner");
+  const hasPremium = service?.premiumPricePence !== undefined;
+  // Late evening, or the small hours after a late night (the owner types the
+  // real date, so 01:00 belongs to the night before).
+  const lateStart =
+    premiumFrom !== null && start !== "" && (start >= premiumFrom || start < "06:00");
+  const premium = hasPremium && (premiumChoice ?? lateStart);
+  const priced = service && quoteService(service, optionIds, "owner", premium);
 
   if (state.status === "success" && state.bookingId) {
     return <Booked state={state} />;
@@ -113,13 +125,34 @@ export function ManualBookingForm({
           />
         </Field>
         <Field label="Start time" error={errors.start}>
-          <input name="start" type="time" step={300} className={inputClass} />
+          <input
+            name="start"
+            type="time"
+            step={300}
+            value={start}
+            onChange={(event) => setStart(event.target.value)}
+            className={inputClass}
+          />
         </Field>
       </div>
       <p className="-mt-2 text-xs text-muted">
-        Any time works, including outside opening hours. It just can&rsquo;t
-        overlap another appointment.
+        Any time works, including outside opening hours, as long as a chair is
+        free. After midnight, pick the next day&rsquo;s date (01:00 after a
+        late Wednesday is Thursday).
       </p>
+      {service && hasPremium && (
+        <label className="flex min-h-11 items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="premium"
+            checked={premium}
+            onChange={(event) => setPremiumChoice(event.target.checked)}
+            className="size-5 accent-brand"
+          />
+          Premium price ({formatPrice(service.premiumPricePence!)} instead of{" "}
+          {formatPrice(service.priceFromPence)})
+        </label>
+      )}
 
       <Field label="Client name" error={errors.name}>
         <input name="name" autoComplete="off" className={inputClass} />

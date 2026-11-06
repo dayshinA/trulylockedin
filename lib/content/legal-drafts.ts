@@ -89,6 +89,7 @@ These terms apply when you book an appointment or order from our shop through th
 
 ## Prices and payment
 - Prices are shown in pounds sterling. Some services are priced "from" because the final price depends on your hair's length and thickness; we'll tell you if the price will be higher before we start.
+- Late-evening and after-midnight start times are premium times, and some services cost more then. The premium price is shown next to the time before you book.
 - The rest of the price is paid in the salon on the day of your appointment.
 
 ## If you're unhappy with a service

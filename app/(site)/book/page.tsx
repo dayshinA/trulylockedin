@@ -53,6 +53,7 @@ async function BookingLoader({
   let firstDay: string;
   let maxAdvanceDays: number;
   let depositPence: number;
+  let premiumFrom: string | null;
   try {
     const [categories, all, settings] = await Promise.all([
       repo.listCategories(),
@@ -73,6 +74,7 @@ async function BookingLoader({
                   description: s.description,
                   durationMin: s.durationMin,
                   priceFromPence: s.priceFromPence,
+                  premiumPricePence: s.premiumPricePence,
                   priceLabel: s.priceLabel,
                   depositNote: s.depositNote,
                   depositRequired: s.depositRequired,
@@ -94,6 +96,7 @@ async function BookingLoader({
     );
     maxAdvanceDays = settings.maxAdvanceDays;
     depositPence = settings.depositPence;
+    premiumFrom = settings.premiumFrom;
   } catch (error) {
     console.error("Booking page failed to load", error);
     return <Unavailable />;
@@ -108,6 +111,7 @@ async function BookingLoader({
       firstDay={firstDay}
       maxAdvanceDays={maxAdvanceDays}
       depositPence={depositPence}
+      premiumFrom={premiumFrom}
       // From "Book this" links on /services and "Book again" on /account.
       // Unknown or hidden services and options are ignored.
       initialServiceId={typeof requested === "string" ? requested : undefined}

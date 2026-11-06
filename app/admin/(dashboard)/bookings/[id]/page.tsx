@@ -113,7 +113,10 @@ export default async function BookingDetailPage({
                 ],
               ] as [string, string][])
             : []),
-          ["Price from", formatPrice(booking.service.priceFromPence)],
+          [
+            "Price from",
+            `${formatPrice(booking.service.priceFromPence)}${booking.service.premium ? " (premium time)" : ""}`,
+          ],
           ...depositRows(booking, settings.timezone),
           [
             "Reference",

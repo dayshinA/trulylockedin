@@ -74,6 +74,8 @@ export default async function ServicesPage() {
                           <span className="block text-sm text-muted">
                             {formatDuration(service.durationMin)} ·{" "}
                             {formatPriceFrom(service.priceFromPence)}
+                            {service.premiumPricePence !== undefined &&
+                              ` · premium ${formatPriceFrom(service.premiumPricePence).toLowerCase()}`}
                             {service.options.length > 0 &&
                               ` · ${service.options.length} option${service.options.length === 1 ? "" : "s"}`}
                           </span>

@@ -18,11 +18,11 @@ import type {
   LocalDate,
   Service,
   ServiceCategory,
-  WeeklyHours,
+  WeeklySchedule,
 } from "@/types/booking";
 import { DEFAULT_BOOKING_SETTINGS } from "./defaults";
 import { depositFor, holdTimes } from "./deposit-rules";
-import { blocksTime, clashesWithBookings, occupiesTime } from "./overlap";
+import { blocksTime, fitsAlongside, occupiesTime } from "./overlap";
 import {
   BookingNotConfiguredError,
   sortCategories,
@@ -37,7 +37,7 @@ import {
   type StatusChangeResult,
 } from "./repository";
 import { quoteForBooking } from "./quote";
-import { canTransition } from "./rules";
+import { canTransition, dayRulesFor } from "./rules";
 import {
   bookedTimeSchema,
   bookingSchema,
@@ -47,8 +47,9 @@ import {
   serviceCategorySchema,
   serviceSchema,
   weeklyHoursSchema,
+  weeklyRulesSchema,
 } from "./schemas";
-import { parseLocalDate } from "./time";
+import { addDays, parseLocalDate } from "./time";
 import { BOOKING_REF_RE } from "./tokens";
 import { validateBookingRequest } from "./validate";
 
@@ -56,14 +57,16 @@ import { validateBookingRequest } from "./validate";
 //   settings/main                         booking rule fields (others ignored here)
 //   serviceCategories/{id}                ServiceCategory minus id
 //   services/{id}                         Service minus id, options stored inline
-//   availability/weekly                   { sun..sat: TimeWindow[] }
+//   availability/weekly                   { sun..sat: TimeWindow[], rules: { [day]: DayRules } }
 //   availability/overrides/dates/{date}   DateOverride
 //   bookings/{id}                         Booking minus id
 //   bookingDays/{date}                    { date, bookings: { [id]: BookedTime } }
 //
 // bookingDays/{date} is the contention point: every write that changes a date's
 // availability reads and writes it inside a transaction, so two overlapping
-// requests can't both commit. Cancelled bookings are removed from it.
+// requests can't both commit. Cancelled bookings are removed from it. A
+// booking sits under its real start date; appointments can run past midnight,
+// so availability checks read the dates either side too.
 
 type BookingDay = {
   date: LocalDate;
@@ -82,9 +85,13 @@ function parseSettings(snap: DocumentSnapshot): BookingSettings {
 }
 
 // No fallback: inventing opening hours would show fake slots.
-function parseWeekly(snap: DocumentSnapshot): WeeklyHours {
+function parseWeekly(snap: DocumentSnapshot): WeeklySchedule {
   if (!snap.exists) throw new BookingNotConfiguredError("availability/weekly");
-  return weeklyHoursSchema.parse(snap.data());
+  const data = snap.data() ?? {};
+  return {
+    hours: weeklyHoursSchema.parse(data),
+    rules: weeklyRulesSchema.parse(data.rules ?? {}),
+  };
 }
 
 function parseOverride(snap: DocumentSnapshot): DateOverride | null {
@@ -132,6 +139,11 @@ export class FirestoreBookingRepository implements BookingRepository {
     return this.db.doc(`bookingDays/${date}`);
   }
 
+  // The date and the dates either side, in that order of days.
+  private nearbyDayRefs(date: LocalDate): DocumentReference[] {
+    return [-1, 0, 1].map((d) => this.dayRef(addDays(date, d)));
+  }
+
   private get bookingsCol() {
     return this.db.collection("bookings");
   }
@@ -140,7 +152,7 @@ export class FirestoreBookingRepository implements BookingRepository {
     return parseSettings(await this.settingsRef.get());
   }
 
-  async getWeeklyHours() {
+  async getWeekly() {
     return parseWeekly(await this.weeklyRef.get());
   }
 
@@ -160,7 +172,8 @@ export class FirestoreBookingRepository implements BookingRepository {
 
   async getBookedTimes(date: LocalDate, now: Date) {
     if (!parseLocalDate(date)) return [];
-    return parseBookedTimes(await this.dayRef(date).get(), now.getTime());
+    const snaps = await this.db.getAll(...this.nearbyDayRefs(date));
+    return snaps.flatMap((snap) => parseBookedTimes(snap, now.getTime()));
   }
 
   async getBookedTimesBetween(from: LocalDate, to: LocalDate, now: Date) {
@@ -256,32 +269,52 @@ export class FirestoreBookingRepository implements BookingRepository {
       input.mode,
     );
     if (!priced.ok) return priced;
-    const { quote } = priced;
 
     return this.db.runTransaction(async (tx) => {
-      const dayRef = this.dayRef(input.date);
       // Rules are read in the transaction too, so an owner edit mid-booking
-      // forces a retry against the new rules.
-      const [settingsSnap, weeklySnap, overrideSnap, daySnap] = await tx.getAll(
-        this.settingsRef,
-        this.weeklyRef,
-        this.overrideRef(input.date),
-        dayRef,
-      );
+      // forces a retry against the new rules. So are the neighbouring days,
+      // whose late appointments may run into this one.
+      const [settingsSnap, weeklySnap, overrideSnap, ...daySnaps] =
+        await tx.getAll(
+          this.settingsRef,
+          this.weeklyRef,
+          this.overrideRef(input.date),
+          ...this.nearbyDayRefs(input.date),
+        );
       const settings = parseSettings(settingsSnap);
 
       const result = validateBookingRequest({
         date: input.date,
         start: input.start,
-        service: { active: input.service.active, durationMin: quote.durationMin },
+        service: {
+          active: input.service.active,
+          durationMin: priced.quote.durationMin,
+        },
         weekly: parseWeekly(weeklySnap),
         override: parseOverride(overrideSnap),
-        bookings: parseBookedTimes(daySnap, input.now.getTime()),
+        bookings: daySnaps.flatMap((snap) =>
+          parseBookedTimes(snap, input.now.getTime()),
+        ),
         settings,
         now: input.now,
         mode: input.mode,
       });
       if (!result.ok) return result;
+
+      // Premium is decided here, from the rules just read: online by the
+      // start time, owner bookings by their own choice.
+      const premiumTime =
+        input.mode === "owner" ? input.premium === true : !!result.slot.premium;
+      const repriced = premiumTime
+        ? quoteForBooking(
+            input.service,
+            input.optionIds ?? [],
+            input.mode,
+            true,
+          )
+        : priced;
+      if (!repriced.ok) return repriced;
+      const { quote } = repriced;
 
       const bookingRef = this.bookingsCol.doc();
       const timestamp = input.now.toISOString();
@@ -299,8 +332,9 @@ export class FirestoreBookingRepository implements BookingRepository {
           durationMin: quote.durationMin,
           priceFromPence: quote.pricePence,
           options: quote.options.length > 0 ? quote.options : undefined,
+          premium: quote.premium ? true : undefined,
         },
-        date: input.date,
+        date: result.slot.date,
         start: result.slot.start,
         end: result.slot.end,
         startUtc: result.slot.startUtc,
@@ -325,9 +359,9 @@ export class FirestoreBookingRepository implements BookingRepository {
       const { id, ...data } = booking;
       tx.create(bookingRef, stripUndefined(data));
       tx.set(
-        dayRef,
+        this.dayRef(booking.date),
         {
-          date: input.date,
+          date: booking.date,
           bookings: {
             [id]: stripUndefined({
               startUtc: booking.startUtc,
@@ -371,21 +405,35 @@ export class FirestoreBookingRepository implements BookingRepository {
       }
 
       const dayRef = this.dayRef(booking.date);
-      const [settingsSnap, daySnap] = await tx.getAll(this.settingsRef, dayRef);
+      const [settingsSnap, weeklySnap, overrideSnap, ...daySnaps] =
+        await tx.getAll(
+          this.settingsRef,
+          this.weeklyRef,
+          this.overrideRef(booking.date),
+          ...this.nearbyDayRefs(booking.date),
+        );
       const settings = parseSettings(settingsSnap);
       const nowMs = now.getTime();
       // Normally the hold kept the time free. If it lapsed first (a very late
-      // webhook), another booking may have taken it since.
-      const others = parseDayEntries(daySnap)
+      // webhook), another booking may have taken it since. Chairs are those of
+      // the booking's real date (close enough for a start after midnight).
+      const others = daySnaps
+        .flatMap(parseDayEntries)
         .filter(([otherId, entry]) => otherId !== id && blocksTime(entry, nowMs))
         .map(([, entry]) => entry);
-      const taken = clashesWithBookings(
+      const { chairs } = dayRulesFor(
+        booking.date,
+        parseWeekly(weeklySnap),
+        parseOverride(overrideSnap),
+        settings,
+      );
+      const taken = !fitsAlongside(
         {
           startMs: Date.parse(booking.startUtc),
           endMs: Date.parse(booking.endUtc),
         },
         others,
-        settings.bufferMin,
+        { chairs, bufferMin: settings.bufferMin, staggerMin: settings.staggerMin },
       );
 
       const updatedAt = now.toISOString();
@@ -558,8 +606,11 @@ export class FirestoreBookingRepository implements BookingRepository {
     });
   }
 
-  async saveWeeklyHours(weekly: WeeklyHours) {
-    await this.weeklyRef.set(weeklyHoursSchema.parse(weekly));
+  async saveWeekly(weekly: WeeklySchedule) {
+    await this.weeklyRef.set({
+      ...weeklyHoursSchema.parse(weekly.hours),
+      rules: stripUndefined(weeklyRulesSchema.parse(weekly.rules)),
+    });
   }
 
   async listOverrides(fromDate: LocalDate) {

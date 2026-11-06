@@ -10,8 +10,15 @@ import {
   toSlot,
   type AvailabilityInput,
 } from "./availability";
-import { clashesWithBookings } from "./overlap";
-import { addDays, localToUtcMs, MINUTE_MS, parseLocalDate } from "./time";
+import { fitsAlongside } from "./overlap";
+import { dayRulesFor } from "./rules";
+import {
+  localToUtcMs,
+  MINUTE_MS,
+  parseLocalDate,
+  parseLocalTime,
+  utcMsToLocal,
+} from "./time";
 
 export type ValidationResult =
   | { ok: true; slot: Slot }
@@ -19,6 +26,8 @@ export type ValidationResult =
 
 // Re-runs every availability rule for one requested start time. Call it on the
 // server with freshly read data, inside the same transaction as the write.
+// `date` is the schedule date and `start` one of its offered times, which may
+// be after midnight (the returned slot carries the real date).
 export function validateBookingRequest(
   input: AvailabilityInput & { start: LocalTime; mode?: BookingMode },
 ): ValidationResult {
@@ -27,27 +36,28 @@ export function validateBookingRequest(
   const plan = planDay(input);
   if (!plan.ok) return plan;
 
-  const startMs = localToUtcMs(
-    input.date,
-    input.start,
-    input.settings.timezone,
+  const minutes = parseLocalTime(input.start);
+  if (minutes === null || minutes >= 24 * 60) {
+    return { ok: false, reason: "invalid_time" };
+  }
+  const { timezone } = input.settings;
+  const startMs = plan.startsMs.find(
+    (ms) => utcMsToLocal(ms, timezone).time === input.start,
   );
-  if (startMs === null) return { ok: false, reason: "invalid_time" };
-  if (!plan.startsMs.includes(startMs))
-    return { ok: false, reason: "not_a_slot" };
+  if (startMs === undefined) return { ok: false, reason: "not_a_slot" };
 
-  const reason = checkStart(startMs, input, plan.blocked);
+  const reason = checkStart(startMs, input, plan);
   if (reason) return { ok: false, reason };
 
   return {
     ok: true,
-    slot: toSlot(startMs, input.service.durationMin, input.settings.timezone),
+    slot: toSlot(startMs, input.service.durationMin, input.date, input.settings),
   };
 }
 
 // The owner can book any time on any date (phone bookings, walk-ins, after
-// hours), but never on top of another appointment. No buffer: they chose the gap.
-// It must end by midnight because availability is stored per local date.
+// hours), as long as a chair is free. No buffer or stagger: they chose the gap.
+// `date` + `start` are the real local date and time here.
 function validateOwnerBooking(
   input: AvailabilityInput & { start: LocalTime },
 ): ValidationResult {
@@ -61,14 +71,20 @@ function validateOwnerBooking(
     return { ok: false, reason: "invalid_time" };
   }
   const endMs = startMs + service.durationMin * MINUTE_MS;
-  const dayEnd = localToUtcMs(addDays(date, 1), "00:00", settings.timezone)!;
-  if (endMs > dayEnd) return { ok: false, reason: "outside_day" };
-  if (clashesWithBookings({ startMs, endMs }, input.bookings, 0)) {
+  const { chairs } = dayRulesFor(date, input.weekly, input.override, settings);
+  if (
+    !fitsAlongside({ startMs, endMs }, input.bookings, {
+      chairs,
+      bufferMin: 0,
+      staggerMin: 0,
+    })
+  ) {
     return { ok: false, reason: "slot_taken" };
   }
   return {
     ok: true,
-    slot: toSlot(startMs, service.durationMin, settings.timezone),
+    // Owner times are real dates; whether to charge premium is their choice.
+    slot: toSlot(startMs, service.durationMin, date, settings),
   };
 }
 
@@ -84,7 +100,6 @@ export const REJECTION_MESSAGES: Record<BookingRejection, string> = {
   too_soon: "That time is too soon to book online.",
   blocked: "That time isn't available.",
   slot_taken: "Sorry, that slot has just been taken. Please pick another time.",
-  outside_day: "The appointment must finish by midnight.",
 };
 
 // Wording for the owner's manual-booking form.
@@ -92,6 +107,5 @@ export const OWNER_REJECTION_MESSAGES: Partial<
   Record<BookingRejection, string>
 > = {
   service_unavailable: "Add a duration to this service under Services first.",
-  slot_taken: "That time overlaps another appointment.",
-  outside_day: "The appointment must finish by midnight.",
+  slot_taken: "Every chair is taken at that time.",
 };

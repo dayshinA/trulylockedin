@@ -7,8 +7,9 @@ import {
   type Service,
   type ServiceCategory,
   type ServiceOption,
+  type DayRules,
   type TimeWindow,
-  type WeeklyHours,
+  type WeeklySchedule,
 } from "@/types/booking";
 import { mediaPublicIdSchema } from "@/lib/media/folder";
 import {
@@ -19,10 +20,12 @@ import {
 import {
   bookingSettingsSchema,
   dateOverrideSchema,
+  dayRulesSchema,
   docIdSchema,
   localTimeSchema,
   serviceSchema,
   weeklyHoursSchema,
+  weeklyRulesSchema,
 } from "./schemas";
 
 // FormData → validated domain objects for the admin forms. Framework-free and
@@ -90,6 +93,12 @@ const serviceFormSchema = z.object({
   price: z
     .string()
     .refine((v) => poundsToPence(v) !== null, "Enter a price like 65 or 65.50"),
+  premiumPrice: z
+    .string()
+    .refine(
+      (v) => v === "" || poundsToPence(v) !== null,
+      "Enter a price like 80 or 80.50, or leave it empty",
+    ),
   priceLabel: z.string().max(120, "Keep this under 120 characters"),
   depositNote: z.string().max(200),
   categoryId: docIdSchema.or(z.literal("")).refine(Boolean, "Choose a category"),
@@ -164,6 +173,7 @@ export function parseServiceForm(
     description: text(form, "description"),
     durationMin: text(form, "durationMin") || null,
     price: text(form, "price"),
+    premiumPrice: text(form, "premiumPrice"),
     priceLabel: text(form, "priceLabel"),
     depositNote: text(form, "depositNote"),
     categoryId: text(form, "categoryId"),
@@ -194,6 +204,8 @@ export function parseServiceForm(
     description: v.description,
     durationMin: v.durationMin,
     priceFromPence: poundsToPence(v.price)!,
+    premiumPricePence:
+      v.premiumPrice === "" ? undefined : poundsToPence(v.premiumPrice)!,
     depositNote: v.depositNote || undefined,
     categoryId: v.categoryId,
     priceLabel: v.priceLabel || undefined,
@@ -244,15 +256,24 @@ function windowsFrom(form: Form, prefix: string): TimeWindow[] {
   return windows;
 }
 
-export function parseWeeklyForm(form: Form): Parsed<WeeklyHours> {
-  const weekly = Object.fromEntries(
+// "{prefix}stepMin" / "{prefix}chairs" selects; "" = use the default.
+function dayRulesFrom(form: Form, prefix: string): DayRules {
+  const number = (key: string) => {
+    const value = text(form, `${prefix}${key}`);
+    return value ? Number(value) : undefined;
+  };
+  return { stepMin: number("stepMin"), chairs: number("chairs") };
+}
+
+export function parseWeeklyForm(form: Form): Parsed<WeeklySchedule> {
+  const hours = Object.fromEntries(
     WEEKDAYS.map((day) => [
       day,
       checked(form, `${day}.open`) ? windowsFrom(form, `${day}.`) : [],
     ]),
   );
   const missing = WEEKDAYS.filter(
-    (day) => checked(form, `${day}.open`) && weekly[day].length === 0,
+    (day) => checked(form, `${day}.open`) && hours[day].length === 0,
   );
   if (missing.length > 0) {
     return {
@@ -265,10 +286,17 @@ export function parseWeeklyForm(form: Form): Parsed<WeeklyHours> {
       ),
     };
   }
-  const parsed = weeklyHoursSchema.safeParse(weekly);
-  return parsed.success
-    ? { ok: true, value: parsed.data }
-    : fail(parsed.error, "Check the opening times");
+  const parsedHours = weeklyHoursSchema.safeParse(hours);
+  if (!parsedHours.success) {
+    return fail(parsedHours.error, "Check the opening times");
+  }
+  const rules = weeklyRulesSchema.safeParse(
+    Object.fromEntries(
+      WEEKDAYS.map((day) => [day, dayRulesFrom(form, `${day}.`)]),
+    ),
+  );
+  if (!rules.success) return fail(rules.error, "Check the gaps and chairs");
+  return { ok: true, value: { hours: parsedHours.data, rules: rules.data } };
 }
 
 export function parseSettingsForm(
@@ -286,9 +314,13 @@ export function parseSettingsForm(
     timezone: current.timezone,
     depositPence,
     slotIntervalMin: Number(text(form, "slotIntervalMin")),
+    chairs: Number(text(form, "chairs")),
+    staggerMin: Number(text(form, "staggerMin")),
     bufferMin: Number(text(form, "bufferMin")),
     minNoticeHours: Number(text(form, "minNoticeHours")),
     maxAdvanceDays: Number(text(form, "maxAdvanceDays")),
+    // Empty turns premium times off.
+    premiumFrom: text(form, "premiumFrom") || null,
   });
   return parsed.success ? { ok: true, value: parsed.data } : fail(parsed.error);
 }
@@ -320,7 +352,11 @@ export function parseOverrideForm(form: Form): Parsed<DateOverride> {
   if (kind === "closed") {
     override.closed = true;
   } else {
-    if (kind === "hours") override.windows = windowsFrom(form, "");
+    if (kind === "hours") {
+      override.windows = windowsFrom(form, "");
+      const rules = dayRulesSchema.safeParse(dayRulesFrom(form, ""));
+      if (rules.success) Object.assign(override, rules.data);
+    }
     if (blocked!.length) override.blockedSlots = blocked!;
     if (extra!.length) override.extraSlots = extra!;
   }
@@ -347,6 +383,7 @@ const manualSchema = bookingRequestSchema.omit({ website: true, acceptTerms: tru
   // Owner can pick any minute, not just the slot grid.
   start: localTimeSchema.refine((t) => t !== "24:00", "Pick a start time"),
   adminNotes: z.string().trim().max(2000).optional(),
+  premium: z.boolean(),
 });
 
 export type ManualBooking = z.infer<typeof manualSchema>;
@@ -362,6 +399,7 @@ export function parseManualBookingForm(form: Form): Parsed<ManualBooking> {
     email: text(form, "email"),
     notes: text(form, "notes"),
     adminNotes: text(form, "adminNotes"),
+    premium: checked(form, "premium"),
   });
   return parsed.success ? { ok: true, value: parsed.data } : fail(parsed.error);
 }

@@ -5,46 +5,38 @@ import type {
   DateOverride,
   LocalDate,
   Slot,
-  WeeklyHours,
+  WeeklySchedule,
 } from "@/types/booking";
-import { clashesWithBookings, overlaps, type Interval } from "./overlap";
+import { fitsAlongside, overlaps, type Interval } from "./overlap";
 import {
   blockedIntervals,
+  dayRulesFor,
+  isPremiumTime,
   isWithinBookingWindow,
   meetsMinNotice,
   openingWindows,
+  scheduleTimeToMs,
+  windowBounds,
 } from "./rules";
-import {
-  localToUtcMs,
-  MINUTE_MS,
-  parseLocalDate,
-  parseLocalTime,
-  utcMsToLocal,
-} from "./time";
+import { MINUTE_MS, parseLocalDate, utcMsToLocal } from "./time";
 
 export type AvailabilityInput = {
+  // The schedule date. Starts after midnight on a day that closes late belong
+  // to it, though their real date is the next one (Slot.date).
   date: LocalDate;
   // durationMin is the whole appointment, options included (see quote.ts).
   service: { active: boolean; durationMin: number };
-  weekly: WeeklyHours;
+  weekly: WeeklySchedule;
   override: DateOverride | null;
-  // Bookings on this date; cancelled ones are ignored.
+  // Bookings on this date and the dates either side (appointments can run past
+  // midnight); cancelled ones are ignored.
   bookings: readonly BookedTime[];
   settings: BookingSettings;
   now: Date;
 };
 
-// A service longer than any normal opening stretch could never fit before closing.
-function longerThanAnyOpening(durationMin: number, weekly: WeeklyHours) {
-  return Object.values(weekly)
-    .flat()
-    .every(
-      (w) => durationMin > parseLocalTime(w.end)! - parseLocalTime(w.start)!,
-    );
-}
-
 type DayPlan =
-  | { ok: true; startsMs: number[]; blocked: Interval[] }
+  | { ok: true; startsMs: number[]; blocked: Interval[]; chairs: number }
   | { ok: false; reason: BookingRejection };
 
 // Day-level checks plus every candidate start time, before per-slot filtering.
@@ -66,78 +58,82 @@ export function planDay(input: AvailabilityInput): DayPlan {
     return { ok: false, reason: "closed" };
   }
 
+  const { stepMin, chairs } = dayRulesFor(date, weekly, override, settings);
   const durationMs = service.durationMin * MINUTE_MS;
-  const stepMs = settings.slotIntervalMin * MINUTE_MS;
+  const stepMs = stepMin * MINUTE_MS;
   const starts = new Set<number>();
 
   for (const window of windows) {
-    const windowStart = localToUtcMs(date, window.start, settings.timezone);
-    const windowEnd = localToUtcMs(date, window.end, settings.timezone);
-    if (windowStart === null || windowEnd === null) continue;
-    // The appointment must finish by closing; the buffer only matters between clients.
-    for (let t = windowStart; t + durationMs <= windowEnd; t += stepMs) {
+    const bounds = windowBounds(date, window, settings.timezone);
+    if (!bounds) continue;
+    // Starts every stepMin from opening; the appointment must finish by closing.
+    for (let t = bounds.startMs; t + durationMs <= bounds.endMs; t += stepMs) {
       starts.add(t);
     }
   }
-  // Such a service takes the whole day, so it's offered at opening and runs past
-  // closing. Not on days with special hours, which may be deliberately short.
-  if (
-    windows.length > 0 &&
-    !override?.windows &&
-    longerThanAnyOpening(service.durationMin, weekly)
-  ) {
-    const opening = localToUtcMs(date, windows[0].start, settings.timezone);
-    if (opening !== null) starts.add(opening);
-  }
   for (const time of extras) {
-    const t = localToUtcMs(date, time, settings.timezone);
+    const t = scheduleTimeToMs(date, time, windows, settings.timezone);
     if (t !== null) starts.add(t);
   }
 
   return {
     ok: true,
     startsMs: [...starts].sort((a, b) => a - b),
-    blocked: blockedIntervals(date, override, settings),
+    blocked: blockedIntervals(date, windows, override, settings, stepMin),
+    chairs,
   };
 }
 
 export function checkStart(
   startMs: number,
   input: AvailabilityInput,
-  blocked: readonly Interval[],
+  plan: { blocked: readonly Interval[]; chairs: number },
 ): BookingRejection | null {
   const interval = {
     startMs,
     endMs: startMs + input.service.durationMin * MINUTE_MS,
   };
   if (!meetsMinNotice(startMs, input.settings, input.now)) return "too_soon";
-  if (blocked.some((cell) => overlaps(interval, cell))) return "blocked";
-  if (clashesWithBookings(interval, input.bookings, input.settings.bufferMin)) {
+  if (plan.blocked.some((cell) => overlaps(interval, cell))) return "blocked";
+  const { bufferMin, staggerMin } = input.settings;
+  if (
+    !fitsAlongside(interval, input.bookings, {
+      chairs: plan.chairs,
+      bufferMin,
+      staggerMin,
+    })
+  ) {
     return "slot_taken";
   }
   return null;
 }
 
+// `scheduleDate` is the day whose times these are (see Slot.date).
 export function toSlot(
   startMs: number,
   durationMin: number,
-  timeZone: string,
+  scheduleDate: LocalDate,
+  settings: BookingSettings,
 ): Slot {
   const endMs = startMs + durationMin * MINUTE_MS;
-  return {
-    start: utcMsToLocal(startMs, timeZone).time,
-    end: utcMsToLocal(endMs, timeZone).time,
+  const start = utcMsToLocal(startMs, settings.timezone);
+  const slot: Slot = {
+    date: start.date,
+    start: start.time,
+    end: utcMsToLocal(endMs, settings.timezone).time,
     startUtc: new Date(startMs).toISOString(),
     endUtc: new Date(endMs).toISOString(),
   };
+  if (isPremiumTime(slot, scheduleDate, settings)) slot.premium = true;
+  return slot;
 }
 
 export function getAvailableSlots(input: AvailabilityInput): Slot[] {
   const plan = planDay(input);
   if (!plan.ok) return [];
   return plan.startsMs
-    .filter((startMs) => checkStart(startMs, input, plan.blocked) === null)
+    .filter((startMs) => checkStart(startMs, input, plan) === null)
     .map((startMs) =>
-      toSlot(startMs, input.service.durationMin, input.settings.timezone),
+      toSlot(startMs, input.service.durationMin, input.date, input.settings),
     );
 }
