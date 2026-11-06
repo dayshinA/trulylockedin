@@ -37,8 +37,11 @@ export default async function EditServicePage({
 
       <DangerZone summary="Delete this service">
         <p className="text-muted">
-          Existing bookings keep their details. To stop new bookings but keep
-          the service, untick &ldquo;Bookable online&rdquo; instead.
+          This removes the service from the website for good, and can&rsquo;t
+          be undone. Bookings already made for it aren&rsquo;t cancelled and
+          keep their details. If you might offer it again, untick &ldquo;Show
+          on the website&rdquo; above instead: it disappears for clients, but
+          you can bring it back with one tick.
         </p>
         <form action={deleteServiceAction}>
           <input type="hidden" name="id" value={service.id} />

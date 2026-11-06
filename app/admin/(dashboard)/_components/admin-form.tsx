@@ -37,7 +37,7 @@ export function Field({
   className = "",
 }: {
   label: string;
-  hint?: string;
+  hint?: React.ReactNode;
   error?: string[];
   children: React.ReactNode;
   className?: string;
@@ -62,20 +62,26 @@ export function Checkbox({
   name,
   label,
   defaultChecked,
+  hint,
 }: {
   name: string;
   label: string;
   defaultChecked?: boolean;
+  /** What ticking it does, in plain words. */
+  hint?: React.ReactNode;
 }) {
   return (
-    <label className="flex min-h-11 items-center gap-3 text-sm">
+    <label className="flex min-h-11 items-start gap-3 py-2.5 text-sm">
       <input
         type="checkbox"
         name={name}
         defaultChecked={defaultChecked}
-        className="size-5 accent-brand"
+        className="mt-px size-5 shrink-0 accent-brand"
       />
-      {label}
+      <span className="flex flex-col gap-0.5">
+        <span>{label}</span>
+        {hint && <span className="text-xs text-muted">{hint}</span>}
+      </span>
     </label>
   );
 }

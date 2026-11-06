@@ -25,6 +25,7 @@ import {
   primaryButton,
   textLink,
 } from "../../_components/admin-ui";
+import { Tip } from "../../_components/help";
 import { StatusBadge } from "../booking-list";
 
 export const metadata: Metadata = {
@@ -217,6 +218,21 @@ export default async function BookingDetailPage({
       )}
 
       {actions.length > 0 && (
+        <Tip>
+          After the appointment, tap <strong>Mark completed</strong>, or{" "}
+          <strong>Mark no-show</strong> if they didn&rsquo;t come. Neither
+          sends the client anything; they just keep your records tidy.{" "}
+          <strong>Cancel booking</strong> frees the time on the website and
+          emails the client to say it&rsquo;s cancelled
+          {booking.deposit?.status === "paid"
+            ? ", and refunds their deposit"
+            : ""}
+          . You can&rsquo;t undo a cancellation, so if you only need to move
+          the time, make a new booking first and then cancel this one.
+        </Tip>
+      )}
+
+      {actions.length > 0 && (
         <div className="flex flex-wrap gap-3">
           {actions.map((status) =>
             status === "cancelled" && booking.deposit?.status === "paid" ? (
@@ -268,6 +284,10 @@ export default async function BookingDetailPage({
         <label htmlFor="adminNotes" className="text-sm text-muted">
           Private notes (only you can see these)
         </label>
+        <span className="-mt-1 text-xs text-muted">
+          For anything you want to remember: products used, allergies, what
+          to do next time. Clients never see these notes.
+        </span>
         <textarea
           id="adminNotes"
           name="adminNotes"

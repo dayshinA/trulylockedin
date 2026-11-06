@@ -162,9 +162,23 @@ export function MediaManager({
         multiple
         onUploaded={addUpload}
       />
-      <p className="text-xs text-muted">
-        Removed photos are deleted from storage when you save.
-      </p>
+      <ul className="flex list-disc flex-col gap-1 pl-5 text-xs text-muted">
+        <li>
+          New uploads aren&rsquo;t on the website until you press the save
+          button at the bottom of this page.
+        </li>
+        <li>
+          The <strong>cover</strong> is the picture shown in lists and
+          galleries. Without one, the first photo is used. Use ↑ ↓ to change
+          the order they appear in.
+        </li>
+        <li>
+          The description is read aloud to blind visitors and helps Google
+          find your work, e.g. &ldquo;Medium starter locs on short natural
+          hair&rdquo;.
+        </li>
+        <li>Removed photos are deleted for good when you save.</li>
+      </ul>
     </fieldset>
   );
 }

@@ -265,7 +265,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
       <div className="grid gap-5 sm:grid-cols-2">
         <Field
           label="Default gap between start times"
-          hint="Used on days where you haven't picked one"
+          hint="How often start times are offered, e.g. every hour: 13:00, 14:00, 15:00… Used on days where you haven't picked one."
           error={errors.slotIntervalMin}
         >
           <select
@@ -282,7 +282,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
         </Field>
         <Field
           label="Default chairs"
-          hint="Clients who can be in at once, on days where you haven't picked"
+          hint="How many clients can be booked in at the same time, on days where you haven't picked. Use 1 if you work alone."
           error={errors.chairs}
         >
           <select
@@ -299,7 +299,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
         </Field>
         <Field
           label="Time between two clients' starts (minutes)"
-          hint="Two clients never start closer together than this"
+          hint="So you're never starting two clients at once. 0 lets them start together."
           error={errors.staggerMin}
         >
           <input
@@ -315,7 +315,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
         </Field>
         <Field
           label="Break after each client (minutes)"
-          hint="Free time before that chair takes the next client"
+          hint="Time to tidy up and reset after each client. Nobody can book into it."
           error={errors.bufferMin}
         >
           <input
@@ -331,7 +331,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
         </Field>
         <Field
           label="Minimum notice (hours)"
-          hint="How soon a client can book. Also how late they can cancel online"
+          hint="e.g. 24: nobody can book less than a day ahead, and clients can't cancel online in the last 24 hours before their appointment (they have to contact you)."
           error={errors.minNoticeHours}
         >
           <input
@@ -346,7 +346,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
         </Field>
         <Field
           label="Bookings open (days ahead)"
-          hint="Clients can book up to this many days from today"
+          hint="e.g. 30: clients can book up to a month ahead. Raise it to open up later dates."
           error={errors.maxAdvanceDays}
         >
           <input
@@ -362,7 +362,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
       </div>
       <Field
         label="Premium from"
-        hint="Start times from this time (and after midnight) use each service's premium price, if it has one. Clear it to turn premium times off."
+        hint="Start times from this time, and after midnight, use each service's premium price (if you've given it one). Clients see it clearly before booking. Clear the box to turn premium times off."
         error={errors.premiumFrom}
       >
         <input
@@ -375,7 +375,7 @@ export function BookingRulesForm({ settings }: { settings: BookingSettings }) {
       </Field>
       <Field
         label="Deposit (£)"
-        hint="Paid online when booking a service that takes a deposit. Paying it confirms the booking. 0 turns deposits off."
+        hint="Clients pay this by card when they book, and paying it confirms the booking. If the client cancels they lose it; it's refunded only when you cancel. 0 turns deposits off for every service."
         error={errors.depositPence}
       >
         <input
@@ -458,14 +458,14 @@ export function OverrideForm({ today }: { today: string }) {
         <>
           <Field
             label="Block these start times"
-            hint="No appointment will run through them, e.g. 13:00, 13:30"
+            hint="Times you're busy that day, e.g. 13:00, 13:30. No appointment will be booked over them."
             error={errors.blockedSlots}
           >
             <input name="blockedSlots" className={inputClass} />
           </Field>
           <Field
             label="Add extra start times"
-            hint="Offered even outside opening hours, e.g. 18:00"
+            hint="One-off start times to offer that day, even outside your hours, e.g. 18:00"
             error={errors.extraSlots}
           >
             <input name="extraSlots" className={inputClass} />
@@ -474,8 +474,9 @@ export function OverrideForm({ today }: { today: string }) {
       )}
 
       <p className="text-xs text-muted">
-        Saving replaces anything already set for that date. Existing bookings
-        are not affected.
+        Saving replaces anything already set for that date. Bookings already
+        made that day are not moved or cancelled: if you close a day that has
+        bookings, contact those clients yourself.
       </p>
       <FormMessage state={state} />
       <SubmitButton pending={pending}>Save for this date</SubmitButton>

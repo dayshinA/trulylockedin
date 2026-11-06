@@ -45,7 +45,8 @@ export function ServiceImageField({
         />
       ) : (
         <p className="text-sm text-muted">
-          No photo. The service shows as text only.
+          No photo. The service shows as text only. A photo appears at the top
+          of the service on the Services page.
         </p>
       )}
       {error?.[0] && <FieldError>{error[0]}</FieldError>}

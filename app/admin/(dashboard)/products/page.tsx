@@ -14,6 +14,7 @@ import {
   rowList,
   rowTitle,
 } from "../_components/admin-ui";
+import { PageGuide } from "../_components/help";
 
 export const metadata: Metadata = {
   title: "Products",
@@ -33,6 +34,29 @@ export default async function ProductsAdminPage() {
           </Link>
         }
       />
+
+      <PageGuide
+        id="products"
+      >
+          <li>
+            These are the products in your website <strong>Shop</strong>.
+            Customers add them to a basket and either collect from the salon or
+            have them posted. New orders appear under <strong>Orders</strong>.
+          </li>
+          <li>
+            Tap <strong>Add product</strong>, add a name, price and at least
+            one photo, then save. It&rsquo;s in the shop straight away.
+          </li>
+          <li>
+            Run out of something? Open it and untick{" "}
+            <strong>In stock</strong>. It stays visible as &ldquo;Sold
+            out&rdquo; so nobody can order it, and you don&rsquo;t lose the
+            details.
+          </li>
+          <li>
+            Sell more than one size? Add each size as its own product.
+          </li>
+      </PageGuide>
 
       {products.length === 0 ? (
         <p className="text-muted">

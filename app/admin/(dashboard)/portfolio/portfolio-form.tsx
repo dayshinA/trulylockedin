@@ -26,13 +26,17 @@ export function PortfolioForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       {item && <input type="hidden" name="id" value={item.id} />}
 
-      <Field label="Title" error={errors.title}>
+      <Field
+        label="Title"
+        hint="The name of the look, e.g. Sisterlocks on shoulder-length hair"
+        error={errors.title}
+      >
         <input name="title" defaultValue={item?.title} className={inputClass} />
       </Field>
       {!item && (
         <Field
           label="Web address"
-          hint="Leave empty to make one from the title. It can't be changed later."
+          hint="The end of this look's link on the website (…/work/your-text). Leave it empty and one is made from the title. It can't be changed later."
           error={errors.slug}
         >
           <input name="slug" autoCapitalize="none" className={inputClass} />
@@ -41,7 +45,7 @@ export function PortfolioForm({
       <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
         <Field
           label="Style / category"
-          hint="Used for the filter on the Work page"
+          hint="Visitors can filter the Work page by this. Pick an existing one from the list to keep them grouped."
           error={errors.category}
         >
           <input
@@ -56,7 +60,7 @@ export function PortfolioForm({
             ))}
           </datalist>
         </Field>
-        <Field label="Order" hint="Lower first" error={errors.order}>
+        <Field label="Order" hint="0 shows first" error={errors.order}>
           <input
             name="order"
             type="number"
@@ -67,7 +71,11 @@ export function PortfolioForm({
           />
         </Field>
       </div>
-      <Field label="Description (optional)" error={errors.description}>
+      <Field
+        label="Description (optional)"
+        hint="Shown on the look's own page: the style, how long it took, products used…"
+        error={errors.description}
+      >
         <textarea
           name="description"
           rows={3}
@@ -89,11 +97,13 @@ export function PortfolioForm({
         <Checkbox
           name="published"
           label="Show on the website"
+          hint="Untick to hide it while you're still working on it. It needs at least one photo to be shown."
           defaultChecked={item?.published ?? true}
         />
         <Checkbox
           name="featured"
           label="Feature on the home page"
+          hint="Shows it in “Recent looks” on the home page (up to 6 are shown). Pick your best work."
           defaultChecked={item?.featured}
         />
       </div>

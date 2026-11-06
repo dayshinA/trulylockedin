@@ -10,6 +10,7 @@ import {
   SubmitButton,
   useAdminForm,
 } from "../_components/admin-form";
+import { Tip } from "../_components/help";
 import { saveServiceAction } from "./actions";
 import { OptionsEditor } from "./options-editor";
 import { ServiceImageField } from "./service-image-field";
@@ -28,7 +29,11 @@ export function ServiceForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       {service && <input type="hidden" name="id" value={service.id} />}
 
-      <Field label="Name" error={errors.name}>
+      <Field
+        label="Name"
+        hint="What clients see on the Services page and when booking."
+        error={errors.name}
+      >
         <input
           name="name"
           defaultValue={service?.name}
@@ -40,8 +45,8 @@ export function ServiceForm({
         label="Web address (slug)"
         hint={
           service
-            ? undefined
-            : "Leave empty to make one from the name, e.g. retwist-style"
+            ? "Booking links you've already shared keep working whatever you put here."
+            : "Used in the link that opens booking on this service. Leave it empty and one is made from the name, e.g. retwist-style."
         }
         error={errors.slug}
       >
@@ -52,7 +57,11 @@ export function ServiceForm({
           className={inputClass}
         />
       </Field>
-      <Field label="Description" error={errors.description}>
+      <Field
+        label="Description"
+        hint="A sentence or two about what's included. Shown under the name on the website."
+        error={errors.description}
+      >
         <textarea
           name="description"
           rows={3}
@@ -64,7 +73,7 @@ export function ServiceForm({
       <div className="grid grid-cols-2 gap-4">
         <Field
           label="Duration (minutes)"
-          hint="Leave empty if it varies. It can't be booked until it has one."
+          hint="How long the appointment takes, so the website knows which times are free. Without one, clients are asked to get in touch instead of booking."
           error={errors.durationMin}
         >
           <input
@@ -80,7 +89,7 @@ export function ServiceForm({
         </Field>
         <Field
           label="Base price (£)"
-          hint="Options are added to this. 0 shows as Free"
+          hint="The starting price clients see. Any options they pick are added on top. 0 shows as Free."
           error={errors.price}
         >
           <input
@@ -94,7 +103,7 @@ export function ServiceForm({
         </Field>
         <Field
           label="Premium price (£, optional)"
-          hint="Charged instead of the base price for late start times (Availability → Booking rules → Premium from). Empty = normal price"
+          hint="Charged instead of the base price for late-night start times (you set the time under Availability → Booking rules). Leave empty to charge the normal price at any time."
           error={errors.premiumPrice}
         >
           <input
@@ -112,7 +121,7 @@ export function ServiceForm({
 
       <Field
         label="Note beside the price (optional)"
-        hint="e.g. Up to 100 locs, or Per strand"
+        hint="Small text next to the price, e.g. Up to 100 locs, or Per strand"
         error={errors.priceLabel}
       >
         <input
@@ -122,7 +131,11 @@ export function ServiceForm({
         />
       </Field>
 
-      <Field label="Deposit note (optional)" error={errors.depositNote}>
+      <Field
+        label="Deposit note (optional)"
+        hint="Extra text shown with this service on the Services page and when booking. It doesn't change the deposit amount."
+        error={errors.depositNote}
+      >
         <input
           name="depositNote"
           defaultValue={service?.depositNote}
@@ -132,7 +145,11 @@ export function ServiceForm({
       </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Category" error={errors.categoryId}>
+        <Field
+          label="Category"
+          hint="The heading it's listed under"
+          error={errors.categoryId}
+        >
           <select
             name="categoryId"
             defaultValue={service?.categoryId ?? ""}
@@ -150,7 +167,7 @@ export function ServiceForm({
         </Field>
         <Field
           label="Display order"
-          hint="Lower numbers show first"
+          hint="Its place in the list: 0 shows first, then 1, 2…"
           error={errors.order}
         >
           <input
@@ -172,21 +189,31 @@ export function ServiceForm({
         error={errors.imagePublicId}
       />
 
-      <Checkbox
-        name="active"
-        label="Show on the website"
-        defaultChecked={service?.active ?? true}
-      />
-      <Checkbox
-        name="onlineBooking"
-        label="Bookable online"
-        defaultChecked={service?.onlineBooking ?? true}
-      />
-      <Checkbox
-        name="depositRequired"
-        label="Takes a deposit when booked online (the amount is set under Availability → Booking rules)"
-        defaultChecked={service?.depositRequired ?? true}
-      />
+      <div className="flex flex-col gap-1 border-t border-line pt-5">
+        <Checkbox
+          name="active"
+          label="Show on the website"
+          hint="Untick to hide it everywhere on the website, for example while you're not offering it. You can still add bookings for it yourself."
+          defaultChecked={service?.active ?? true}
+        />
+        <Checkbox
+          name="onlineBooking"
+          label="Bookable online"
+          hint="Untick to keep it on the price list but have clients contact you to book, e.g. for a consultation first."
+          defaultChecked={service?.onlineBooking ?? true}
+        />
+        <Checkbox
+          name="depositRequired"
+          label="Takes a deposit when booked online"
+          hint="Clients pay the deposit by card to secure the time. The amount is the same for every service and is set under Availability → Booking rules."
+          defaultChecked={service?.depositRequired ?? true}
+        />
+      </div>
+
+      <Tip>
+        Changes show on the website as soon as you save. Bookings already
+        made keep the price and length they were booked at.
+      </Tip>
 
       <FormMessage state={state} />
       <SubmitButton pending={pending}>

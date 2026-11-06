@@ -9,6 +9,7 @@ import {
 } from "@/lib/booking/admin-views";
 import { bookingRepository } from "@/lib/booking/server";
 import { PageHeader, primaryButton, Tabs } from "../_components/admin-ui";
+import { PageGuide } from "../_components/help";
 import { BookingsByDate } from "./booking-list";
 
 export const metadata: Metadata = {
@@ -52,6 +53,36 @@ export default async function BookingsPage({
           </Link>
         }
       />
+      <PageGuide
+        id="bookings"
+      >
+          <li>
+            <strong>Upcoming</strong> lists every appointment still to come,
+            grouped by day. <strong>Past 30 days</strong> shows recent ones,
+            newest first. <strong>Cancelled</strong> shows upcoming bookings
+            that were cancelled.
+          </li>
+          <li>
+            The coloured label shows where each booking is up to.{" "}
+            <strong>Confirmed</strong>: it&rsquo;s going ahead.{" "}
+            <strong>Completed</strong>: the client came.{" "}
+            <strong>No-show</strong>: they didn&rsquo;t turn up.{" "}
+            <strong>Cancelled</strong>: the time is free again.
+          </li>
+          <li>
+            <strong>Premium</strong> means it&rsquo;s a late-evening booking at
+            the premium price. <strong>Photo</strong> means the client sent
+            reference pictures.
+          </li>
+          <li>
+            Tap a booking to call or message the client, add private notes,
+            or change its status.
+          </li>
+          <li>
+            <strong>New booking</strong> is for clients who booked by phone, DM
+            or in person. It takes the time off the website straight away.
+          </li>
+      </PageGuide>
       <Tabs
         label="Filter bookings"
         items={BOOKING_VIEWS.map((v) => ({

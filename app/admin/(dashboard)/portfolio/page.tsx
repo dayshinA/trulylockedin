@@ -13,6 +13,7 @@ import {
   rowList,
   rowTitle,
 } from "../_components/admin-ui";
+import { PageGuide } from "../_components/help";
 import { StorageCleanup } from "./storage-cleanup";
 
 export const metadata: Metadata = {
@@ -33,6 +34,33 @@ export default async function PortfolioAdminPage() {
           </Link>
         }
       />
+
+      <PageGuide
+        id="portfolio"
+      >
+          <li>
+            Your portfolio is the <strong>Work</strong> gallery on the
+            website. Each &ldquo;look&rdquo; is one client&rsquo;s style, with
+            as many photos or short videos as you like.
+          </li>
+          <li>
+            Tap <strong>Add look</strong>, give it a title and a style (e.g.
+            &ldquo;Starter locs&rdquo;), upload the photos and save. It&rsquo;s
+            on the website straight away.
+          </li>
+          <li>
+            <strong>Featured</strong> looks also appear on the home page.{" "}
+            <strong>Hidden</strong> ones are saved here but visitors
+            can&rsquo;t see them.
+          </li>
+          <li>
+            Photos straight from your phone are fine: the website shrinks them
+            automatically so pages stay fast.
+          </li>
+          <li>
+            Always ask your client before posting their photos.
+          </li>
+      </PageGuide>
 
       {items.length === 0 ? (
         <p className="text-muted">

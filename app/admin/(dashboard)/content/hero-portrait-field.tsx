@@ -81,9 +81,11 @@ export function HeroPortraitField({
         }
       />
       <p className="text-xs text-muted">
-        Use a PNG or WebP with the background already removed. A normal photo
-        will show as a rectangle. Head and shoulders, with the head in the
-        middle of the picture, works best.
+        This is the person shown in the burgundy circle at the top of the home
+        page. Use a picture with the background already removed (a PNG or
+        WebP, e.g. made with a background-remover app): a normal photo will
+        show as a rectangle. Head and shoulders, with the hair touching the top
+        edge and the face in the middle, works best.
       </p>
     </fieldset>
   );

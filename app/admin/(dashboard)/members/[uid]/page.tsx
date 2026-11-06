@@ -95,8 +95,11 @@ export default async function MemberPage({
 
       <DangerZone summary="Delete this member">
         <p className="text-muted">
-          This deletes their account and signs them out. Their bookings and
-          orders stay, as guest ones.
+          Only do this if the client asks you to delete their account. It
+          deletes the account straight away and signs them out, and it
+          can&rsquo;t be undone. Their bookings and orders aren&rsquo;t
+          cancelled: they stay in your lists as guest bookings. Clients can
+          also delete their own account from the website.
         </p>
         <form action={deleteMemberAction}>
           <input type="hidden" name="uid" value={member.uid} />

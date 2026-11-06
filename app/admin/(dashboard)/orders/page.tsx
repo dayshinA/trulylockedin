@@ -9,6 +9,7 @@ import {
 } from "@/lib/shop/orders";
 import { orderRepository } from "@/lib/shop/server";
 import { PageHeader, Tabs } from "../_components/admin-ui";
+import { PageGuide } from "../_components/help";
 import { OrderRows } from "./order-list";
 
 export const metadata: Metadata = {
@@ -41,6 +42,36 @@ export default async function OrdersPage({
   return (
     <div className="flex max-w-3xl flex-col gap-8">
       <PageHeader title="Orders" />
+      <PageGuide
+        id="orders"
+      >
+          <li>
+            Orders from your website shop land here, and you get an email for
+            each one. <strong>Open</strong> is everything you still need to
+            pack, post or hand over.
+          </li>
+          <li>
+            Each order says whether the customer will <strong>collect</strong>{" "}
+            it from the salon or wants it <strong>delivered</strong> (free, UK
+            only), and whether they&rsquo;ve <strong>paid online</strong> or
+            will pay when they collect.
+          </li>
+          <li>
+            Open an order to see what to pack, then tap{" "}
+            <strong>Mark ready to collect</strong> or <strong>Mark posted</strong>. The
+            customer is emailed automatically.
+          </li>
+          <li>
+            <strong>Completed</strong> shows orders collected or delivered in
+            the last {ORDER_HISTORY_DAYS} days. <strong>Cancelled</strong>{" "}
+            shows ones that were cancelled, by you or the customer.
+          </li>
+          <li>
+            Customers can cancel online themselves only until you mark the
+            order ready. Money paid online is refunded to their card whenever
+            an order is cancelled.
+          </li>
+      </PageGuide>
       <Tabs
         label="Filter orders"
         items={ORDER_VIEWS.map((v) => ({

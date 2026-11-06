@@ -4,7 +4,8 @@ import { verifyAdmin } from "@/lib/auth/dal";
 import type { SiteSection } from "@/lib/content/schemas";
 import { readSiteContent } from "@/lib/content/store";
 import { adminDb } from "@/lib/firebase/admin";
-import { Badge, PageHeader } from "../_components/admin-ui";
+import { Badge, PageHeader, textLink } from "../_components/admin-ui";
+import { PageGuide } from "../_components/help";
 import {
   AboutForm,
   ContactForm,
@@ -25,43 +26,61 @@ const SECTIONS: {
   id: SiteSection;
   title: string;
   where: string;
+  href: string;
 }[] = [
-  { id: "hero", title: "Home page banner", where: "Top of the home page" },
+  {
+    id: "hero",
+    title: "Home page banner",
+    where: "The first thing visitors see: the big headline and portrait at the top of the home page.",
+    href: "/",
+  },
   {
     id: "about",
     title: "About",
-    where: "About page; the first paragraph and highlights also show on the home page",
+    where: "Your story on the About page. The first paragraph and the highlights also show on the home page.",
+    href: "/about",
   },
-  { id: "testimonials", title: "Reviews", where: "Home page" },
+  {
+    id: "testimonials",
+    title: "Reviews",
+    where: "Client reviews on the home page. Remove them all to hide the section.",
+    href: "/",
+  },
   {
     id: "contact",
     title: "Contact details",
-    where: "Contact page and footer. Leave a channel empty to hide it.",
+    where: "Your phone, WhatsApp, email, socials and address on the Contact page and in the footer of every page. Leave one empty to hide it.",
+    href: "/contact",
   },
   {
     id: "policies",
     title: "Booking information",
-    where: "Contact page, under “Before your appointment”",
+    where: "What clients should know before they come (lateness, preparation, deposits). Shown on the Contact page, under “Before your appointment”, and in booking emails.",
+    href: "/contact",
   },
   {
     id: "shop",
     title: "Shop",
-    where: "Top of the Shop page; the ordering points also show on each product",
+    where: "The heading and introduction at the top of the Shop page. The ordering points also show on each product.",
+    href: "/shop",
   },
   {
     id: "seo",
     title: "Search engines",
-    where: "The short description Google and link previews show",
+    where: "The short description Google shows under your site's name, and that appears when someone shares a link to it on WhatsApp or Instagram.",
+    href: "/",
   },
   {
     id: "privacy",
     title: "Privacy notice",
-    where: "The Privacy page (/privacy), linked from the footer, booking, checkout and account sign-up",
+    where: "The Privacy page, which explains what you do with clients' details. It's linked from the footer, booking, checkout and account sign-up.",
+    href: "/privacy",
   },
   {
     id: "terms",
     title: "Terms & returns",
-    where: "The Terms page (/terms): deposits, cancellations, shop orders and returns",
+    where: "The Terms page: deposits, cancellations, shop orders and returns. Clients agree to it every time they book or order.",
+    href: "/terms",
   },
 ];
 
@@ -84,11 +103,36 @@ export default async function ContentPage() {
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-10">
-      <PageHeader title="Site content">
-        The words on the public website. Each section saves on its own.
-      </PageHeader>
+      <PageHeader title="Site content" />
+      <PageGuide
+        id="content"
+      >
+          <li>
+            This is where you change the <strong>words and pictures</strong> on
+            your website: your story, reviews, contact details and policies.
+          </li>
+          <li>
+            Tap a section to open it, make your changes, then press{" "}
+            <strong>Save this section</strong> at the bottom of it. Each
+            section saves on its own, and the website updates straight away.
+          </li>
+          <li>
+            A <strong>Placeholder</strong> label means the website is still
+            showing the sample text we wrote. Replace it with your own words,
+            then save to remove the label.
+          </li>
+          <li>
+            Want a word in <strong>orange</strong> in a heading? Put stars
+            around it: <code>*Care*</code> first, then <code>*craft*</code>.
+          </li>
+          <li>
+            Not sure how something looks? Use the{" "}
+            <strong>See it on the website</strong> link in each section, which
+            opens it in a new tab.
+          </li>
+      </PageGuide>
       <div className="border-t border-line">
-        {SECTIONS.map(({ id, title, where }) => (
+        {SECTIONS.map(({ id, title, where, href }) => (
           <details key={id} className="group border-b border-line">
             <summary className="flex min-h-16 cursor-pointer items-center gap-3 py-3">
               <span className="flex-1 font-display text-2xl font-semibold transition-colors group-hover:text-brand-hover">
@@ -100,7 +144,17 @@ export default async function ContentPage() {
               </span>
             </summary>
             <div className="pb-10">
-              <p className="mb-6 text-sm text-muted">{where}</p>
+              <div className="mb-6 flex flex-col gap-1 text-sm text-muted">
+                <p>{where}</p>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={textLink}
+                >
+                  See it on the website ↗
+                </a>
+              </div>
               {forms[id]}
             </div>
           </details>

@@ -64,7 +64,11 @@ export function ManualBookingForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <Field label="Service" error={errors.serviceId}>
+      <Field
+        label="Service"
+        hint="Services hidden from the website are listed too, so you can still book them."
+        error={errors.serviceId}
+      >
         <select
           name="serviceId"
           value={serviceId}
@@ -141,23 +145,35 @@ export function ManualBookingForm({
         late Wednesday is Thursday).
       </p>
       {service && hasPremium && (
-        <label className="flex min-h-11 items-center gap-3 text-sm">
+        <label className="flex min-h-11 items-start gap-3 py-2.5 text-sm">
           <input
             type="checkbox"
             name="premium"
             checked={premium}
             onChange={(event) => setPremiumChoice(event.target.checked)}
-            className="size-5 accent-brand"
+            className="mt-px size-5 shrink-0 accent-brand"
           />
-          Premium price ({formatPrice(service.premiumPricePence!)} instead of{" "}
-          {formatPrice(service.priceFromPence)})
+          <span className="flex flex-col gap-0.5">
+            <span>
+              Premium price ({formatPrice(service.premiumPricePence!)} instead
+              of {formatPrice(service.priceFromPence)})
+            </span>
+            <span className="text-xs text-muted">
+              Ticked for you on late starts. Untick it to charge the normal
+              price.
+            </span>
+          </span>
         </label>
       )}
 
       <Field label="Client name" error={errors.name}>
         <input name="name" autoComplete="off" className={inputClass} />
       </Field>
-      <Field label="Client phone" error={errors.phone}>
+      <Field
+        label="Client phone"
+        hint="Shown on the booking so you can call or WhatsApp them."
+        error={errors.phone}
+      >
         <input
           name="phone"
           type="tel"
@@ -166,7 +182,11 @@ export function ManualBookingForm({
           className={inputClass}
         />
       </Field>
-      <Field label="Client email (optional)" error={errors.email}>
+      <Field
+        label="Client email (optional)"
+        hint="If you add it, the client is emailed a confirmation with a link to view or cancel."
+        error={errors.email}
+      >
         <input
           name="email"
           type="email"
@@ -175,10 +195,18 @@ export function ManualBookingForm({
           className={inputClass}
         />
       </Field>
-      <Field label="Client notes (optional)" error={errors.notes}>
+      <Field
+        label="Client notes (optional)"
+        hint="What the client asked for. The client can see these on their booking."
+        error={errors.notes}
+      >
         <textarea name="notes" rows={2} className={`${inputClass} py-2`} />
       </Field>
-      <Field label="Private notes (optional)" error={errors.adminNotes}>
+      <Field
+        label="Private notes (optional)"
+        hint="Only you can see these."
+        error={errors.adminNotes}
+      >
         <textarea name="adminNotes" rows={2} className={`${inputClass} py-2`} />
       </Field>
 
@@ -208,8 +236,11 @@ function Booked({
       </p>
       <div className="flex flex-col gap-3 text-sm">
         <p className="text-muted">
-          Client&rsquo;s private link to view or cancel. Send it now if you want
-          them to have it; it can&rsquo;t be shown again.
+          This is the client&rsquo;s private link to view or cancel their
+          booking. If you added their email, it has already been emailed to
+          them. Otherwise copy it and send it by text or WhatsApp now: for
+          security it can&rsquo;t be shown again. Without an email, this
+          link is the only way they can manage the booking online.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <code className="min-w-0 flex-1 break-all rounded-sm border border-line bg-page p-3 text-xs">

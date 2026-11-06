@@ -5,6 +5,7 @@ import { verifyAdmin } from "@/lib/auth/dal";
 import { bookingRepository } from "@/lib/booking/server";
 import { todayLocal } from "@/lib/booking/time";
 import { PageHeader } from "../../_components/admin-ui";
+import { PageGuide } from "../../_components/help";
 import { ManualBookingForm } from "./manual-booking-form";
 
 export const metadata: Metadata = {
@@ -26,6 +27,29 @@ export default async function NewBookingPage() {
         back={{ href: "/admin/bookings", label: "All bookings" }}
         title="New booking"
       />
+      <PageGuide
+        id="new-booking"
+      >
+          <li>
+            Use this when a client books by phone, DM or in person. The time
+            is taken off the website straight away, so nobody else can book
+            it.
+          </li>
+          <li>
+            You can pick <strong>any time</strong>, even outside your opening
+            hours or on a closed day. The only thing it stops is booking more
+            clients at once than you have chairs.
+          </li>
+          <li>
+            Bookings you add here are confirmed immediately and{" "}
+            <strong>don&rsquo;t take a deposit</strong>. Sort payment with the
+            client yourself.
+          </li>
+          <li>
+            If you add the client&rsquo;s email, they get a confirmation email
+            with a link to view or cancel their booking.
+          </li>
+      </PageGuide>
       {services.length === 0 ? (
         <p className="text-muted">
           Add a service first under{" "}

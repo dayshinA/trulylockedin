@@ -14,6 +14,7 @@ import {
   rowList,
   rowTitle,
 } from "../_components/admin-ui";
+import { PageGuide } from "../_components/help";
 
 export const metadata: Metadata = {
   title: "Members",
@@ -29,10 +30,29 @@ export default async function MembersPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-8">
-      <PageHeader title="Members">
-        Clients who signed up for an account, newest first. Guests who book
-        without one aren&rsquo;t listed here.
-      </PageHeader>
+      <PageHeader title="Members" />
+      <PageGuide
+        id="members"
+      >
+          <li>
+            Members are clients who made an account on your website, newest
+            first. An account is optional: anyone can book or order as a
+            guest, and guests aren&rsquo;t listed here.
+          </li>
+          <li>
+            A member&rsquo;s details are filled in for them when they book, and
+            they can see their past appointments and tap &ldquo;Book
+            again&rdquo;.
+          </li>
+          <li>
+            Tap a member to see their contact details and everything they
+            booked or ordered while signed in.
+          </li>
+          <li>
+            You don&rsquo;t need to do anything here. It&rsquo;s for looking
+            people up, or deleting an account if someone asks you to.
+          </li>
+      </PageGuide>
 
       {members.length === 0 ? (
         <p className="text-muted">No members yet.</p>

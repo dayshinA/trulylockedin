@@ -11,6 +11,7 @@ import {
   PageHeader,
   Section,
 } from "../_components/admin-ui";
+import { PageGuide, Tip } from "../_components/help";
 import { deleteOverrideAction } from "./actions";
 import {
   BookingRulesForm,
@@ -35,7 +36,8 @@ export default async function AvailabilityPage() {
   return (
     <div className="flex max-w-2xl flex-col gap-14">
       <PageHeader title="Availability">
-        When clients can book online. Changes never move existing bookings.
+        This page decides which days and times clients can pick when they book
+        online.
       </PageHeader>
 
       <HowItWorks settings={settings} />
@@ -51,6 +53,13 @@ export default async function AvailabilityPage() {
         title="Special dates"
         description="Holidays, days off, shorter days, or one-off extra times."
       >
+        <Tip>
+          Going on holiday or taking a day off? Add each date here as
+          &ldquo;Closed all day&rdquo;, and clients won&rsquo;t be able to book
+          it. If someone already booked that day, their booking stays: contact
+          them and cancel it from Bookings. Dates disappear from this list once
+          they&rsquo;ve passed.
+        </Tip>
         {overrides.length > 0 ? (
           <ul className="border-t border-line">
             {overrides.map((override) => (
@@ -96,6 +105,10 @@ export default async function AvailabilityPage() {
         title="Booking rules"
         description="Defaults for every day, plus the rules every online booking follows."
       >
+        <Tip tone="warning">
+          These rules apply to every online booking from the moment you save.
+          Bookings already made stay exactly as they are.
+        </Tip>
         <BookingRulesForm settings={settings} />
       </Section>
     </div>
@@ -127,29 +140,45 @@ function describeOverride(override: DateOverride): string {
 function HowItWorks({ settings }: { settings: BookingSettings }) {
   const { bufferMin, staggerMin, chairs } = settings;
   return (
-    <aside className="flex flex-col gap-3 border-l-2 border-brand bg-surface px-5 py-4 text-sm">
-      <h2 className="font-display text-2xl font-semibold">
-        How booking times work
-      </h2>
-      <ul className="flex list-disc flex-col gap-1.5 pl-5 text-muted">
+    <PageGuide
+      id="availability"
+      title="How booking times work"
+    >
         <li>
-          Clients pick from start times offered every &ldquo;gap&rdquo; from
-          opening. Every appointment must finish by closing time, so long
-          services get fewer start times.
+          <strong>Opening hours</strong> are your normal week. Clients are
+          offered start times from opening, one every &ldquo;gap&rdquo;
+          (e.g. every hour). Every appointment must finish by closing time,
+          so long services get fewer start times.
         </li>
         <li>
-          Up to {chairs} client{chairs === 1 ? "" : "s"} can be in at once
-          (change it per day). Two clients never start less than {staggerMin}{" "}
-          minutes apart, and each chair gets a {bufferMin}-minute break after
-          every client.
+          <strong>Chairs</strong> is how many clients you can look after at
+          once (now {chairs}). Two clients never start less than{" "}
+          {staggerMin} minutes apart, and each chair gets a {bufferMin}-minute
+          break after every client. Clients never see chairs, only the times
+          that are free.
         </li>
         <li>
           Example: open 13:00–03:00, every 1 hour, 2 chairs. A 4-hour retwist
           at 13:00 still leaves 14:00 free for a second client in the other
           chair; a third client can only start once one of them has finished.
         </li>
-        <li>Clients never see chairs, only the times that are free.</li>
-      </ul>
-    </aside>
+        <li>
+          <strong>Special dates</strong> override your normal week for one
+          day: a holiday, a short day, or an extra late slot.
+        </li>
+        <li>
+          Nothing here ever moves or cancels a booking that&rsquo;s already
+          been made. Want to check what clients see? Open{" "}
+          <a
+            href="/book"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-brand underline underline-offset-4"
+          >
+            the booking page ↗
+          </a>
+          .
+        </li>
+    </PageGuide>
   );
 }

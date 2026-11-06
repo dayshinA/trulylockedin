@@ -37,8 +37,10 @@ export function OptionsEditor({
     <fieldset className="flex flex-col gap-4 border-t border-line pt-6">
       <legend className="font-display text-2xl font-semibold">Options</legend>
       <p className="-mt-2 text-sm text-muted">
-        Choices clients pick when booking. Their price and time are added to
-        this service&rsquo;s.
+        Choices clients pick when booking, like loc count, length or an
+        add-on. Each one adds its price and time to the service, so a longer
+        option leaves fewer free times. Leave the options empty if the service
+        has no choices.
       </p>
 
       {rows.map(({ key, option }, i) => (
@@ -55,7 +57,11 @@ export function OptionsEditor({
             />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Adds (£)" error={errors[`optionPrice.${i}`]}>
+            <Field
+              label="Adds (£)"
+              hint="0 if it doesn't change the price"
+              error={errors[`optionPrice.${i}`]}
+            >
               <input
                 name="optionPrice"
                 inputMode="decimal"
@@ -65,6 +71,7 @@ export function OptionsEditor({
             </Field>
             <Field
               label="Adds (minutes)"
+              hint="Empty if it takes no extra time"
               error={errors[`optionMinutes.${i}`]}
             >
               <input
@@ -127,7 +134,10 @@ export function OptionsEditor({
         <FieldError>{errors.options[0]}</FieldError>
       )}
 
-      <Field label="How many can a client pick?">
+      <Field
+        label="How many can a client pick?"
+        hint="“Only one” for sizes or lengths; “Any number” for add-ons."
+      >
         <select
           name="optionsSelectionMode"
           defaultValue={service?.optionsSelectionMode ?? "multiple"}
@@ -141,6 +151,7 @@ export function OptionsEditor({
         <Checkbox
           name="optionsRequired"
           label="Clients must pick at least one"
+          hint="Tick it when the price depends on the choice, e.g. small, medium or large."
           defaultChecked={service?.optionsRequired ?? false}
         />
         {errors.optionsRequired?.[0] && (

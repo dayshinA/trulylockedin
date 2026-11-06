@@ -27,7 +27,11 @@ export function ProductForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       {product && <input type="hidden" name="id" value={product.id} />}
 
-      <Field label="Name" error={errors.name}>
+      <Field
+        label="Name"
+        hint="Include the size if you sell more than one, e.g. Scalp oil 100ml"
+        error={errors.name}
+      >
         <input
           name="name"
           defaultValue={product?.name}
@@ -37,14 +41,18 @@ export function ProductForm({
       {!product && (
         <Field
           label="Web address"
-          hint="Leave empty to make one from the name. It can't be changed later."
+          hint="The end of this product's link on the website (…/shop/your-text). Leave it empty and one is made from the name. It can't be changed later."
           error={errors.slug}
         >
           <input name="slug" autoCapitalize="none" className={inputClass} />
         </Field>
       )}
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Price (£)" error={errors.price}>
+        <Field
+          label="Price (£)"
+          hint="Changing it doesn't affect orders already placed"
+          error={errors.price}
+        >
           <input
             name="price"
             inputMode="decimal"
@@ -54,7 +62,7 @@ export function ProductForm({
             className={inputClass}
           />
         </Field>
-        <Field label="Order" hint="Lower first" error={errors.order}>
+        <Field label="Order" hint="0 shows first" error={errors.order}>
           <input
             name="order"
             type="number"
@@ -67,7 +75,7 @@ export function ProductForm({
       </div>
       <Field
         label="Category (optional)"
-        hint="Used for the filter on the Shop page, e.g. Oils"
+        hint="Visitors can filter the Shop page by this, e.g. Oils. Pick an existing one from the list to keep them grouped."
         error={errors.category}
       >
         <input
@@ -108,16 +116,19 @@ export function ProductForm({
         <Checkbox
           name="inStock"
           label="In stock"
+          hint="Untick when you run out: it stays on the website marked “Sold out” and can't be ordered. Tick it again when it's back."
           defaultChecked={product?.inStock ?? true}
         />
         <Checkbox
           name="published"
           label="Show on the website"
+          hint="Untick to hide it from the shop completely. It needs at least one photo to be shown."
           defaultChecked={product?.published ?? true}
         />
         <Checkbox
           name="featured"
           label="Feature on the home page"
+          hint="Shows it in “Care between visits” on the home page (up to 4 are shown)."
           defaultChecked={product?.featured}
         />
       </div>

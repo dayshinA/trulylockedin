@@ -52,6 +52,7 @@ export function CategoryForm({
         <Checkbox
           name="visibleOnline"
           label="Show on the website"
+          hint="Untick to hide this category and all its services from clients."
           defaultChecked={category?.visibleOnline ?? true}
         />
         <FormMessage state={save.state} />

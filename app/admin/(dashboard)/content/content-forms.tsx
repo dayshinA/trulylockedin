@@ -52,7 +52,7 @@ function SectionForm({
         <FieldError>{errors.form[0]}</FieldError>
       )}
       <FormMessage state={state} />
-      <SubmitButton pending={pending}>Save</SubmitButton>
+      <SubmitButton pending={pending}>Save this section</SubmitButton>
     </form>
   );
 }
@@ -98,7 +98,11 @@ export function HeroForm({ hero }: { hero: SiteContent["hero"] }) {
               className={inputClass}
             />
           </Field>
-          <Field label="Text under the headline" error={errors.subtitle}>
+          <Field
+            label="Text under the headline"
+            hint="A sentence or two that appears as visitors scroll down the banner."
+            error={errors.subtitle}
+          >
             <textarea
               name="subtitle"
               rows={3}
@@ -146,7 +150,11 @@ export function AboutForm({ about }: { about: SiteContent["about"] }) {
             </legend>
             {highlights.rows.map(({ key, value }, i) => (
               <div key={key} className={rowGroup}>
-                <Field label="Title" error={errors[`title.${i}`]}>
+                <Field
+                  label="Title"
+                  hint="A short point, e.g. 10 years' experience"
+                  error={errors[`title.${i}`]}
+                >
                   <input
                     name="highlightTitle"
                     defaultValue={value.title}
@@ -208,7 +216,11 @@ export function TestimonialsForm({
           )}
           {reviews.rows.map(({ key, value }, i) => (
             <div key={key} className={rowGroup}>
-              <Field label="Review" error={errors[`quote.${i}`]}>
+              <Field
+                label="Review"
+                hint="Copy it word for word from the client (with their permission)"
+                error={errors[`quote.${i}`]}
+              >
                 <textarea
                   name="quote"
                   rows={3}
@@ -310,7 +322,11 @@ export function ContactForm({ contact }: { contact: SiteContent["contact"] }) {
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Phone (optional)" error={errors.phone}>
+            <Field
+              label="Phone (optional)"
+              hint="Adds a tap-to-call button"
+              error={errors.phone}
+            >
               <input
                 name="phone"
                 type="tel"
@@ -320,6 +336,7 @@ export function ContactForm({ contact }: { contact: SiteContent["contact"] }) {
             </Field>
             <Field
               label="WhatsApp number (optional)"
+              hint="Adds a button that opens a WhatsApp chat with you"
               error={errors.whatsapp}
             >
               <input
@@ -330,7 +347,11 @@ export function ContactForm({ contact }: { contact: SiteContent["contact"] }) {
               />
             </Field>
           </div>
-          <Field label="Email (optional)" error={errors.email}>
+          <Field
+            label="Email (optional)"
+            hint="Shown on the Contact page and in the footer"
+            error={errors.email}
+          >
             <input
               name="email"
               type="email"
@@ -410,6 +431,7 @@ export function ShopForm({ shop }: { shop: SiteContent["shop"] }) {
           </Field>
           <Field
             label="Introduction (optional)"
+            hint="A short welcome under the heading on the Shop page"
             error={errors.intro}
           >
             <textarea

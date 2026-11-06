@@ -28,6 +28,7 @@ import {
   primaryButton,
   textLink,
 } from "../../_components/admin-ui";
+import { Tip } from "../../_components/help";
 import { OrderStatusBadge } from "../order-list";
 
 export const metadata: Metadata = {
@@ -218,6 +219,28 @@ export default async function OrderDetailPage({
       )}
 
       {actions.length > 0 && (
+        <Tip>
+          {order.delivery ? (
+            <>
+              Once you&rsquo;ve sent it, tap <strong>Mark posted</strong>:
+              the customer gets an email saying it&rsquo;s on its way. When it
+              has arrived, mark it delivered to move it out of your open
+              orders (no email is sent for that).
+            </>
+          ) : (
+            <>
+              Once it&rsquo;s packed, tap <strong>Mark ready to collect</strong>:
+              the customer gets an email saying they can come and collect it.
+              When they&rsquo;ve picked it up, mark it collected to move it out
+              of your open orders (no email is sent for that).
+            </>
+          )}{" "}
+          Cancelling emails the customer
+          {refundable > 0 ? " and refunds what they paid online" : ""}.
+        </Tip>
+      )}
+
+      {actions.length > 0 && (
         <div className="flex flex-wrap gap-3">
           {actions.map((status) =>
             status === "cancelled" && refundable > 0 ? (
@@ -294,6 +317,10 @@ export default async function OrderDetailPage({
         <label htmlFor="adminNotes" className="text-sm text-muted">
           Private notes (only you can see these)
         </label>
+        <span className="-mt-1 text-xs text-muted">
+          e.g. a tracking number or when they said they&rsquo;d collect.
+          Customers never see these notes.
+        </span>
         <textarea
           id="adminNotes"
           name="adminNotes"

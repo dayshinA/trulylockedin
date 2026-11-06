@@ -44,9 +44,12 @@ export function StorageCleanup() {
     <section className="mt-6 flex flex-col gap-4 border-t border-line pt-8">
       <h2 className="font-display text-3xl font-semibold">Storage clean-up</h2>
       <p className="text-sm text-muted">
-        Finds photos and videos that were uploaded but never saved to a look or
-        service. Uploads from the last {ORPHAN_GRACE_HOURS} hours are left
-        alone.
+        Your photo storage has a free limit. If you upload a photo and then
+        leave the page without saving, the file is left behind, unused. This
+        finds those files so you can delete them. It never touches anything
+        that&rsquo;s on the website, and leaves uploads from the last{" "}
+        {ORPHAN_GRACE_HOURS} hours alone. Running it every few months is
+        plenty.
       </p>
       {found?.status === "ok" && found.count === 0 && (
         <p role="status" className="text-sm text-brand">

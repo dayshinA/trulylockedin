@@ -14,6 +14,7 @@ import {
   rowTitle,
   Section,
 } from "../_components/admin-ui";
+import { PageGuide } from "../_components/help";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -42,6 +43,37 @@ export default async function ServicesPage() {
           </>
         }
       />
+
+      <PageGuide
+        id="services"
+      >
+          <li>
+            This is your price list. Everything here appears on the
+            website&rsquo;s Services page and is what clients choose from when
+            they book.
+          </li>
+          <li>
+            Services are grouped under <strong>categories</strong> (the
+            headings, like &ldquo;Locs&rdquo; or &ldquo;Braids&rdquo;). Tap{" "}
+            <strong>Categories</strong> to rename, reorder or add them.
+          </li>
+          <li>
+            Tap a service to change its price, how long it takes, its options
+            (e.g. loc count) or its photo. Changes go live as soon as you save.
+          </li>
+          <li>
+            The labels on the right explain anything unusual.{" "}
+            <strong>Hidden</strong>: clients can&rsquo;t see it.{" "}
+            <strong>Not online</strong>: listed, but clients contact you to
+            book. <strong>No duration</strong>: it can&rsquo;t be booked
+            online until you add one. <strong>No deposit</strong>: clients
+            don&rsquo;t pay a deposit for it.
+          </li>
+          <li>
+            The length matters: the website uses it to work out which times
+            are free, so make it how long the appointment really takes.
+          </li>
+      </PageGuide>
 
       {services.length === 0 ? (
         <p className="text-muted">No services yet.</p>

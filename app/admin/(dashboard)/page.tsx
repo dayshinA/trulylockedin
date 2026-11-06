@@ -14,6 +14,7 @@ import {
   Section,
   textLink,
 } from "./_components/admin-ui";
+import { PageGuide } from "./_components/help";
 import { seedBookingDataAction } from "./actions";
 import { BookingRows, BookingsByDate } from "./bookings/booking-list";
 import { OrderRows } from "./orders/order-list";
@@ -44,10 +45,43 @@ export default async function AdminOverviewPage() {
         }
       />
 
+      <PageGuide
+        id="overview"
+        title="Welcome to your admin"
+      >
+          <li>
+            This page is your day at a glance: any <strong>new shop orders</strong>,
+            today&rsquo;s appointments, and everything booked for the next 7
+            days. Tap any row to see the client&rsquo;s details.
+          </li>
+          <li>
+            Clients book themselves on the website, so you don&rsquo;t need to
+            do anything for a booking to happen. You&rsquo;ll get an email each
+            time someone books, cancels or orders.
+          </li>
+          <li>
+            Booked someone by phone or in person? Tap{" "}
+            <strong>New booking</strong> so the time is taken off the website
+            and nobody else can book it.
+          </li>
+          <li>
+            Use the menu to change your <strong>opening hours</strong>{" "}
+            (Availability), <strong>prices</strong> (Services), your{" "}
+            <strong>photos</strong> (Portfolio) and the{" "}
+            <strong>words on the website</strong> (Content). Each page has its
+            own help box like this one.
+          </li>
+          <li>
+            Nothing you change here ever moves or deletes a booking that&rsquo;s
+            already been made.
+          </li>
+      </PageGuide>
+
       {newOrders.length > 0 && (
         <Section
           title="New orders"
           count={newOrders.length}
+          description="Shop orders waiting for you to pack them. Open one to mark it ready or posted."
           action={
             <Link href="/admin/orders" className={textLink}>
               All orders
@@ -58,7 +92,10 @@ export default async function AdminOverviewPage() {
         </Section>
       )}
 
-      <Section title="Today">
+      <Section
+        title="Today"
+        description="Appointments today, in time order. After each one, open it and mark it completed or a no-show."
+      >
         {todays.length > 0 ? (
           <BookingRows bookings={todays} />
         ) : (
@@ -88,10 +125,11 @@ function BookingSetup() {
   return (
     <div className="flex max-w-2xl flex-col gap-8">
       <PageHeader eyebrow="Getting started" title="Set up online booking">
-        Online booking needs opening hours, booking rules and at least one
-        service. This adds sensible defaults (Tue–Sat hours, 30-minute slots,
-        15-minute buffer, 24 hours’ notice, 8 weeks ahead) and sample services.
-        You can change all of it later.
+        Before clients can book online, the website needs your opening hours,
+        your booking rules and at least one service. Press the button below to
+        fill these in with sensible starting values. Nothing is shown to
+        clients until you press it, and you can change everything afterwards
+        under Availability and Services.
       </PageHeader>
       <form action={seedBookingDataAction}>
         <button type="submit" className={primaryButton}>

@@ -46,7 +46,8 @@ export default async function EditProductPage({
 
       <DangerZone summary="Delete this product">
         <p className="text-muted">
-          This removes the product and deletes its photos from storage. To just
+          This removes the product and deletes its photos for good. It
+          can&rsquo;t be undone, but past orders keep their details. To just
           hide it, untick &ldquo;Show on the website&rdquo;; for a short gap,
           untick &ldquo;In stock&rdquo;.
         </p>
