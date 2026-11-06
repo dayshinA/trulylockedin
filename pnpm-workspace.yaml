@@ -12,3 +12,6 @@ allowBuilds:
 overrides:
   "@grpc/grpc-js": ">=1.14.6"
   glob: ">=14.0.2"
+  # jose 6 is ESM-only; jwks-rsa (firebase-admin/auth) require()s it, which
+  # fails on Vercel's runtime. jose 5 ships a CommonJS build with the same API.
+  "jwks-rsa>jose": "5.10.0"
