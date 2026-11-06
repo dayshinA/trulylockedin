@@ -19,7 +19,7 @@ export const smallButton =
   "min-h-11 min-w-11 rounded-full border border-line px-3 text-xs text-ink transition-colors hover:border-brand hover:text-brand-hover disabled:text-faint disabled:hover:border-line";
 
 export const textLink =
-  "inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand underline-offset-4 hover:underline";
+  "inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand underline-offset-4 hover:underline pointer-coarse:underline";
 
 // A list of rows between hairlines (bookings, orders, services…).
 export const rowList = "border-t border-line";

@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+
+import { FormNotice } from "@/components/forms/field-error";
+import { useErrorFocus } from "@/lib/use-error-focus";
 
 import {
   Field,
@@ -24,6 +27,8 @@ export function ProfileForm({
   const [result, setResult] = useState<ProfileResult | null>(null);
   const [pending, startTransition] = useTransition();
   const fieldErrors = result?.status === "invalid" ? result.fieldErrors : {};
+  const formRef = useRef<HTMLFormElement>(null);
+  useErrorFocus(formRef, result?.status === "invalid" ? result : null);
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,7 +37,12 @@ export function ProfileForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="flex flex-col gap-5"
+      noValidate
+    >
       <Field label="Name" error={fieldErrors.name}>
         <input
           name="name"
@@ -54,7 +64,7 @@ export function ProfileForm({
       </Field>
       <Field
         label="Phone (optional)"
-        hint="Used to fill in your bookings."
+        hint="Used to fill in your bookings. Preferably a number on WhatsApp, so we have another way to reach you."
         error={fieldErrors.phone}
       >
         <input
@@ -69,10 +79,11 @@ export function ProfileForm({
       </Field>
 
       {result?.status === "error" && <FormAlert>{result.message}</FormAlert>}
+      {result?.status === "invalid" && (
+        <FormAlert>Please check the highlighted details.</FormAlert>
+      )}
       {result?.status === "saved" && !pending && (
-        <p role="status" className="text-sm text-ink">
-          Saved.
-        </p>
+        <FormNotice tone="success">Saved.</FormNotice>
       )}
 
       <button

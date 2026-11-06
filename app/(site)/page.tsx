@@ -58,7 +58,7 @@ export default async function Home() {
               </SplitHeading>
               <Link
                 href="/work"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
               >
                 See all work <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>
@@ -83,7 +83,7 @@ export default async function Home() {
                 </p>
                 <Link
                   href="/services"
-                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
                 >
                   All services and prices <span aria-hidden className="text-accent">&nbsp;→</span>
                 </Link>
@@ -105,7 +105,7 @@ export default async function Home() {
               </SplitHeading>
               <Link
                 href="/shop"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
               >
                 Shop all products <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>
@@ -127,7 +127,7 @@ export default async function Home() {
               <p className="mt-6 text-lg text-muted">{about.paragraphs[0]}</p>
               <Link
                 href="/about"
-                className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+                className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
               >
                 More about us <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>

@@ -6,6 +6,7 @@ import { penceToPounds, type FieldErrors } from "@/lib/booking/admin-forms";
 import type { Service, ServiceOption } from "@/types/booking";
 import { Checkbox, Field, inputClass } from "../_components/admin-form";
 import { smallButton } from "../_components/admin-ui";
+import { FieldError } from "@/components/forms/field-error";
 
 const MAX_OPTIONS = 50;
 
@@ -123,7 +124,7 @@ export function OptionsEditor({
         </button>
       )}
       {errors.options?.[0] && (
-        <p className="text-sm font-semibold text-brand">{errors.options[0]}</p>
+        <FieldError>{errors.options[0]}</FieldError>
       )}
 
       <Field label="How many can a client pick?">
@@ -143,9 +144,7 @@ export function OptionsEditor({
           defaultChecked={service?.optionsRequired ?? false}
         />
         {errors.optionsRequired?.[0] && (
-          <p className="text-sm font-semibold text-brand">
-            {errors.optionsRequired[0]}
-          </p>
+          <FieldError>{errors.optionsRequired[0]}</FieldError>
         )}
       </div>
     </fieldset>

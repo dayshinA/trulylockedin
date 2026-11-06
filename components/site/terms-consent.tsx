@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { FieldError } from "@/components/forms/field-error";
+
 const link =
   "font-semibold text-brand underline decoration-accent underline-offset-4 hover:text-brand-hover";
 
@@ -15,13 +17,15 @@ export function TermsConsent({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div
+      data-invalid={error?.[0] ? "" : undefined}
+      className="flex flex-col gap-2"
+    >
       <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm text-ink">
         <input
           type="checkbox"
           name="acceptTerms"
           required
-          aria-invalid={error?.[0] ? true : undefined}
           className="mt-0.5 size-5 shrink-0 accent-brand"
         />
         <span>
@@ -36,11 +40,7 @@ export function TermsConsent({
           .
         </span>
       </label>
-      {error?.[0] && (
-        <p role="alert" className="text-sm font-semibold text-brand">
-          {error[0]}
-        </p>
-      )}
+      {error?.[0] && <FieldError>{error[0]}</FieldError>}
     </div>
   );
 }

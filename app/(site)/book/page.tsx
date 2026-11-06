@@ -50,6 +50,7 @@ async function BookingLoader({
 
   let catalogue: BookableCategory[];
   let today: string;
+  let firstDay: string;
   let maxAdvanceDays: number;
   let depositPence: number;
   try {
@@ -84,7 +85,13 @@ async function BookingLoader({
         ),
       }))
       .filter((category) => category.services.length > 0);
-    today = todayLocal(new Date(), settings.timezone);
+    const now = new Date();
+    today = todayLocal(now, settings.timezone);
+    // Days before this can't have any times because of the minimum notice.
+    firstDay = todayLocal(
+      new Date(now.getTime() + settings.minNoticeHours * 3_600_000),
+      settings.timezone,
+    );
     maxAdvanceDays = settings.maxAdvanceDays;
     depositPence = settings.depositPence;
   } catch (error) {
@@ -98,6 +105,7 @@ async function BookingLoader({
     <BookingFlow
       catalogue={catalogue}
       today={today}
+      firstDay={firstDay}
       maxAdvanceDays={maxAdvanceDays}
       depositPence={depositPence}
       // From "Book this" links on /services and "Book again" on /account.

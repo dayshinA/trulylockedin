@@ -28,19 +28,31 @@ function shiftMonth(month: string, by: number): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-// Month calendar limited to the bookable window [first, last].
+// Month calendar limited to the bookable window [first, last]. Once
+// `openDays` has loaded, days without a free time are greyed out too; until
+// then (or if it failed) every day in the window can be tapped.
 export function DayGrid({
   first,
   last,
   selected,
+  openDays,
   onSelect,
 }: {
   first: LocalDate;
   last: LocalDate;
   selected: LocalDate | null;
+  openDays: readonly LocalDate[] | null;
   onSelect: (date: LocalDate) => void;
 }) {
   const [month, setMonth] = useState(() => (selected ?? first).slice(0, 7));
+  // Follow the selection when it's moved for the client (e.g. to the first
+  // open day, in another month).
+  const [shownSelection, setShownSelection] = useState(selected);
+  if (selected !== shownSelection) {
+    setShownSelection(selected);
+    if (selected) setMonth(selected.slice(0, 7));
+  }
+  const open = openDays ? new Set(openDays) : null;
   const canGoBack = month > first.slice(0, 7);
   const canGoForward = month < last.slice(0, 7);
 
@@ -76,7 +88,8 @@ export function DayGrid({
         ))}
         {monthCells(month).map((date, i) => {
           if (!date) return <span key={`pad-${i}`} />;
-          const bookable = date >= first && date <= last;
+          const inWindow = date >= first && date <= last;
+          const bookable = inWindow && (!open || open.has(date));
           const isSelected = date === selected;
           return (
             <button
@@ -84,14 +97,20 @@ export function DayGrid({
               type="button"
               disabled={!bookable}
               aria-pressed={isSelected}
-              aria-label={formatLocalDate(date, "long")}
+              aria-label={
+                inWindow && !bookable
+                  ? `${formatLocalDate(date, "long")}, no free times`
+                  : formatLocalDate(date, "long")
+              }
               onClick={() => onSelect(date)}
               className={`flex aspect-square min-h-11 items-center justify-center rounded-sm border transition-colors ${
                 isSelected
                   ? "border-brand bg-brand font-semibold text-on-brand"
                   : bookable
                     ? "border-line text-ink hover:border-brand hover:bg-brand hover:text-on-brand"
-                    : "border-transparent text-faint"
+                    : inWindow
+                      ? "border-transparent text-faint line-through decoration-faint"
+                      : "border-transparent text-faint"
               }`}
             >
               {Number(date.slice(8))}
@@ -99,6 +118,11 @@ export function DayGrid({
           );
         })}
       </div>
+      {open && (
+        <p className="mt-3 text-xs text-muted">
+          Crossed-out days have no free times.
+        </p>
+      )}
     </div>
   );
 }

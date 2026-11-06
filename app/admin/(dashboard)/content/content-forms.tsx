@@ -25,6 +25,7 @@ import {
   saveTestimonialsAction,
 } from "./actions";
 import { HeroPortraitField } from "./hero-portrait-field";
+import { FieldError } from "@/components/forms/field-error";
 
 const textareaClass = `${inputClass} py-2`;
 
@@ -48,7 +49,7 @@ function SectionForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       {children(errors)}
       {errors.form?.[0] && (
-        <p className="text-sm font-semibold text-brand">{errors.form[0]}</p>
+        <FieldError>{errors.form[0]}</FieldError>
       )}
       <FormMessage state={state} />
       <SubmitButton pending={pending}>Save</SubmitButton>
@@ -166,7 +167,7 @@ export function AboutForm({ about }: { about: SiteContent["about"] }) {
               </div>
             ))}
             {errors.highlights?.[0] && (
-              <p className="text-sm font-semibold text-brand">{errors.highlights[0]}</p>
+              <FieldError>{errors.highlights[0]}</FieldError>
             )}
             {highlights.rows.length < 6 && (
               <button
@@ -479,7 +480,8 @@ function LegalFormatHelp({ href }: { href: string }) {
   );
 }
 
-const legalTextareaClass = `${textareaClass} min-h-96 font-mono text-sm leading-relaxed`;
+// 16px (text-base): iOS zooms the page into anything smaller.
+const legalTextareaClass = `${textareaClass} min-h-96 font-mono text-base leading-relaxed`;
 
 export function PrivacyForm({
   privacy,

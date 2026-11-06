@@ -100,8 +100,10 @@ export function ThankYou({
               Your booking
             </h1>
             <p className="text-lg">{state.message}</p>
-            <div className="mt-4 flex flex-wrap gap-x-6">
-              <TextLink href="/book/find">Find it with your reference</TextLink>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link href="/book/find" className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-8 font-semibold text-on-brand transition-colors hover:bg-brand-hover">
+                Find it with your reference
+              </Link>
               <TextLink href="/book">Make a new booking</TextLink>
             </div>
           </div>
@@ -528,7 +530,7 @@ function Where({ contact }: { contact: Contact }) {
           href={contact.mapUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 inline-flex min-h-11 items-center gap-1 text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+          className="mt-2 inline-flex min-h-11 items-center gap-1 text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
         >
           Open in maps
           <ArrowUpRight aria-hidden className="size-4" />

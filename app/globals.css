@@ -60,6 +60,52 @@
   button:disabled {
     cursor: not-allowed;
   }
+
+  /* Keyboard focus in the brand colour instead of the browser's blue (which
+     clashes on burgundy). The token flips to white inside surface-burgundy. */
+  :where(a, button, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  /* iOS Safari gives date/time inputs an intrinsic width that ignores
+     w-full and pushes them out of two-column grids; it also centres them. */
+  input:is([type="date"], [type="time"]) {
+    min-width: 0;
+    appearance: none;
+  }
+  input:is([type="date"], [type="time"])::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
+  /* Keeps focused or scrolled-to fields clear of the fixed/sticky header. */
+  html {
+    scroll-padding-top: 6rem;
+  }
+
+  /* A field with an error (see components/forms/field-error.tsx): a heavier
+     burgundy border and a faint tint, so it stands out from valid fields. */
+  [data-invalid]:not([data-fixed])
+    :is(
+      input:not([type="checkbox"], [type="radio"], [type="hidden"]),
+      select,
+      textarea
+    ) {
+    border-color: var(--color-brand);
+    box-shadow: inset 0 0 0 1px var(--color-brand);
+    background-color: color-mix(in oklab, var(--color-brand) 4%, var(--color-page));
+  }
+  [data-invalid]:not([data-fixed])
+    :is(input[type="checkbox"], input[type="radio"]) {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+/* Edited since the failed submit (lib/use-error-focus.ts): hide the error.
+   Outside @layer base so it beats the error line's `flex` utility. */
+[data-fixed] [data-field-error] {
+  display: none;
 }
 
 body {

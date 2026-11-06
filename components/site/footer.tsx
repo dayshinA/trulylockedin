@@ -3,7 +3,7 @@ import Link from "next/link";
 import { summarizeWeeklyHours } from "@/lib/booking/hours-summary";
 import { getOpeningHours, getSiteContent } from "@/lib/data/public";
 import { SITE_NAME } from "@/lib/site";
-import { contactChannels, ContactLinks } from "./contact-links";
+import { contactChannels, ContactLinks, publicContact } from "./contact-links";
 import { Logo } from "./logo";
 import { NAV_LINKS } from "./nav-links";
 
@@ -12,7 +12,7 @@ export async function Footer() {
     getSiteContent(),
     getOpeningHours(),
   ]);
-  const { contact } = content;
+  const contact = publicContact(content);
 
   return (
     <footer className="surface-burgundy border-t border-line">

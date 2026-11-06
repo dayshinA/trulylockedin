@@ -10,15 +10,22 @@ import {
   type User,
 } from "firebase/auth";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { startMemberSession } from "@/app/(site)/account/actions";
 import { clientAuth } from "@/lib/firebase/client";
-import { memberAuthErrorMessage } from "@/lib/members/auth-errors";
+import {
+  memberAuthErrorField,
+  memberAuthErrorMessage,
+} from "@/lib/members/auth-errors";
+import { useErrorFocus } from "@/lib/use-error-focus";
 import { memberNameSchema, MIN_PASSWORD_LENGTH } from "@/lib/members/schemas";
 import type { MemberProfile } from "@/types/member";
 import { Field, FormAlert, inputClass, primaryButtonClass } from "./form-field";
 import { GoogleIcon } from "./google-icon";
+import { FormNotice } from "@/components/forms/field-error";
+
+type FieldErrors = Partial<Record<"name" | "email" | "password", string>>;
 
 type Mode = "sign-in" | "sign-up" | "reset";
 
@@ -41,14 +48,25 @@ export function MemberAuth({
   const [mode, setMode] = useState<Mode>("sign-in");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [nameError, setNameError] = useState<string | null>(null);
+  // Errors that belong to one field; shown under it, and the form jumps there.
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+  useErrorFocus(formRef, fieldErrors);
 
   function switchMode(next: Mode) {
     setMode(next);
     setError(null);
     setNotice(null);
-    setNameError(null);
+    setFieldErrors({});
+  }
+
+  // A Firebase error goes under its field when it has one.
+  function showError(err: unknown) {
+    const message = memberAuthErrorMessage(err);
+    const field = memberAuthErrorField(err);
+    if (message && field) setFieldErrors({ [field]: message });
+    else setError(message);
   }
 
   // Turns a Firebase sign-in into a member session.
@@ -91,7 +109,21 @@ export function MemberAuth({
 
     setError(null);
     setNotice(null);
-    setNameError(null);
+
+    const problems: FieldErrors = {};
+    let name: string | undefined;
+    if (mode === "sign-up") {
+      const parsed = memberNameSchema.safeParse(form.get("name") ?? "");
+      if (parsed.success) name = parsed.data;
+      else problems.name = parsed.error.issues[0].message;
+    }
+    if (!email) problems.email = "Enter your email address.";
+    if (mode !== "reset" && !password) problems.password = "Enter your password.";
+    else if (mode === "sign-up" && password.length < MIN_PASSWORD_LENGTH) {
+      problems.password = `Choose a password of at least ${MIN_PASSWORD_LENGTH} characters.`;
+    }
+    setFieldErrors(problems);
+    if (Object.keys(problems).length > 0) return;
 
     if (mode === "reset") {
       startTransition(async () => {
@@ -104,26 +136,10 @@ export function MemberAuth({
             `If there's an account for ${email}, we've emailed a link to reset your password. Check your spam folder too.`,
           );
         } catch (err) {
-          setError(memberAuthErrorMessage(err));
+          showError(err);
         }
       });
       return;
-    }
-
-    let name: string | undefined;
-    if (mode === "sign-up") {
-      const parsed = memberNameSchema.safeParse(form.get("name") ?? "");
-      if (!parsed.success) {
-        setNameError(parsed.error.issues[0].message);
-        return;
-      }
-      if (password.length < MIN_PASSWORD_LENGTH) {
-        setError(
-          `Choose a password of at least ${MIN_PASSWORD_LENGTH} characters.`,
-        );
-        return;
-      }
-      name = parsed.data;
     }
 
     startTransition(async () => {
@@ -135,7 +151,7 @@ export function MemberAuth({
             : await signInWithEmailAndPassword(auth, email, password);
         await finishSignIn(user, name);
       } catch (err) {
-        setError(memberAuthErrorMessage(err));
+        showError(err);
       }
     });
   }
@@ -164,6 +180,7 @@ export function MemberAuth({
       {/* key: each mode gets fresh inputs and the right autocomplete hints. */}
       <form
         key={mode}
+        ref={formRef}
         onSubmit={onSubmit}
         className="flex flex-col gap-5"
         noValidate
@@ -171,7 +188,7 @@ export function MemberAuth({
         {mode === "sign-up" && (
           <Field
             label="Your name"
-            error={nameError ? [nameError] : undefined}
+            error={asList(fieldErrors.name)}
           >
             <input
               name="name"
@@ -181,7 +198,7 @@ export function MemberAuth({
             />
           </Field>
         )}
-        <Field label="Email">
+        <Field label="Email" error={asList(fieldErrors.email)}>
           <input
             name="email"
             type="email"
@@ -199,6 +216,7 @@ export function MemberAuth({
                 ? `At least ${MIN_PASSWORD_LENGTH} characters`
                 : undefined
             }
+            error={asList(fieldErrors.password)}
           >
             <input
               name="password"
@@ -214,11 +232,7 @@ export function MemberAuth({
         )}
 
         {error && <FormAlert>{error}</FormAlert>}
-        {notice && (
-          <p role="status" className="text-sm text-ink">
-            {notice}
-          </p>
-        )}
+        {notice && <FormNotice tone="success">{notice}</FormNotice>}
 
         <button
           type="submit"
@@ -292,4 +306,8 @@ function ModeLink({
       {children}
     </button>
   );
+}
+
+function asList(message?: string) {
+  return message ? [message] : undefined;
 }

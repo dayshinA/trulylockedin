@@ -2,9 +2,12 @@
 
 import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
+import { FormNotice } from "@/components/forms/field-error";
 import { clientAuth } from "@/lib/firebase/client";
+import { useErrorFocus } from "@/lib/use-error-focus";
+import { Field, inputClass } from "../(dashboard)/_components/admin-form";
 import { createSession } from "./actions";
 
 function signInErrorMessage(error: unknown): string {
@@ -26,7 +29,10 @@ function signInErrorMessage(error: unknown): string {
 
 export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
+  const [missing, setMissing] = useState<{ email?: string[]; password?: string[] }>({});
   const [pending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+  useErrorFocus(formRef, missing);
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,6 +41,12 @@ export function LoginForm() {
     const password = String(form.get("password") ?? "");
 
     setError(null);
+    const empty = {
+      ...(!email && { email: ["Enter your email address."] }),
+      ...(!password && { password: ["Enter your password."] }),
+    };
+    setMissing(empty);
+    if (!email || !password) return;
     startTransition(async () => {
       const auth = clientAuth();
       let idToken: string;
@@ -58,34 +70,33 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <label className="flex flex-col gap-2 text-sm">
-        <span className="text-muted">Email</span>
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="flex flex-col gap-5"
+      noValidate
+    >
+      <Field label="Email" error={missing.email}>
         <input
           name="email"
           type="email"
           autoComplete="email"
           inputMode="email"
           required
-          className="min-h-12 rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand"
+          className={inputClass}
         />
-      </label>
-      <label className="flex flex-col gap-2 text-sm">
-        <span className="text-muted">Password</span>
+      </Field>
+      <Field label="Password" error={missing.password}>
         <input
           name="password"
           type="password"
           autoComplete="current-password"
           required
-          className="min-h-12 rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand"
+          className={inputClass}
         />
-      </label>
+      </Field>
 
-      {error && (
-        <p role="alert" className="text-sm font-semibold text-brand">
-          {error}
-        </p>
-      )}
+      {error && <FormNotice>{error}</FormNotice>}
 
       <button
         type="submit"

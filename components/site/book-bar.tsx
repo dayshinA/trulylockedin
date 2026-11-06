@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Sticky mobile call to action; hidden where it would be redundant.
+// Sticky mobile call to action; hidden where it would be redundant, or would
+// sit right under the page's own main button (Sign in, Add to basket) and look
+// like a second one.
 export function BookBar() {
   const pathname = usePathname();
   if (
     pathname.startsWith("/book") ||
-    pathname.startsWith("/shop/basket") ||
-    pathname.startsWith("/shop/order")
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/shop/")
   ) {
     return null;
   }

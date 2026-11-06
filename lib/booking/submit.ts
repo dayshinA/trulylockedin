@@ -14,9 +14,11 @@ import { quoteForBooking } from "./quote";
 import {
   BookingNotConfiguredError,
   loadAvailableSlots,
+  loadOpenDays,
   type BookingRepository,
 } from "./repository";
 import { bookingRequestSchema, slotQuerySchema } from "./request";
+import { addDays, todayLocal } from "./time";
 import { createBookingRef, createCancelToken, hashToken } from "./tokens";
 import { REJECTION_MESSAGES } from "./validate";
 
@@ -61,6 +63,44 @@ export async function findSlots(
       now,
     });
     return { ok: true, slots };
+  } catch (error) {
+    return { ok: false, error: failureMessage(error) };
+  }
+}
+
+export type FindOpenDaysResult =
+  | { ok: true; openDays: LocalDate[] }
+  | { ok: false; error: string };
+
+// Which days in the booking window have at least one free time for the
+// service (and options). The window is worked out here from the settings,
+// not taken from the browser.
+export async function findOpenDays(
+  repo: BookingRepository,
+  raw: unknown,
+  now: Date,
+): Promise<FindOpenDaysResult> {
+  const parsed = slotQuerySchema.omit({ date: true }).safeParse(raw);
+  if (!parsed.success) return { ok: false, error: GENERIC };
+
+  try {
+    const service = await getOnlineService(repo, parsed.data.serviceId);
+    if (!service) {
+      return { ok: false, error: REJECTION_MESSAGES.service_unavailable };
+    }
+    const priced = quoteForBooking(service, parsed.data.optionIds);
+    if (!priced.ok) {
+      return { ok: false, error: REJECTION_MESSAGES[priced.reason] };
+    }
+    const settings = await repo.getSettings();
+    const today = todayLocal(now, settings.timezone);
+    const openDays = await loadOpenDays(repo, {
+      from: today,
+      to: addDays(today, settings.maxAdvanceDays),
+      service: { active: true, durationMin: priced.quote.durationMin },
+      now,
+    });
+    return { ok: true, openDays };
   } catch (error) {
     return { ok: false, error: failureMessage(error) };
   }
@@ -120,13 +160,6 @@ export async function submitBooking(
     return { ok: false, error: GENERIC };
   }
 
-  if (!(await context.limiter.hit(context.clientKey, context.now.getTime()))) {
-    return {
-      ok: false,
-      error: "Too many booking attempts. Please try again in a few minutes.",
-    };
-  }
-
   const parsed = bookingRequestSchema.safeParse(raw);
   if (!parsed.success) {
     return {
@@ -136,6 +169,15 @@ export async function submitBooking(
     };
   }
   const request = parsed.data;
+
+  // Counted after validation, so fixing typos on the form doesn't use up the
+  // client's attempts; only requests that would try to book count.
+  if (!(await context.limiter.hit(context.clientKey, context.now.getTime()))) {
+    return {
+      ok: false,
+      error: "Too many booking attempts. Please try again in a few minutes.",
+    };
+  }
 
   try {
     const service = await getOnlineService(repo, request.serviceId);

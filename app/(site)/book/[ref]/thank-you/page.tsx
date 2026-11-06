@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { getMember } from "@/lib/auth/member-dal";
 import { getSiteContent } from "@/lib/data/public";
 import { ThankYou, ThankYouHero } from "./thank-you";
+import { publicContact } from "@/components/site/contact-links";
 
 export const metadata: Metadata = {
   title: "Thank you for booking",
@@ -30,7 +31,7 @@ async function ThankYouLoader({
 }: {
   params: PageProps<"/book/[ref]/thank-you">["params"];
 }) {
-  const [{ ref }, { contact, policies }, member] = await Promise.all([
+  const [{ ref }, content, member] = await Promise.all([
     params,
     getSiteContent(),
     getMember(),
@@ -38,8 +39,8 @@ async function ThankYouLoader({
   return (
     <ThankYou
       bookingRef={decodeURIComponent(ref)}
-      contact={contact}
-      bookingNotes={policies.booking}
+      contact={publicContact(content)}
+      bookingNotes={content.policies.booking}
       isMember={member !== null}
     />
   );

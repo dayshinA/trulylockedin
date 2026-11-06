@@ -16,6 +16,7 @@ import type {
   WeeklyHours,
 } from "@/types/booking";
 import { getAvailableSlots, type AvailabilityInput } from "./availability";
+import { addDays } from "./time";
 
 // Thrown when required booking data (e.g. weekly hours) has never been set up.
 export class BookingNotConfiguredError extends Error {
@@ -81,6 +82,13 @@ export interface BookingRepository {
   // Times that block availability on a date at `now`; cancelled bookings and
   // lapsed deposit holds excluded.
   getBookedTimes(date: LocalDate, now: Date): Promise<BookedTime[]>;
+  // The same for every date in [from, to], in one read; dates without
+  // bookings are missing from the map.
+  getBookedTimesBetween(
+    from: LocalDate,
+    to: LocalDate,
+    now: Date,
+  ): Promise<Map<LocalDate, BookedTime[]>>;
   getBooking(id: string): Promise<Booking | null>;
   // Inactive services are returned too; callers decide (availability rejects them).
   getService(id: string): Promise<Service | null>;
@@ -204,4 +212,43 @@ export async function loadAvailableSlots(
     settings,
     now,
   });
+}
+
+// The dates in [from, to] with at least one free start time for the service,
+// for greying out closed and fully booked days in the public calendar.
+export async function loadOpenDays(
+  repo: BookingRepository,
+  {
+    from,
+    to,
+    service,
+    now,
+  }: {
+    from: LocalDate;
+    to: LocalDate;
+    service: AvailabilityInput["service"];
+    now: Date;
+  },
+): Promise<LocalDate[]> {
+  const [settings, weekly, overrides, booked] = await Promise.all([
+    repo.getSettings(),
+    repo.getWeeklyHours(),
+    repo.listOverrides(from),
+    repo.getBookedTimesBetween(from, to, now),
+  ]);
+  const overrideFor = new Map(overrides.map((o) => [o.date, o]));
+  const open: LocalDate[] = [];
+  for (let date = from; date <= to; date = addDays(date, 1)) {
+    const slots = getAvailableSlots({
+      date,
+      service,
+      weekly,
+      override: overrideFor.get(date) ?? null,
+      bookings: booked.get(date) ?? [],
+      settings,
+      now,
+    });
+    if (slots.length > 0) open.push(date);
+  }
+  return open;
 }

@@ -100,13 +100,6 @@ export async function submitOrder(
     return { ok: false, error: GENERIC };
   }
 
-  if (!(await context.limiter.hit(context.clientKey, context.now.getTime()))) {
-    return {
-      ok: false,
-      error: "Too many orders in a short time. Please try again in a few minutes.",
-    };
-  }
-
   const parsed = orderRequestSchema.safeParse(raw);
   // The address is only read for a delivery. Both are checked together so the
   // customer sees every field error at once.
@@ -130,6 +123,15 @@ export async function submitOrder(
       fieldErrors,
     };
   }
+  // Counted after validation, so fixing typos at checkout doesn't use up the
+  // customer's attempts.
+  if (!(await context.limiter.hit(context.clientKey, context.now.getTime()))) {
+    return {
+      ok: false,
+      error: "Too many orders in a short time. Please try again in a few minutes.",
+    };
+  }
+
   const { lines, name, phone, email, notes, fulfilment } = parsed.data;
   const paymentMethod: PaymentMethod =
     fulfilment === "delivery" ? "online" : parsed.data.payment;

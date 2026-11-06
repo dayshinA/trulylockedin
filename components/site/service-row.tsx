@@ -84,7 +84,7 @@ export function ServiceRow({
               ? `/book?service=${encodeURIComponent(service.id)}`
               : "/contact"
           }
-          className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+          className="mt-3 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
         >
           {bookable ? "Book this" : "Get in touch to book"}
           <span className="sr-only">: {service.name}</span>

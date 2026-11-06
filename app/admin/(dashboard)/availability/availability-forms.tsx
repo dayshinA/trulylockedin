@@ -21,6 +21,7 @@ import {
   saveOverrideAction,
   saveWeeklyHoursAction,
 } from "./actions";
+import { FieldError } from "@/components/forms/field-error";
 
 const DAY_NAMES: Record<Weekday, string> = {
   sun: "Sunday",
@@ -112,7 +113,10 @@ function DayRow({
   const prefix = `${day}.`;
 
   return (
-    <fieldset className="flex flex-col gap-2 border-b border-line py-3">
+    <fieldset
+      data-invalid={error?.[0] ? "" : undefined}
+      className="flex flex-col gap-2 border-b border-line py-3"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <legend className="sr-only">{DAY_NAMES[day]}</legend>
         <label className="flex min-h-11 items-center gap-3 font-display text-xl font-semibold">
@@ -148,14 +152,14 @@ function DayRow({
             <button
               type="button"
               onClick={() => setSplit(true)}
-              className="min-h-11 w-fit text-sm text-brand underline-offset-4 hover:underline"
+              className="min-h-11 w-fit text-sm text-brand underline-offset-4 hover:underline pointer-coarse:underline"
             >
               + Add a break
             </button>
           )}
         </div>
       )}
-      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
+      {error?.[0] && <FieldError>{error[0]}</FieldError>}
     </fieldset>
   );
 }

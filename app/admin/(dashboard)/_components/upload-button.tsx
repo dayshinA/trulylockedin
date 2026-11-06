@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { checkUpload, formatMegabytes, uploadHint } from "@/lib/media/limits";
 import { UploadError, uploadMedia, type UploadedAsset } from "@/lib/media/upload";
 import { outlineButton, smallButton } from "./admin-ui";
+import { FieldError } from "@/components/forms/field-error";
 
 const CONCURRENT_UPLOADS = 3;
 
@@ -133,7 +134,7 @@ export function UploadButton({
               </p>
               {job.status === "failed" ? (
                 <>
-                  <p className="text-sm font-semibold text-brand">{job.error}</p>
+                  <FieldError live>{job.error}</FieldError>
                   <div className="flex flex-wrap gap-2">
                     {job.retryable && (
                       <button

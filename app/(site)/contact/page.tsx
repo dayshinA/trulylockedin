@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Reveal } from "@/components/motion/reveal";
-import { contactChannels } from "@/components/site/contact-links";
+import { contactChannels, publicContact } from "@/components/site/contact-links";
 import { PageIntro } from "@/components/site/page-intro";
 import { summarizeWeeklyHours } from "@/lib/booking/hours-summary";
 import { getOpeningHours, getSiteContent } from "@/lib/data/public";
@@ -13,10 +13,12 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const [{ contact, policies }, weekly] = await Promise.all([
+  const [content, weekly] = await Promise.all([
     getSiteContent(),
     getOpeningHours(),
   ]);
+  const { policies } = content;
+  const contact = publicContact(content);
   const channels = contactChannels(contact);
 
   return (
@@ -64,7 +66,8 @@ export default async function ContactPage() {
               </ul>
             ) : (
               <p className="mt-6 border-t border-line pt-6 text-muted">
-                Contact details coming soon.
+                Book online and we&rsquo;ll confirm by email. You can reply to
+                that email with any questions.
               </p>
             )}
             <Link
@@ -100,7 +103,7 @@ export default async function ContactPage() {
                     href={contact.mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+                    className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
                   >
                     Open in maps <span aria-hidden className="text-accent">&nbsp;→</span>
                   </a>

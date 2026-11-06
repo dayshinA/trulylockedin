@@ -1,3 +1,5 @@
+import { FieldError, FormNotice } from "@/components/forms/field-error";
+
 // Shared by the public forms (booking details, member sign-in, account details).
 export const inputClass =
   "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
@@ -16,12 +18,18 @@ export function Field({
   error?: string[];
   children: React.ReactNode;
 }) {
+  const message = error?.[0];
   return (
-    <label className="flex flex-col gap-2 text-sm">
-      <span className="text-muted">{label}</span>
+    <label
+      data-invalid={message ? "" : undefined}
+      className="flex flex-col gap-2 text-sm"
+    >
+      <span className={message ? "font-semibold text-ink" : "text-muted"}>
+        {label}
+      </span>
       {children}
-      {error?.[0] ? (
-        <span className="font-semibold text-brand">{error[0]}</span>
+      {message ? (
+        <FieldError>{message}</FieldError>
       ) : (
         hint && <span className="text-muted">{hint}</span>
       )}
@@ -30,9 +38,5 @@ export function Field({
 }
 
 export function FormAlert({ children }: { children: React.ReactNode }) {
-  return (
-    <p role="alert" className="text-sm font-semibold text-brand">
-      {children}
-    </p>
-  );
+  return <FormNotice>{children}</FormNotice>;
 }

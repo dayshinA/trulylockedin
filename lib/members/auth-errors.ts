@@ -40,3 +40,22 @@ export function memberAuthErrorMessage(error: unknown): string | null {
   }
   return "Something went wrong. Please try again.";
 }
+
+// Which field an error belongs to, so the form can show it there instead of
+// at the bottom.
+export function memberAuthErrorField(
+  error: unknown,
+): "email" | "password" | null {
+  if (!(error instanceof FirebaseError)) return null;
+  switch (error.code) {
+    case "auth/invalid-email":
+    case "auth/missing-email":
+    case "auth/email-already-in-use":
+      return "email";
+    case "auth/weak-password":
+    case "auth/password-does-not-meet-requirements":
+    case "auth/missing-password":
+      return "password";
+  }
+  return null;
+}

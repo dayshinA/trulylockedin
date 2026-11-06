@@ -8,6 +8,7 @@ import { inputClass } from "../_components/admin-form";
 import { outlineButton } from "../_components/admin-ui";
 import { discardUploadsAction } from "../_components/media-actions";
 import { UploadButton } from "../_components/upload-button";
+import { FieldError } from "@/components/forms/field-error";
 
 // The cut-out over the burgundy disc on the home page. The save action deletes the old
 // photo once replaced or removed; a photo uploaded and replaced before saving
@@ -70,7 +71,7 @@ export function HeroPortraitField({
           No portrait uploaded. The home page is showing the default portrait.
         </p>
       )}
-      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
+      {error?.[0] && <FieldError>{error[0]}</FieldError>}
       <UploadButton
         label={image ? "Replace portrait" : "Upload a portrait"}
         videos={false}

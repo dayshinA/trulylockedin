@@ -31,7 +31,7 @@ export default async function NewBookingPage() {
           Add a service first under{" "}
           <Link
             href="/admin/services"
-            className="text-brand underline-offset-4 hover:underline"
+            className="text-brand underline-offset-4 hover:underline pointer-coarse:underline"
           >
             Services
           </Link>

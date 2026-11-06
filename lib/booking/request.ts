@@ -33,6 +33,7 @@ const EMAIL_MESSAGE = "Enter a valid email address";
 export const phoneSchema = z
   .string()
   .trim()
+  .min(1, "Enter your phone number")
   .refine((value) => normalizePhone(value) !== null, PHONE_MESSAGE)
   .transform((value) => normalizePhone(value)!);
 

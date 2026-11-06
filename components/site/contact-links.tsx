@@ -1,6 +1,18 @@
 import type { SiteContent } from "@/types/cms";
 
 // Only the channels the owner has filled in are shown.
+// The contact details shown on the site. Until the owner adds a contact
+// email, the privacy notice's (already public on /privacy) stands in, so
+// there's always a way to get in touch.
+export function publicContact(
+  content: Pick<SiteContent, "contact" | "privacy">,
+): SiteContent["contact"] {
+  const { contact, privacy } = content;
+  return contact.email || !privacy.contactEmail
+    ? contact
+    : { ...contact, email: privacy.contactEmail };
+}
+
 export function contactChannels(contact: SiteContent["contact"]) {
   const channels: { label: string; value: string; href: string }[] = [];
   if (contact.phone) {

@@ -163,6 +163,20 @@ export class FirestoreBookingRepository implements BookingRepository {
     return parseBookedTimes(await this.dayRef(date).get(), now.getTime());
   }
 
+  async getBookedTimesBetween(from: LocalDate, to: LocalDate, now: Date) {
+    const result = new Map<LocalDate, BookedTime[]>();
+    if (!parseLocalDate(from) || !parseLocalDate(to)) return result;
+    const snap = await this.db
+      .collection("bookingDays")
+      .where(FieldPath.documentId(), ">=", from)
+      .where(FieldPath.documentId(), "<=", to)
+      .get();
+    for (const doc of snap.docs) {
+      result.set(doc.id, parseBookedTimes(doc, now.getTime()));
+    }
+    return result;
+  }
+
   async getService(id: string) {
     if (!docIdSchema.safeParse(id).success) return null;
     const snap = await this.db.collection("services").doc(id).get();

@@ -37,7 +37,7 @@ type State =
   | { kind: "ready"; order: OrderSummary; message?: string };
 
 const linkClass =
-  "inline-flex min-h-11 items-center text-brand decoration-accent decoration-2 underline-offset-4 hover:underline";
+  "inline-flex min-h-11 items-center text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline";
 
 export function ManageOrder({ orderRef }: { orderRef: string }) {
   const [state, setState] = useState<State>({ kind: "loading" });
@@ -112,8 +112,8 @@ export function ManageOrder({ orderRef }: { orderRef: string }) {
     return (
       <div className="mt-8 border-t border-line pt-6">
         <p className="text-lg">{state.message}</p>
-        <div className="mt-4 flex flex-wrap gap-x-6">
-          <Link href="/shop/order/find" className={linkClass}>
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Link href="/shop/order/find" className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-8 font-semibold text-on-brand transition-colors hover:bg-brand-hover">
             Find it with your reference and email
           </Link>
           <Link href="/shop" className={linkClass}>

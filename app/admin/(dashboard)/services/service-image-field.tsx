@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { outlineButton } from "../_components/admin-ui";
 import { discardUploadsAction } from "../_components/media-actions";
 import { UploadButton } from "../_components/upload-button";
+import { FieldError } from "@/components/forms/field-error";
 
 // One optional photo per service. The saved photo is deleted by the save
 // action when replaced or removed; a photo uploaded and replaced before
@@ -47,7 +48,7 @@ export function ServiceImageField({
           No photo. The service shows as text only.
         </p>
       )}
-      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
+      {error?.[0] && <FieldError>{error[0]}</FieldError>}
       {publicId && (
         <button
           type="button"

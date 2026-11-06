@@ -33,7 +33,7 @@ export default async function WorkPage() {
               </p>
               <Link
                 href="/services"
-                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
               >
                 View services <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>

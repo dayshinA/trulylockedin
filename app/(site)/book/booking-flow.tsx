@@ -1,13 +1,21 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
 import { depositFor } from "@/lib/booking/deposit-rules";
 import { quoteService } from "@/lib/booking/quote";
 import { addDays } from "@/lib/booking/time";
-import { Field, inputClass } from "@/components/site/form-field";
+import { Field, FormAlert, inputClass } from "@/components/site/form-field";
+import { useErrorFocus } from "@/lib/use-error-focus";
 import { MemberBar } from "@/components/site/member-bar";
 import { TermsConsent } from "@/components/site/terms-consent";
 import {
@@ -18,7 +26,12 @@ import {
 } from "@/lib/format";
 import type { Slot } from "@/types/booking";
 import type { MemberProfile } from "@/types/member";
-import { abandonDeposit, createBooking, getSlots } from "./actions";
+import {
+  abandonDeposit,
+  createBooking,
+  getOpenDays,
+  getSlots,
+} from "./actions";
 import {
   saveBookingAccess,
   settleBookingAccess,
@@ -46,6 +59,7 @@ type FieldErrors = Partial<Record<string, string[]>>;
 export function BookingFlow({
   catalogue,
   today,
+  firstDay,
   maxAdvanceDays,
   depositPence,
   initialServiceId,
@@ -54,6 +68,8 @@ export function BookingFlow({
 }: {
   catalogue: BookableCategory[];
   today: string;
+  // The first day that can have times (today + minimum notice).
+  firstDay: string;
   maxAdvanceDays: number;
   depositPence: number;
   initialServiceId?: string;
@@ -80,10 +96,18 @@ export function BookingFlow({
           .map((category) => category.id),
   );
   const [optionIds, setOptionIds] = useState<string[]>(initial.optionIds);
-  const [date, setDate] = useState<string | null>(startsOnTime ? today : null);
+  const [date, setDate] = useState<string | null>(
+    startsOnTime ? firstDay : null,
+  );
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [slotError, setSlotError] = useState<string | null>(null);
   const [slot, setSlot] = useState<Slot | null>(null);
+  // Days in the window with a free time for the chosen service and options;
+  // null while loading (or if it failed: then every day can be tapped).
+  const [openDays, setOpenDays] = useState<string[] | null>(null);
+  const latestDaysRequest = useRef(0);
+  // Set when the client taps a day, so a late answer doesn't move them.
+  const pickedDay = useRef(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [photos, setPhotos] = useState<ReferencePhoto[]>([]);
@@ -100,6 +124,8 @@ export function BookingFlow({
   const latestRequest = useRef(0);
   const flowRef = useRef<HTMLDivElement>(null);
   const shownStep = useRef(step);
+  const detailsRef = useRef<HTMLFormElement>(null);
+  useErrorFocus(detailsRef, fieldErrors);
 
   // The steps differ a lot in height, so leaving a long list from far down would
   // otherwise land the client in the footer.
@@ -131,23 +157,6 @@ export function BookingFlow({
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  // Arriving on the time step (see initialSelection): fetch today's times once.
-  useEffect(() => {
-    if (!initial.startsOnTime || !initial.service) return;
-    const request = ++latestRequest.current;
-    const { service: first, optionIds: firstOptions } = initial;
-    startSlots(async () => {
-      const result = await getSlots({
-        serviceId: first.id,
-        optionIds: firstOptions,
-        date: today,
-      });
-      if (request !== latestRequest.current) return;
-      if (result.ok) setSlots(result.slots);
-      else setSlotError(result.error);
-    });
-  }, [initial, today]);
-
   const lastDay = addDays(today, maxAdvanceDays);
 
   function loadSlots(
@@ -155,9 +164,17 @@ export function BookingFlow({
     forOptions: string[],
     forDate: string,
   ) {
-    const request = ++latestRequest.current;
     setSlots(null);
     setSlotError(null);
+    fetchSlots(forService, forOptions, forDate);
+  }
+
+  function fetchSlots(
+    forService: BookableService,
+    forOptions: string[],
+    forDate: string,
+  ) {
+    const request = ++latestRequest.current;
     startSlots(async () => {
       const result = await getSlots({
         serviceId: forService.id,
@@ -169,6 +186,47 @@ export function BookingFlow({
       else setSlotError(result.error);
     });
   }
+
+  // Greys out days without free times, and moves the client off a shown day
+  // that has none (unless they've tapped a day since).
+  function loadOpenDays(
+    forService: BookableService,
+    forOptions: string[],
+    shownDay: string,
+  ) {
+    setOpenDays(null);
+    fetchOpenDays(forService, forOptions, shownDay);
+  }
+
+  function fetchOpenDays(
+    forService: BookableService,
+    forOptions: string[],
+    shownDay: string,
+  ) {
+    const request = ++latestDaysRequest.current;
+    pickedDay.current = false;
+    void getOpenDays({ serviceId: forService.id, optionIds: forOptions }).then(
+      (result) => {
+        if (request !== latestDaysRequest.current || !result.ok) return;
+        setOpenDays(result.openDays);
+        const firstOpen = result.openDays[0];
+        if (!pickedDay.current && firstOpen && !result.openDays.includes(shownDay)) {
+          setDate(firstOpen);
+          loadSlots(forService, forOptions, firstOpen);
+        }
+      },
+      () => {},
+    );
+  }
+
+  // Arriving on the time step (see initialSelection): fetch the first day's
+  // times and the open days once.
+  const arrive = useEffectEvent(() => {
+    if (!initial.startsOnTime || !initial.service) return;
+    fetchSlots(initial.service, initial.optionIds, firstDay);
+    fetchOpenDays(initial.service, initial.optionIds, firstDay);
+  });
+  useEffect(() => arrive(), []);
 
   function toggleCategory(categoryId: string) {
     if (!openCategoryIds.includes(categoryId)) {
@@ -201,13 +259,15 @@ export function BookingFlow({
 
   function goToTimes(forService: BookableService, forOptions: string[]) {
     setStep("time");
-    const firstDay = date ?? today;
-    setDate(firstDay);
-    loadSlots(forService, forOptions, firstDay);
+    const day = date ?? firstDay;
+    setDate(day);
+    loadSlots(forService, forOptions, day);
+    loadOpenDays(forService, forOptions, day);
   }
 
   function chooseDate(next: string) {
     if (!service) return;
+    pickedDay.current = true;
     setDate(next);
     setSlot(null);
     loadSlots(service, optionIds, next);
@@ -336,20 +396,29 @@ export function BookingFlow({
 
             <div className="grid gap-8 md:grid-cols-[minmax(0,20rem)_1fr] md:gap-10">
               <DayGrid
-                first={today}
+                first={firstDay}
                 last={lastDay}
                 selected={date}
+                openDays={openDays}
                 onSelect={chooseDate}
               />
               <div className="flex flex-col gap-6">
-                {formError && (
-                  <p role="alert" className="text-sm font-semibold text-brand">
-                    {formError}
-                  </p>
-                )}
+                {formError && <FormAlert>{formError}</FormAlert>}
 
                 <div aria-live="polite">
-                  {loadingSlots || (!slots && !slotError) ? (
+                  {openDays?.length === 0 ? (
+                    <p className="text-muted">
+                      There are no free times for this in the next{" "}
+                      {Math.round(maxAdvanceDays / 7)} weeks. Please{" "}
+                      <Link
+                        href="/contact"
+                        className="font-semibold text-brand underline decoration-accent underline-offset-4"
+                      >
+                        get in touch
+                      </Link>{" "}
+                      and we&rsquo;ll try to fit you in.
+                    </p>
+                  ) : loadingSlots || (!slots && !slotError) ? (
                     <p className="text-muted">Finding times…</p>
                   ) : slotError ? (
                     <p className="font-semibold text-brand">{slotError}</p>
@@ -407,6 +476,7 @@ export function BookingFlow({
             {/* Keyed so a sign-in (or sign-out) mid-form refills the fields. */}
             <form
               key={member?.email ?? "guest"}
+              ref={detailsRef}
               onSubmit={submit}
               className="flex flex-col gap-5"
               noValidate
@@ -435,7 +505,11 @@ export function BookingFlow({
                   className={inputClass}
                 />
               </Field>
-              <Field label="Phone (optional)" error={fieldErrors.phone}>
+              <Field
+                label="Phone (optional)"
+                hint="Preferably a number on WhatsApp, so we have another way to reach you."
+                error={fieldErrors.phone}
+              >
                 <input
                   name="phone"
                   type="tel"
@@ -478,11 +552,7 @@ export function BookingFlow({
                 {deposit > 0 && ", including the non-refundable deposit,"}
               </TermsConsent>
 
-              {formError && (
-                <p role="alert" className="text-sm font-semibold text-brand">
-                  {formError}
-                </p>
-              )}
+              {formError && <FormAlert>{formError}</FormAlert>}
 
               {deposit > 0 && (
                 <p className="max-w-prose text-sm text-muted">
@@ -694,7 +764,7 @@ function SummaryRow({
         <button
           type="button"
           onClick={onChange}
-          className="min-h-11 shrink-0 px-2 text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+          className="min-h-11 shrink-0 px-2 text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
         >
           Change
         </button>

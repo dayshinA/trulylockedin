@@ -9,6 +9,7 @@ import {
   type UnusedUploads,
 } from "../_components/media-actions";
 import { dangerButton, outlineButton } from "../_components/admin-ui";
+import { FormNotice } from "@/components/forms/field-error";
 
 const megabytes = (bytes: number) =>
   `${(bytes / 1_000_000).toLocaleString("en-GB", { maximumFractionDigits: 1 })} MB`;
@@ -53,9 +54,7 @@ export function StorageCleanup() {
         </p>
       )}
       {found?.status === "error" && (
-        <p role="alert" className="text-sm font-semibold text-brand">
-          {found.message}
-        </p>
+        <FormNotice>{found.message}</FormNotice>
       )}
       {message && (
         <p role="status" className="text-sm text-brand">

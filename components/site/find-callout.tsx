@@ -36,7 +36,9 @@ export function FindCallout({
       </div>
       <Link
         href={href}
-        className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-brand px-8 font-semibold text-on-brand transition-colors hover:bg-brand-hover"
+        // Outline: a side task, so it doesn't compete with the page's main
+        // (filled) button.
+        className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full border border-brand bg-page px-8 font-semibold text-brand transition-colors hover:bg-brand hover:text-on-brand"
       >
         {label}
       </Link>

@@ -13,8 +13,10 @@ import {
 } from "@/lib/booking/manage";
 import { bookingRepository } from "@/lib/booking/server";
 import {
+  findOpenDays,
   findSlots,
   submitBooking,
+  type FindOpenDaysResult,
   type FindSlotsResult,
   type SubmitBookingResult,
 } from "@/lib/booking/submit";
@@ -54,6 +56,14 @@ export async function getSlots(input: {
   date: string;
 }): Promise<FindSlotsResult> {
   return findSlots(bookingRepository(), input, new Date());
+}
+
+// Days with free times, so the calendar can grey out the rest.
+export async function getOpenDays(input: {
+  serviceId: string;
+  optionIds: string[];
+}): Promise<FindOpenDaysResult> {
+  return findOpenDays(bookingRepository(), input, new Date());
 }
 
 // Guests and members use the same form. A signed-in member's bookings are

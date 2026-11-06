@@ -11,6 +11,7 @@ import { Badge, smallButton } from "./admin-ui";
 import type { FormState } from "./form-state";
 import { discardUploadsAction } from "./media-actions";
 import { UploadButton } from "./upload-button";
+import { FieldError } from "@/components/forms/field-error";
 
 // Upload, order, describe and pick a cover for a list of media (looks and
 // products). Posts the list as JSON in "media" and the cover in
@@ -111,7 +112,7 @@ export function MediaManager({
                   placeholder="Describe the photo (for screen readers)"
                   value={m.alt}
                   onChange={(e) => setAlt(m.publicId, e.target.value)}
-                  className={`${inputClass} text-sm`}
+                  className={inputClass}
                 />
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -154,7 +155,7 @@ export function MediaManager({
           ))}
         </ul>
       )}
-      {error?.[0] && <p className="text-sm font-semibold text-brand">{error[0]}</p>}
+      {error?.[0] && <FieldError>{error[0]}</FieldError>}
       <UploadButton
         label={videos ? "Upload photos or videos" : "Upload photos"}
         videos={videos}

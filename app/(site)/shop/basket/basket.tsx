@@ -3,12 +3,13 @@
 import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import { AddressBlock } from "@/components/site/address-block";
 import { CopyButton } from "@/components/site/copy-button";
 import { DetailRows } from "@/components/site/detail-rows";
-import { Field, inputClass } from "@/components/site/form-field";
+import { Field, FormAlert, inputClass } from "@/components/site/form-field";
+import { useErrorFocus } from "@/lib/use-error-focus";
 import { MemberBar } from "@/components/site/member-bar";
 import { OrderLines } from "@/components/site/order-lines";
 import { QuantityStepper } from "@/components/site/quantity-stepper";
@@ -95,6 +96,8 @@ export function Basket({
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const formRef = useRef<HTMLFormElement>(null);
+  useErrorFocus(formRef, fieldErrors);
   const [placed, setPlaced] = useState<Placed | null>(null);
   const [fulfilment, setFulfilment] = useState<Fulfilment>("collection");
   const delivering = fulfilment === "delivery";
@@ -286,7 +289,7 @@ export function Basket({
         <p className="text-lg">Your basket is empty.</p>
         <Link
           href="/shop"
-          className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
         >
           Browse the shop <span aria-hidden className="text-accent">&nbsp;→</span>
         </Link>
@@ -358,7 +361,7 @@ export function Basket({
                   <button
                     type="button"
                     onClick={() => removeFromBasket(productId)}
-                    className="min-h-11 px-2 text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+                    className="min-h-11 px-2 text-sm text-muted underline-offset-4 hover:text-ink hover:underline pointer-coarse:underline"
                   >
                     Remove
                   </button>
@@ -388,6 +391,7 @@ export function Basket({
         {/* Keyed so a sign-in (or sign-out) mid-checkout refills the fields. */}
         <form
           key={member?.email ?? "guest"}
+          ref={formRef}
           onSubmit={submit}
           className="flex flex-col gap-5"
           noValidate
@@ -446,7 +450,11 @@ export function Basket({
               className={inputClass}
             />
           </Field>
-          <Field label="Phone" error={fieldErrors.phone}>
+          <Field
+            label="Phone"
+            hint="Preferably a number on WhatsApp, so we have another way to reach you."
+            error={fieldErrors.phone}
+          >
             <input
               name="phone"
               type="tel"
@@ -538,11 +546,7 @@ export function Basket({
             , including returns,
           </TermsConsent>
 
-          {formError && (
-            <p role="alert" className="text-sm font-semibold text-brand">
-              {formError}
-            </p>
-          )}
+          {formError && <FormAlert>{formError}</FormAlert>}
           {payOnline && (
             <p className="text-sm text-muted">
               Next you&rsquo;ll pay {formatPrice(total)} on our secure payment

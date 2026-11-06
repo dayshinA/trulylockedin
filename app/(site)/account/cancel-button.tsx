@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { cancelBookingAsMember, cancelOrderAsMember } from "./actions";
+import { FormNotice } from "@/components/forms/field-error";
 
 const ACTIONS = {
   booking: {
@@ -79,9 +80,7 @@ export function CancelButton({
         </button>
       )}
       {error && (
-        <p role="alert" className="text-sm font-semibold text-brand">
-          {error}
-        </p>
+        <FormNotice>{error}</FormNotice>
       )}
     </div>
   );

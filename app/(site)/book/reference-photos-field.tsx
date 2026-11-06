@@ -13,6 +13,7 @@ import {
   MAX_UPLOAD_BYTES,
 } from "@/lib/media/limits";
 import { UploadError, uploadMedia } from "@/lib/media/upload";
+import { FieldError } from "@/components/forms/field-error";
 
 const SIGN_URL = "/api/booking/reference-photo/sign";
 
@@ -113,7 +114,10 @@ export function ReferencePhotosField({
   const message = pickError ?? error?.[0];
 
   return (
-    <fieldset className="flex flex-col gap-3 text-sm">
+    <fieldset
+      data-invalid={error?.[0] ? "" : undefined}
+      className="flex flex-col gap-3 text-sm"
+    >
       <legend className="mb-2 text-muted">Reference picture (optional)</legend>
       <p className="-mt-1 text-muted">
         Got a look in mind? Add a photo of the style you&rsquo;d like, or of
@@ -194,11 +198,7 @@ export function ReferencePhotosField({
         </button>
       )}
 
-      {message && (
-        <span role="alert" className="font-semibold text-brand">
-          {message}
-        </span>
-      )}
+      {message && <FieldError live>{message}</FieldError>}
     </fieldset>
   );
 }

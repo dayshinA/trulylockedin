@@ -1,6 +1,9 @@
 "use client";
 
-import { startTransition, useActionState } from "react";
+import { startTransition, useActionState, useRef } from "react";
+
+import { FieldError, FormNotice } from "@/components/forms/field-error";
+import { useErrorFocus } from "@/lib/use-error-focus";
 
 import { primaryButton } from "./admin-ui";
 import { IDLE, type FormState } from "./form-state";
@@ -9,13 +12,17 @@ export const inputClass =
   "min-h-12 w-full rounded-sm border border-field bg-page px-3 text-base text-ink outline-none focus:border-brand";
 
 // Submits through onSubmit rather than <form action>, so React doesn't reset
-// the fields after a failed save and the owner keeps what they typed.
+// the fields after a failed save and the owner keeps what they typed. After a
+// failed save it moves to the first field with an error (useErrorFocus).
 export function useAdminForm(
   action: (previous: FormState, formData: FormData) => Promise<FormState>,
 ) {
   const [state, dispatch, pending] = useActionState(action, IDLE);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  useErrorFocus(formRef, state);
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    formRef.current = event.currentTarget;
     const formData = new FormData(event.currentTarget);
     startTransition(() => dispatch(formData));
   }
@@ -35,12 +42,18 @@ export function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  const message = error?.[0];
   return (
-    <label className={`flex flex-col gap-2 text-sm ${className}`}>
-      <span className="text-muted">{label}</span>
+    <label
+      data-invalid={message ? "" : undefined}
+      className={`flex flex-col gap-2 text-sm ${className}`}
+    >
+      <span className={message ? "font-semibold text-ink" : "text-muted"}>
+        {label}
+      </span>
       {children}
-      {hint && !error?.[0] && <span className="text-xs text-muted">{hint}</span>}
-      {error?.[0] && <span className="font-semibold text-brand">{error[0]}</span>}
+      {hint && !message && <span className="text-xs text-muted">{hint}</span>}
+      {message && <FieldError>{message}</FieldError>}
     </label>
   );
 }
@@ -70,16 +83,9 @@ export function Checkbox({
 export function FormMessage({ state }: { state: FormState }) {
   if (!state.message) return null;
   return (
-    <p
-      role={state.status === "error" ? "alert" : "status"}
-      className={
-        state.status === "error"
-          ? "text-sm font-semibold text-brand"
-          : "text-sm text-brand"
-      }
-    >
+    <FormNotice tone={state.status === "error" ? "error" : "success"}>
       {state.message}
-    </p>
+    </FormNotice>
   );
 }
 
