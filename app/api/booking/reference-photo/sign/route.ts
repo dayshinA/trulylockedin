@@ -4,14 +4,18 @@ import { checkUpload, uploadFileSchema } from "@/lib/media/limits";
 import { createRateLimiter } from "@/lib/rate-limit";
 
 // Per-process; see lib/rate-limit.ts. Room for a few photos plus retries.
-const limiter = createRateLimiter({ limit: 15, windowMs: 10 * 60_000 });
+const limiter = createRateLimiter({
+  name: "reference-photo",
+  limit: 15,
+  windowMs: 10 * 60_000,
+});
 
 // Signs one reference photo upload from the public booking form. No sign-in:
 // the preset only accepts photos, stores them privately in their own folder,
 // and photos never attached to a booking are deleted after a day
 // (lib/booking/reference-cleanup.ts).
 export async function POST(request: Request) {
-  if (!limiter.hit(await clientKey())) {
+  if (!(await limiter.hit(await clientKey()))) {
     return Response.json(
       { error: "Too many uploads. Please try again in a few minutes." },
       { status: 429 },

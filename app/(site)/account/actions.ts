@@ -38,7 +38,11 @@ import type { MemberProfile } from "@/types/member";
 
 // Firebase rate-limits the password checks itself; this only stops a script
 // minting sessions in a loop.
-const sessionLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60_000 });
+const sessionLimiter = createRateLimiter({
+  name: "member-session",
+  limit: 10,
+  windowMs: 10 * 60_000,
+});
 
 export type MemberSignInResult =
   | { ok: true; member: MemberProfile }
@@ -51,7 +55,7 @@ export async function startMemberSession(
   idToken: unknown,
   signUpName?: unknown,
 ): Promise<MemberSignInResult> {
-  if (!sessionLimiter.hit(await clientKey())) {
+  if (!(await sessionLimiter.hit(await clientKey()))) {
     return {
       ok: false,
       error: "Too many attempts. Wait a few minutes and try again.",

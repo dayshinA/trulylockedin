@@ -120,7 +120,7 @@ export async function submitBooking(
     return { ok: false, error: GENERIC };
   }
 
-  if (!context.limiter.hit(context.clientKey, context.now.getTime())) {
+  if (!(await context.limiter.hit(context.clientKey, context.now.getTime()))) {
     return {
       ok: false,
       error: "Too many booking attempts. Please try again in a few minutes.",

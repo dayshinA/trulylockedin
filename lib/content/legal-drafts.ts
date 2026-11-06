@@ -13,7 +13,7 @@ This notice explains what personal information we collect when you use this webs
 - Payments: deposits and online payments are taken by Stripe. We see the amount, whether it was paid or refunded and Stripe's payment reference. We never see or store your card details.
 - Accounts: if you create an account, your name, email address and phone number. If you sign in with Google, we receive the name and email address on your Google account. Your bookings and orders are linked to your account.
 - Messages: what you send us by email, phone, WhatsApp or social media.
-- Technical information: if something goes wrong on the website, an error report showing what failed, the page you were on and your type of browser and device.
+- Technical information: if something goes wrong on the website, an error report showing what failed, the page you were on and your type of browser and device. To stop spam and repeated attempts, we also keep a scrambled (hashed) form of your IP address when you book, order, look up a booking or order, or sign in.
 
 ## Health information
 Notes and photos about your hair and scalp can show health information, such as hair loss or a scalp condition. You don't have to share this. If you do, we use it only to plan and carry out your appointment safely, and by sharing it you give us your explicit consent to do so. You can withdraw that consent at any time by asking us to delete it.
@@ -43,6 +43,7 @@ We may also share information when the law requires it, for example with HM Reve
 - Reference photos: deleted automatically 30 days after your appointment, or straight away if the booking is cancelled.
 - Your account: until you delete it. After that, your past bookings and orders are kept as records for the period above, but are no longer linked to an account.
 - Error reports: up to 90 days.
+- Scrambled IP addresses: deleted automatically, usually within a day.
 
 ## Your rights
 You can ask us to:

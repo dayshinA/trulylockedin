@@ -100,7 +100,7 @@ export async function submitOrder(
     return { ok: false, error: GENERIC };
   }
 
-  if (!context.limiter.hit(context.clientKey, context.now.getTime())) {
+  if (!(await context.limiter.hit(context.clientKey, context.now.getTime()))) {
     return {
       ok: false,
       error: "Too many orders in a short time. Please try again in a few minutes.",

@@ -26,9 +26,17 @@ import { siteOrigin } from "@/lib/site-origin";
 import { createDepositCheckout } from "@/lib/stripe";
 
 // Per-process; see lib/rate-limit.ts.
-const bookingLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60_000 });
+const bookingLimiter = createRateLimiter({
+  name: "booking",
+  limit: 5,
+  windowMs: 10 * 60_000,
+});
 // "Find my booking" (ref + email) guesses; the private link isn't limited.
-const lookupLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60_000 });
+const lookupLimiter = createRateLimiter({
+  name: "booking-lookup",
+  limit: 10,
+  windowMs: 10 * 60_000,
+});
 
 const TOO_MANY_LOOKUPS: ManageResult = {
   ok: false,
@@ -36,7 +44,7 @@ const TOO_MANY_LOOKUPS: ManageResult = {
 };
 
 async function lookupAllowed(input: ManageCredentials): Promise<boolean> {
-  return !("email" in input) || lookupLimiter.hit(await clientKey());
+  return !("email" in input) || (await lookupLimiter.hit(await clientKey()));
 }
 
 // Live availability: request-time, never cached.

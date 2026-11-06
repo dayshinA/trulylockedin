@@ -25,9 +25,17 @@ import { orderRepository } from "@/lib/shop/server";
 import { submitOrder, type SubmitOrderResult } from "@/lib/shop/submit";
 
 // Per-process; see lib/rate-limit.ts.
-const orderLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60_000 });
+const orderLimiter = createRateLimiter({
+  name: "order",
+  limit: 5,
+  windowMs: 10 * 60_000,
+});
 // "Find my order" (ref + email) guesses; the private link isn't limited.
-const lookupLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60_000 });
+const lookupLimiter = createRateLimiter({
+  name: "order-lookup",
+  limit: 10,
+  windowMs: 10 * 60_000,
+});
 
 const TOO_MANY_LOOKUPS: ManageOrderResult = {
   ok: false,
@@ -35,7 +43,7 @@ const TOO_MANY_LOOKUPS: ManageOrderResult = {
 };
 
 async function lookupAllowed(input: ManageOrderCredentials): Promise<boolean> {
-  return !("email" in input) || lookupLimiter.hit(await clientKey());
+  return !("email" in input) || (await lookupLimiter.hit(await clientKey()));
 }
 
 // Guests and members use the same form. A signed-in member's orders are
