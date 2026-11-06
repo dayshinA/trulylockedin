@@ -16,7 +16,7 @@ export default async function WorkPage() {
 
   return (
     <main className="flex flex-col">
-      <PageIntro title="From the chair">
+      <PageIntro title="From the *chair*">
         A look at recent locs, retwists and styles.
       </PageIntro>
       <section className="px-4 pb-24 sm:px-6">

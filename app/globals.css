@@ -16,14 +16,17 @@
   --color-brand: var(--color-burgundy); /* buttons, links, eyebrows */
   --color-brand-hover: var(--color-burgundy-deep);
   --color-on-brand: #ffffff; /* text on bg-brand */
-  /* Tertiary copper. Supports burgundy, never replaces it.
-     accent: fills, rules, arrows, large numerals (2.9:1 on white, so not
-       for text there).
-     accent-ink: copper text (prices, small labels): 5:1 on white.
-     on-accent: text on bg-accent buttons (5.3:1). */
-  --color-accent: #d08644;
-  --color-accent-hover: #dc9c62;
-  --color-accent-ink: #a35e22;
+  /* Bright orange (public site only). Supports burgundy, never replaces it.
+     accent: fills, rules, arrows, large numerals (2.4:1 on white, so never
+       text there).
+     accent-ink: orange text at any size (prices, small labels): 4.8:1.
+     highlight: orange words in big display headings only (*word* in the
+       CMS, components/site/highlight.tsx): 3.1:1, the AA large-text level.
+     on-accent: text on bg-accent buttons (6.2:1). */
+  --color-accent: #f28c28;
+  --color-accent-hover: #f5a24f;
+  --color-accent-ink: #b35a10;
+  --color-highlight: #e8701c;
   --color-on-accent: var(--color-burgundy-deep);
 }
 
@@ -46,7 +49,20 @@
   --color-brand: #ffffff;
   --color-brand-hover: #f1e2e6;
   --color-on-brand: var(--color-burgundy);
-  --color-accent-ink: #e3a874; /* 5.3:1 on burgundy */
+  --color-accent-ink: #f7a65a; /* 5.7:1 on burgundy */
+  --color-highlight: var(--color-accent); /* 4.6:1 on burgundy */
+  background-color: var(--color-page);
+  color: var(--color-ink);
+}
+
+/* A soft orange band, for "more colour" between white and burgundy
+   sections. Orange text goes one step darker to keep its contrast. */
+@utility surface-warm {
+  --color-page: #fff3e8;
+  --color-line: #f3d9c3;
+  --color-surface: #fbe5d2;
+  --color-accent-ink: #a85208; /* 5:1 on the tint */
+  --color-highlight: #d9650f; /* 3.3:1 */
   background-color: var(--color-page);
   color: var(--color-ink);
 }

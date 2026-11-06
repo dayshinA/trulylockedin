@@ -20,7 +20,7 @@ export default async function ServicesPage() {
 
   return (
     <main className="flex flex-col">
-      <PageIntro title="Services & prices">
+      <PageIntro title="Services & *prices*">
         Prices are a starting point and depend on length and density. Every
         appointment includes the time your hair needs.
       </PageIntro>

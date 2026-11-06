@@ -12,12 +12,12 @@ export { SEED_CATEGORIES, SEED_SERVICES } from "@/lib/booking/seed-catalogue";
 export const SEED_SITE_CONTENT: SiteContent = {
   hero: {
     eyebrow: "Locs · Retwists · Styling",
-    title: "Locs, crafted with intention.",
+    title: "Locs, crafted with *intention*.",
     subtitle:
       "Healthy starter locs, maintenance and styling from a loctician who takes the time to get it right.",
   },
   about: {
-    heading: "Care first, then craft",
+    heading: "*Care* first, then *craft*",
     paragraphs: [
       "Every loc journey is personal. Appointments start with your hair, your scalp and how you want to wear your locs, then we build a plan that keeps them healthy for years.",
       "From first coils to long-term maintenance, the focus is on neat parts, strong roots and styles that last between visits. No rushing, no shortcuts.",
@@ -69,7 +69,7 @@ export const SEED_SITE_CONTENT: SiteContent = {
     ],
   },
   shop: {
-    heading: "Products for healthy locs",
+    heading: "Products for *healthy locs*",
     intro:
       "The oils, sprays and accessories used in the chair, for looking after your locs between appointments.",
     notes: [

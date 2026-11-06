@@ -7,7 +7,7 @@ export const DEFAULT_BOOKING_SETTINGS: BookingSettings = {
   slotIntervalMin: 30,
   bufferMin: 15,
   minNoticeHours: 24,
-  maxAdvanceDays: 56,
+  maxAdvanceDays: 30,
   depositPence: 3000,
 };
 

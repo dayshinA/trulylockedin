@@ -23,7 +23,7 @@ export default async function ContactPage() {
 
   return (
     <main className="flex flex-col">
-      <PageIntro title="Get in touch">
+      <PageIntro title="Get in *touch*">
         The quickest way to get an appointment is to book online. For anything
         else, here&rsquo;s where to find us.
       </PageIntro>

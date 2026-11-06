@@ -27,7 +27,7 @@ export default function WorkItemPage({ params }: PageProps<"/work/[slug]">) {
       <Suspense fallback={<div className="min-h-svh" />}>
         <WorkItem params={params} />
       </Suspense>
-      <BookCta title="Love this look?" />
+      <BookCta title="Love this *look*?" />
     </main>
   );
 }

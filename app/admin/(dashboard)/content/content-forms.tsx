@@ -71,6 +71,10 @@ function useRows<T>(initial: T[], blank: T) {
   };
 }
 
+// Highlight in components/site/highlight.tsx reads the stars.
+const ORANGE_WORDS_HINT =
+  "Put *stars* around words to show them in orange, e.g. *Care* first, then *craft*.";
+
 export function HeroForm({ hero }: { hero: SiteContent["hero"] }) {
   return (
     <SectionForm action={saveHeroAction}>
@@ -87,7 +91,7 @@ export function HeroForm({ hero }: { hero: SiteContent["hero"] }) {
               className={inputClass}
             />
           </Field>
-          <Field label="Headline" error={errors.title}>
+          <Field label="Headline" hint={ORANGE_WORDS_HINT} error={errors.title}>
             <input
               name="title"
               defaultValue={hero.title}
@@ -117,7 +121,7 @@ export function AboutForm({ about }: { about: SiteContent["about"] }) {
     <SectionForm action={saveAboutAction}>
       {(errors) => (
         <>
-          <Field label="Heading" error={errors.heading}>
+          <Field label="Heading" hint={ORANGE_WORDS_HINT} error={errors.heading}>
             <input
               name="heading"
               defaultValue={about.heading}
@@ -397,7 +401,7 @@ export function ShopForm({ shop }: { shop: SiteContent["shop"] }) {
     <SectionForm action={saveShopAction}>
       {(errors) => (
         <>
-          <Field label="Heading" error={errors.heading}>
+          <Field label="Heading" hint={ORANGE_WORDS_HINT} error={errors.heading}>
             <input
               name="heading"
               defaultValue={shop.heading}

@@ -2,9 +2,10 @@
 
 import { useRef } from "react";
 
+import { Highlight } from "@/components/site/highlight";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 
-// Line-by-line headline reveal. Re-splits when fonts load or the width changes.
+// Line-by-line headline reveal. *Starred* words are orange (see Highlight). Re-splits when fonts load or the width changes.
 export function SplitHeading({
   as: Tag = "h2",
   className,
@@ -49,7 +50,7 @@ export function SplitHeading({
 
   return (
     <Tag ref={ref} className={className}>
-      {children}
+      <Highlight text={children} />
     </Tag>
   );
 }

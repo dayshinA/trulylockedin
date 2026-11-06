@@ -49,77 +49,13 @@ export default async function Home() {
         portrait={hero.portrait}
       />
 
-      {featuredWork.length > 0 && (
-        <section className="px-4 pb-20 sm:px-6 sm:pb-28">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
-              <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
-                Recent looks
-              </SplitHeading>
-              <Link
-                href="/work"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
-              >
-                See all work <span aria-hidden className="text-accent">&nbsp;→</span>
-              </Link>
-            </div>
-            <div className="mt-10">
-              <WorkGallery items={featuredWork} />
-            </div>
-          </div>
-        </section>
-      )}
-
-      {featured.length > 0 && (
-        <section className="px-4 pb-20 sm:px-6 sm:pb-28">
-          <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[2fr_3fr] md:gap-16">
-            <div>
-              <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
-                Services &amp; prices
-              </SplitHeading>
-              <Reveal>
-                <p className="mt-4 max-w-sm text-muted">
-                  Tap a service to see available times.
-                </p>
-                <Link
-                  href="/services"
-                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
-                >
-                  All services and prices <span aria-hidden className="text-accent">&nbsp;→</span>
-                </Link>
-              </Reveal>
-            </div>
-            <Reveal>
-              <ServiceList services={featured} />
-            </Reveal>
-          </div>
-        </section>
-      )}
-
-      {featuredProducts.length > 0 && (
-        <section className="px-4 pb-20 sm:px-6 sm:pb-28">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
-              <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
-                Care between visits
-              </SplitHeading>
-              <Link
-                href="/shop"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
-              >
-                Shop all products <span aria-hidden className="text-accent">&nbsp;→</span>
-              </Link>
-            </div>
-            <div className="mt-10">
-              <ProductGrid products={featuredProducts} filter={false} />
-            </div>
-          </div>
-        </section>
-      )}
-
       <section className="surface-burgundy px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:gap-16">
           <div>
+            <p className="mb-4 flex items-center gap-3 text-xs font-semibold tracking-[0.3em] text-accent-ink uppercase">
+              <span aria-hidden className="h-0.5 w-8 bg-accent" />
+              Who we are
+            </p>
             <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
               {about.heading}
             </SplitHeading>
@@ -156,11 +92,80 @@ export default async function Home() {
         </div>
       </section>
 
-      {leadQuote && (
+
+      {featuredWork.length > 0 && (
         <section className="px-4 py-20 sm:px-6 sm:py-28">
           <div className="mx-auto max-w-6xl">
+            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+              <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
+                Recent *looks*
+              </SplitHeading>
+              <Link
+                href="/work"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
+              >
+                See all work <span aria-hidden className="text-accent">&nbsp;→</span>
+              </Link>
+            </div>
+            <div className="mt-10">
+              <WorkGallery items={featuredWork} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {featured.length > 0 && (
+        <section className="surface-warm px-4 py-20 sm:px-6 sm:py-28">
+          <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[2fr_3fr] md:gap-16">
+            <div>
+              <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
+                {"Services & *prices*"}
+              </SplitHeading>
+              <Reveal>
+                <p className="mt-4 max-w-sm text-muted">
+                  Tap a service to see available times.
+                </p>
+                <Link
+                  href="/services"
+                  className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
+                >
+                  All services and prices <span aria-hidden className="text-accent">&nbsp;→</span>
+                </Link>
+              </Reveal>
+            </div>
+            <Reveal>
+              <ServiceList services={featured} />
+            </Reveal>
+          </div>
+        </section>
+      )}
+
+      {featuredProducts.length > 0 && (
+        <section className="px-4 py-20 sm:px-6 sm:py-28">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
+              <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
+                Care *between visits*
+              </SplitHeading>
+              <Link
+                href="/shop"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
+              >
+                Shop all products <span aria-hidden className="text-accent">&nbsp;→</span>
+              </Link>
+            </div>
+            <div className="mt-10">
+              <ProductGrid products={featuredProducts} filter={false} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {leadQuote && (
+        <section className="surface-warm px-4 py-20 sm:px-6 sm:py-28">
+          <div className="mx-auto max-w-6xl">
             <SplitHeading className="font-display text-4xl font-semibold sm:text-6xl">
-              From the chair
+              From the *chair*
             </SplitHeading>
             <Reveal>
               <figure className="mt-10 max-w-4xl">

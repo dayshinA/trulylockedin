@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRef } from "react";
 
 import { CldImage } from "@/components/media/cld";
+import { Highlight } from "@/components/site/highlight";
 import { gsap, useGSAP } from "@/lib/gsap";
 import placeholder from "@/public/hero/portrait.webp";
 import type { ContentImage } from "@/types/cms";
@@ -201,7 +202,7 @@ export function HomeHero({
 
         <div className="hero-before absolute bottom-24 left-4 z-20 max-w-[78vw] md:bottom-12 md:left-[3vw] md:max-w-[30vw]">
           <h1 className="font-masthead text-3xl leading-tight text-ink italic md:text-[clamp(1.875rem,3.2vw,3.25rem)]">
-            {title}
+            <Highlight text={title} />
           </h1>
           {eyebrow && (
             <p className="mt-3 flex items-center gap-3 text-xs tracking-[0.3em] text-accent-ink uppercase">
