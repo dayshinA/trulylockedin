@@ -3,30 +3,30 @@
 /* Brand: burgundy and white. Components use the role tokens below, never the
    raw colours, so they work on white and inside .surface-burgundy alike. */
 @theme static {
-  --color-burgundy: #6e1a2c;
-  --color-burgundy-deep: #4a0f1d;
+  --color-burgundy: #4b0f1f;
+  --color-burgundy-deep: #320914;
 
-  --color-page: #ffffff;
+  --color-page: #fff3e8; /* warm cream, the whole site (was white) */
   --color-ink: var(--color-burgundy-deep); /* main text */
   --color-muted: #75505a; /* secondary text */
   --color-faint: #b39ca2; /* disabled text only: below AA on purpose */
-  --color-line: #ecdfe2; /* hairline dividers */
+  --color-line: #f3d9c3; /* hairline dividers */
   --color-field: #a5828c; /* form field borders: 3:1 on white */
-  --color-surface: #f8f1f3; /* image placeholders */
+  --color-surface: #fbe5d2; /* image placeholders */
   --color-brand: var(--color-burgundy); /* buttons, links, eyebrows */
   --color-brand-hover: var(--color-burgundy-deep);
   --color-on-brand: #ffffff; /* text on bg-brand */
   /* Bright orange (public site only). Supports burgundy, never replaces it.
      accent: fills, rules, arrows, large numerals (2.4:1 on white, so never
        text there).
-     accent-ink: orange text at any size (prices, small labels): 4.8:1.
+     accent-ink: orange text at any size (prices, small labels): 5:1.
      highlight: orange words in big display headings only (*word* in the
-       CMS, components/site/highlight.tsx): 3.1:1, the AA large-text level.
+       CMS, components/site/highlight.tsx): 3.3:1, the AA large-text level.
      on-accent: text on bg-accent buttons (6.2:1). */
   --color-accent: #f28c28;
   --color-accent-hover: #f5a24f;
-  --color-accent-ink: #b35a10;
-  --color-highlight: #e8701c;
+  --color-accent-ink: #a85208; /* 5:1 on the cream page */
+  --color-highlight: #d9650f; /* 3.3:1 */
   --color-on-accent: var(--color-burgundy-deep);
 }
 
@@ -55,8 +55,9 @@
   color: var(--color-ink);
 }
 
-/* A soft orange band, for "more colour" between white and burgundy
-   sections. Orange text goes one step darker to keep its contrast. */
+/* The warm cream is now the default page, so this matches the root tokens.
+   Kept so a section inside surface-burgundy (or a future white page) can
+   switch back to the cream palette. */
 @utility surface-warm {
   --color-page: #fff3e8;
   --color-line: #f3d9c3;

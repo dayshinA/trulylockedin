@@ -113,6 +113,10 @@ export type Service = {
   // Online bookings pay settings.depositPence through Stripe before they're
   // confirmed. Missing on older docs means true.
   depositRequired: boolean;
+  // The price is set at the appointment, after seeing the hair. The online
+  // deposit is still taken (not capped by a price) and comes off that final
+  // price; base, premium and option prices are ignored. Missing means false.
+  priceOnTheDay: boolean;
   imagePublicId?: string;
   active: boolean;
   onlineBooking: boolean;
@@ -134,6 +138,8 @@ export type BookedService = {
   options?: ServiceOption[];
   // Booked at a premium time at the service's premium price.
   premium?: true;
+  // The price is set at the appointment; priceFromPence is 0.
+  priceOnTheDay?: true;
 };
 
 export type BookingStatus =

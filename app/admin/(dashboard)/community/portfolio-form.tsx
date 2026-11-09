@@ -36,7 +36,7 @@ export function PortfolioForm({
       {!item && (
         <Field
           label="Web address"
-          hint="The end of this look's link on the website (…/work/your-text). Leave it empty and one is made from the title. It can't be changed later."
+          hint="The end of this look's link on the website (…/community/your-text). Leave it empty and one is made from the title. It can't be changed later."
           error={errors.slug}
         >
           <input name="slug" autoCapitalize="none" className={inputClass} />
@@ -45,7 +45,7 @@ export function PortfolioForm({
       <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
         <Field
           label="Style / category"
-          hint="Visitors can filter the Work page by this. Pick an existing one from the list to keep them grouped."
+          hint="Visitors can filter the Community page by this. Pick an existing one from the list to keep them grouped."
           error={errors.category}
         >
           <input

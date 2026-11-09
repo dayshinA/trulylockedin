@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { formatDuration, formatPriceFrom } from "@/lib/format";
+import { formatDuration, formatServicePrice } from "@/lib/format";
 import type { Service } from "@/types/booking";
 
 // A salon price list: one row per service, each row books that service.
@@ -29,7 +29,7 @@ export function ServiceList({ services }: { services: Service[] }) {
               </span>
             </span>
             <span className="shrink-0 font-semibold text-accent-ink">
-              {formatPriceFrom(service.priceFromPence)}
+              {formatServicePrice(service)}
             </span>
           </Link>
         </li>

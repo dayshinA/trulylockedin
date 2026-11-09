@@ -17,7 +17,7 @@ import { PageGuide } from "../_components/help";
 import { StorageCleanup } from "./storage-cleanup";
 
 export const metadata: Metadata = {
-  title: "Portfolio",
+  title: "Community",
 };
 
 export default async function PortfolioAdminPage() {
@@ -27,9 +27,9 @@ export default async function PortfolioAdminPage() {
   return (
     <div className="flex max-w-3xl flex-col gap-8">
       <PageHeader
-        title="Portfolio"
+        title="Community"
         actions={
-          <Link href="/admin/portfolio/new" className={primaryButton}>
+          <Link href="/admin/community/new" className={primaryButton}>
             Add look
           </Link>
         }
@@ -39,7 +39,7 @@ export default async function PortfolioAdminPage() {
         id="portfolio"
       >
           <li>
-            Your portfolio is the <strong>Work</strong> gallery on the
+            This is the <strong>Community</strong> gallery on the
             website. Each &ldquo;look&rdquo; is one client&rsquo;s style, with
             as many photos or short videos as you like.
           </li>
@@ -64,7 +64,7 @@ export default async function PortfolioAdminPage() {
 
       {items.length === 0 ? (
         <p className="text-muted">
-          No looks yet. Add your first one to start the Work gallery.
+          No looks yet. Add your first one to start the Community gallery.
         </p>
       ) : (
         <ul className={rowList}>
@@ -73,7 +73,7 @@ export default async function PortfolioAdminPage() {
             return (
               <li key={item.id}>
                 <Link
-                  href={`/admin/portfolio/${item.id}`}
+                  href={`/admin/community/${item.id}`}
                   className={rowLink}
                 >
                   {cover ? (

@@ -114,10 +114,12 @@ export default async function BookingDetailPage({
                 ],
               ] as [string, string][])
             : []),
-          [
-            "Price from",
-            `${formatPrice(booking.service.priceFromPence)}${booking.service.premium ? " (premium time)" : ""}`,
-          ],
+          booking.service.priceOnTheDay
+            ? ["Price", "Set on the day: you price it at the appointment"]
+            : [
+                "Price from",
+                `${formatPrice(booking.service.priceFromPence)}${booking.service.premium ? " (premium time)" : ""}`,
+              ],
           ...depositRows(booking, settings.timezone),
           [
             "Reference",
@@ -323,7 +325,9 @@ function depositRows(
         ["Deposit", `${amount} paid online${at(deposit.paidAt)}`],
         [
           "Left to pay",
-          `${formatPrice(Math.max(0, booking.service.priceFromPence - deposit.amountPence))} from`,
+          booking.service.priceOnTheDay
+            ? `Your price on the day, minus the ${amount} deposit`
+            : `${formatPrice(Math.max(0, booking.service.priceFromPence - deposit.amountPence))} from`,
         ],
       ];
     case "refunded":

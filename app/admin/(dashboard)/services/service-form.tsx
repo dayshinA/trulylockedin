@@ -119,6 +119,13 @@ export function ServiceForm({
         </Field>
       </div>
 
+      <Checkbox
+        name="priceOnTheDay"
+        label="Price set on the day"
+        hint="For a service you can only price once you've seen the client's hair. The website shows “Priced on the day” instead of a price, and the base, premium and option prices above are ignored. The client still pays the deposit online (keep “Takes a deposit” ticked below), and it comes off the price you set at the appointment."
+        defaultChecked={service?.priceOnTheDay ?? false}
+      />
+
       <Field
         label="Note beside the price (optional)"
         hint="Small text next to the price, e.g. Up to 100 locs, or Per strand"

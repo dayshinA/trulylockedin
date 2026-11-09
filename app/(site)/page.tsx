@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CldImage } from "@/components/media/cld";
 import { Reveal } from "@/components/motion/reveal";
 import { SplitHeading } from "@/components/motion/split-heading";
 import { BookCta } from "@/components/site/book-cta";
@@ -101,10 +102,10 @@ export default async function Home() {
                 Recent *looks*
               </SplitHeading>
               <Link
-                href="/work"
+                href="/community"
                 className="inline-flex min-h-11 items-center text-sm font-semibold text-brand decoration-accent decoration-2 underline-offset-4 hover:underline pointer-coarse:underline"
               >
-                See all work <span aria-hidden className="text-accent">&nbsp;→</span>
+                See the community <span aria-hidden className="text-accent">&nbsp;→</span>
               </Link>
             </div>
             <div className="mt-10">
@@ -131,6 +132,16 @@ export default async function Home() {
                 >
                   All services and prices <span aria-hidden className="text-accent">&nbsp;→</span>
                 </Link>
+                {content.home.servicesImage && (
+                  <CldImage
+                    src={content.home.servicesImage.publicId}
+                    width={content.home.servicesImage.width}
+                    height={content.home.servicesImage.height}
+                    alt={content.home.servicesImage.alt}
+                    sizes="(min-width: 768px) 24rem, 100vw"
+                    className="mt-8 h-auto w-full max-w-sm rounded-sm object-cover"
+                  />
+                )}
               </Reveal>
             </div>
             <Reveal>

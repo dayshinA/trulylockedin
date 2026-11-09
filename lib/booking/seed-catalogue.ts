@@ -180,6 +180,7 @@ export const SEED_SERVICES: Service[] = CATALOGUE.flatMap(
       ...(s.priceLabel ? { priceLabel: s.priceLabel } : {}),
       durationMin: s.durationMinutes,
       depositRequired: s.depositRequired ?? true,
+      priceOnTheDay: false,
       active: true,
       onlineBooking: true,
       optionsSelectionMode: s.optionsSelectionMode,

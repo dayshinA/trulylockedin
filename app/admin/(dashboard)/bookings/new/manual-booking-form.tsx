@@ -4,8 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { OptionPicker } from "@/components/site/option-picker";
-import { quoteService } from "@/lib/booking/quote";
-import { formatDuration, formatPrice, formatPriceFrom } from "@/lib/format";
+import { hasPremiumPrice, quoteService } from "@/lib/booking/quote";
+import {
+  formatDuration,
+  formatPrice,
+  formatPriceFrom,
+  PRICED_ON_THE_DAY,
+} from "@/lib/format";
 import type { Service, ServiceCategory } from "@/types/booking";
 import {
   Field,
@@ -29,6 +34,7 @@ type ManualService = Pick<
   | "options"
   | "optionsSelectionMode"
   | "optionsRequired"
+  | "priceOnTheDay"
 >;
 
 export function ManualBookingForm({
@@ -50,7 +56,7 @@ export function ManualBookingForm({
   // null = follow the start time; set once the owner ticks or unticks it.
   const [premiumChoice, setPremiumChoice] = useState<boolean | null>(null);
   const service = services.find((s) => s.id === serviceId);
-  const hasPremium = service?.premiumPricePence !== undefined;
+  const hasPremium = !!service && hasPremiumPrice(service);
   // Late evening, or the small hours after a late night (the owner types the
   // real date, so 01:00 belongs to the night before).
   const lateStart =
@@ -115,7 +121,9 @@ export function ManualBookingForm({
       {priced?.ok && (
         <p className="-mt-2 text-sm text-muted" aria-live="polite">
           {formatDuration(priced.quote.durationMin)} ·{" "}
-          {formatPriceFrom(priced.quote.pricePence)}
+          {service?.priceOnTheDay
+            ? PRICED_ON_THE_DAY
+            : formatPriceFrom(priced.quote.pricePence)}
         </p>
       )}
 

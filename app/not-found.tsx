@@ -12,11 +12,11 @@ export default function NotFound() {
       standalone
       code="404"
       title="This page isn't here"
-      text="The link may be old or mistyped. Have a look at the work, or book your next appointment."
+      text="The link may be old or mistyped. Have a look at our community, or book your next appointment."
       actions={[
         { label: "Book an appointment", href: "/book" },
         { label: "Home", href: "/" },
-        { label: "See the work", href: "/work" },
+        { label: "See the community", href: "/community" },
       ]}
     />
   );

@@ -11,7 +11,7 @@ import { getPublishedWork, getWork } from "@/lib/data/public";
 
 export async function generateMetadata({
   params,
-}: PageProps<"/work/[slug]">): Promise<Metadata> {
+}: PageProps<"/community/[slug]">): Promise<Metadata> {
   const item = await getWork((await params).slug);
   return item
     ? {
@@ -21,7 +21,7 @@ export async function generateMetadata({
     : { title: "Page not found" };
 }
 
-export default function WorkItemPage({ params }: PageProps<"/work/[slug]">) {
+export default function WorkItemPage({ params }: PageProps<"/community/[slug]">) {
   return (
     <main className="flex flex-col">
       <Suspense fallback={<div className="min-h-svh" />}>
@@ -35,7 +35,7 @@ export default function WorkItemPage({ params }: PageProps<"/work/[slug]">) {
 async function WorkItem({
   params,
 }: {
-  params: PageProps<"/work/[slug]">["params"];
+  params: PageProps<"/community/[slug]">["params"];
 }) {
   const { slug } = await params;
   const item = await getWork(slug);
@@ -50,11 +50,11 @@ async function WorkItem({
       <section className="px-4 pt-32 pb-12 sm:px-6 sm:pt-40">
         <div className="mx-auto max-w-6xl">
           <Link
-            href="/work"
+            href="/community"
             className="-ml-1 inline-flex min-h-11 items-center gap-2 px-1 text-sm font-semibold text-brand transition-colors hover:text-brand-hover"
           >
             <ArrowLeft aria-hidden className="size-4" />
-            Back to work
+            Back to community
           </Link>
           <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[1.05] font-semibold sm:text-7xl">
             {item.title}

@@ -27,11 +27,14 @@ type Priced = Pick<
   | "options"
   | "optionsSelectionMode"
   | "optionsRequired"
+  | "priceOnTheDay"
 >;
 
 // Final price = base + selected options. Final duration likewise. At a premium
-// time the base is the service's premium price, if it has one. The owner may
-// leave a required option unpicked: their manual booking form has no picker.
+// time the base is the service's premium price, if it has one. A service
+// priced on the day has no price here (0): options still set the duration.
+// The owner may leave a required option unpicked: their manual booking form
+// has no picker.
 export function quoteService(
   service: Priced,
   optionIds: readonly string[],
@@ -51,16 +54,21 @@ export function quoteService(
     return { ok: false, reason: "options_required" };
   }
 
-  const premium = premiumTime && service.premiumPricePence !== undefined;
+  const premium =
+    premiumTime &&
+    !service.priceOnTheDay &&
+    service.premiumPricePence !== undefined;
   return {
     ok: true,
     quote: {
       options,
       premium,
-      pricePence: options.reduce(
-        (total, option) => total + option.pricePence,
-        premium ? service.premiumPricePence! : service.priceFromPence,
-      ),
+      pricePence: service.priceOnTheDay
+        ? 0
+        : options.reduce(
+            (total, option) => total + option.pricePence,
+            premium ? service.premiumPricePence! : service.priceFromPence,
+          ),
       durationMin:
         service.durationMin === null
           ? null
@@ -70,6 +78,13 @@ export function quoteService(
             ),
     },
   };
+}
+
+// Whether premium start times change this service's price.
+export function hasPremiumPrice(
+  service: Pick<Service, "premiumPricePence" | "priceOnTheDay">,
+): boolean {
+  return !service.priceOnTheDay && service.premiumPricePence !== undefined;
 }
 
 export type BookingQuoteResult =

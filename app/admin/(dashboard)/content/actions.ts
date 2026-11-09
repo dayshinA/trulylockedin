@@ -9,6 +9,7 @@ import {
   parseAboutForm,
   parseContactForm,
   parseHeroForm,
+  parseHomeForm,
   parsePoliciesForm,
   parsePrivacyForm,
   parseSeoForm,
@@ -45,6 +46,19 @@ export async function saveHeroAction(_previous: FormState, formData: FormData) {
   await verifyAdmin();
   const before = (await readSiteContent(adminDb())).content.hero.portrait;
   const result = await save("hero", parseHeroForm(formData));
+  if (result.status === "success" && before) {
+    const inUse = await referencedPublicIds();
+    if (!inUse.has(before.publicId)) {
+      await destroyMedia([{ publicId: before.publicId, type: "image" }]);
+    }
+  }
+  return result;
+}
+
+export async function saveHomeAction(_previous: FormState, formData: FormData) {
+  await verifyAdmin();
+  const before = (await readSiteContent(adminDb())).content.home.servicesImage;
+  const result = await save("home", parseHomeForm(formData));
   if (result.status === "success" && before) {
     const inUse = await referencedPublicIds();
     if (!inUse.has(before.publicId)) {

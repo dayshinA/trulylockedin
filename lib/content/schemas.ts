@@ -30,6 +30,10 @@ export const heroSchema = z.object({
   portrait: contentImageSchema.optional(),
 });
 
+export const homeSchema = z.object({
+  servicesImage: contentImageSchema.optional(),
+});
+
 export const highlightSchema = z.object({
   title: line(80, "Enter a title"),
   body: line(300, "Enter a sentence or two"),
@@ -108,6 +112,7 @@ export const privacySchema = termsSchema.extend({
 
 export const SECTION_SCHEMAS = {
   hero: heroSchema,
+  home: homeSchema,
   about: aboutSchema,
   testimonials: testimonialsSchema,
   contact: contactSchema,

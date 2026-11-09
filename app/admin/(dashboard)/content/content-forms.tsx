@@ -20,10 +20,12 @@ import {
   savePoliciesAction,
   savePrivacyAction,
   saveSeoAction,
+  saveHomeAction,
   saveShopAction,
   saveTermsAction,
   saveTestimonialsAction,
 } from "./actions";
+import { ContentImageField } from "./content-image-field";
 import { HeroPortraitField } from "./hero-portrait-field";
 import { FieldError } from "@/components/forms/field-error";
 
@@ -112,6 +114,23 @@ export function HeroForm({ hero }: { hero: SiteContent["hero"] }) {
           </Field>
           <HeroPortraitField initial={hero.portrait} error={errors.portrait} />
         </>
+      )}
+    </SectionForm>
+  );
+}
+
+export function HomeForm({ home }: { home: SiteContent["home"] }) {
+  return (
+    <SectionForm action={saveHomeAction}>
+      {(errors) => (
+        <ContentImageField
+          name="servicesImage"
+          legend="Photo beside “Services & prices”"
+          initial={home.servicesImage}
+          error={errors.servicesImage}
+          emptyText="No photo: the Services & prices section shows just the price list."
+          help="Sits under the “All services and prices” link on the home page (beside the price list on a computer, above it on a phone). A portrait-shaped photo of a finished style works best."
+        />
       )}
     </SectionForm>
   );

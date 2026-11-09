@@ -17,7 +17,7 @@ export default async function NewLookPage() {
   return (
     <div className="flex max-w-xl flex-col gap-10">
       <PageHeader
-        back={{ href: "/admin/portfolio", label: "Portfolio" }}
+        back={{ href: "/admin/community", label: "Community" }}
         title="Add look"
       />
       <PortfolioForm categories={categories} />

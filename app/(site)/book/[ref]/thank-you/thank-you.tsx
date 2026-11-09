@@ -180,7 +180,7 @@ export function ThankYou({
                 While you wait
               </p>
               <div className="flex flex-wrap gap-x-8">
-                <ArrowLink href="/work">Browse recent looks</ArrowLink>
+                <ArrowLink href="/community">Browse recent looks</ArrowLink>
                 <ArrowLink href="/shop">Shop aftercare</ArrowLink>
                 <ArrowLink href="/">Back to home</ArrowLink>
               </div>
@@ -289,9 +289,11 @@ function Ticket({
               {booking.start}–{booking.end}
             </TicketItem>
             <TicketItem label="Length">{formatDuration(minutes)}</TicketItem>
-            <TicketItem label="Price from">
+            <TicketItem label={booking.priceOnTheDay ? "Price" : "Price from"}>
               <span className="text-accent-ink">
-                {formatPrice(booking.pricePence)}
+                {booking.priceOnTheDay
+                  ? "Set at your appointment"
+                  : formatPrice(booking.pricePence)}
               </span>
               {booking.premium && (
                 <span className="block text-xs text-muted">Premium time</span>

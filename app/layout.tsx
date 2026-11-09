@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    "Loc installation, retwists, maintenance and styling. View the work and book your appointment online.",
+    "Loc installation, retwists, maintenance and styling. See our community and book your appointment online.",
   openGraph: { siteName: SITE_NAME, locale: "en_GB", type: "website" },
   twitter: { card: "summary_large_image" },
 };

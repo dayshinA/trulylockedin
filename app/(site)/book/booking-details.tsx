@@ -64,10 +64,12 @@ export function BookingDetails({
               "When",
               `${formatLocalDate(booking.date, "long")}, ${booking.start}–${booking.end}`,
             ],
-            [
-              "Price from",
-              `${formatPrice(booking.pricePence)}${booking.premium ? " (premium time)" : ""}`,
-            ],
+            booking.priceOnTheDay
+              ? ["Price", "Set at your appointment"]
+              : [
+                  "Price from",
+                  `${formatPrice(booking.pricePence)}${booking.premium ? " (premium time)" : ""}`,
+                ],
             ...depositRows(booking),
             ...(booking.notes
               ? ([
@@ -148,17 +150,22 @@ export function BookingDetails({
 
 // Deposit and what's left to pay, once a deposit was taken.
 export function depositRows(
-  booking: Pick<BookingSummary, "deposit" | "pricePence">,
+  booking: Pick<BookingSummary, "deposit" | "pricePence" | "priceOnTheDay">,
 ): [string, string][] {
   const deposit = booking.deposit;
   if (!deposit || deposit.status === "awaiting") return [];
   if (deposit.status === "paid") {
     return [
       ["Deposit paid", formatPrice(deposit.amountPence)],
-      [
-        "Left to pay",
-        `${formatPrice(Math.max(0, booking.pricePence - deposit.amountPence))} from, at your appointment`,
-      ],
+      booking.priceOnTheDay
+        ? [
+            "Left to pay",
+            "The rest, at your appointment: the deposit comes off the price set on the day",
+          ]
+        : [
+            "Left to pay",
+            `${formatPrice(Math.max(0, booking.pricePence - deposit.amountPence))} from, at your appointment`,
+          ],
     ];
   }
   return [

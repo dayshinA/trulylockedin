@@ -17,6 +17,7 @@ export const SEED_SITE_CONTENT: SiteContent = {
     subtitle:
       "Healthy starter locs, maintenance and styling from a loctician who takes the time to get it right.",
   },
+  home: {},
   about: {
     heading: "*Care* first, then *craft*",
     paragraphs: [
@@ -80,7 +81,7 @@ export const SEED_SITE_CONTENT: SiteContent = {
   },
   seo: {
     description:
-      "Loc installation, retwists, maintenance and styling. View the work and book your appointment online.",
+      "Loc installation, retwists, maintenance and styling. See our community and book your appointment online.",
   },
   privacy: {
     controllerName: "",

@@ -35,7 +35,7 @@ export function WorkGallery({ items }: { items: PortfolioItem[] }) {
                   : "border-transparent text-muted hover:text-ink"
               }`}
             >
-              {c ?? "All work"}
+              {c ?? "All"}
             </button>
           ))}
         </div>
@@ -46,7 +46,7 @@ export function WorkGallery({ items }: { items: PortfolioItem[] }) {
           const cover = coverOf(item);
           return (
             <li key={item.id} className="mb-8 break-inside-avoid">
-              <Link href={`/work/${item.id}`} className="group block">
+              <Link href={`/community/${item.id}`} className="group block">
                 <span className="block overflow-hidden rounded-sm bg-surface">
                   {cover ? (
                     <WorkThumb

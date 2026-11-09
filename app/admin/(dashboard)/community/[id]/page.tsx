@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default async function EditLookPage({
   params,
-}: PageProps<"/admin/portfolio/[id]">) {
+}: PageProps<"/admin/community/[id]">) {
   await verifyAdmin();
   const { id } = await params;
   const repo = portfolioRepository();
@@ -30,11 +30,11 @@ export default async function EditLookPage({
   return (
     <div className="flex max-w-xl flex-col gap-10">
       <PageHeader
-        back={{ href: "/admin/portfolio", label: "Portfolio" }}
+        back={{ href: "/admin/community", label: "Community" }}
         title={item.title}
         actions={
           item.published && (
-            <Link href={`/work/${item.id}`} target="_blank" className={textLink}>
+            <Link href={`/community/${item.id}`} target="_blank" className={textLink}>
               View on site ↗
             </Link>
           )

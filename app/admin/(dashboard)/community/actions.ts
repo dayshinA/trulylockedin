@@ -49,7 +49,7 @@ export async function savePortfolioAction(
     await destroyMedia(removedMedia(result.previous.media, parsed.value.media));
   }
   updateTag(PUBLIC_TAGS.portfolio);
-  if (!existingId) redirect("/admin/portfolio");
+  if (!existingId) redirect("/admin/community");
   refresh();
   return { status: "success", message: "Saved." };
 }
@@ -62,5 +62,5 @@ export async function deletePortfolioAction(formData: FormData) {
     if (deleted) await destroyMedia(deleted.media);
   }
   updateTag(PUBLIC_TAGS.portfolio);
-  redirect("/admin/portfolio");
+  redirect("/admin/community");
 }

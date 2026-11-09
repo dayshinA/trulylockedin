@@ -30,6 +30,11 @@ export type SiteContent = {
     // Without one the home page uses the bundled placeholder.
     portrait?: ContentImage;
   };
+  // Photos placed in fixed spots on the home page. Empty spots are hidden.
+  home: {
+    // Beside the price list in "Services & prices".
+    servicesImage?: ContentImage;
+  };
   about: {
     heading: string;
     // First paragraph doubles as the home-page teaser.

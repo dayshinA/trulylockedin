@@ -10,13 +10,16 @@ export const CHECKOUT_MINUTES = 31;
 export const HOLD_MARGIN_MINUTES = 10;
 
 // What an online booking pays up front: the deposit, never more than the
-// appointment itself. 0 = no payment step.
+// appointment itself. A service priced on the day has no price yet, so it
+// pays the full deposit, which comes off the price set at the appointment.
+// 0 = no payment step.
 export function depositFor(
   depositPence: number,
-  service: { depositRequired: boolean },
+  service: { depositRequired: boolean; priceOnTheDay?: boolean },
   pricePence: number,
 ): number {
   if (!service.depositRequired || depositPence <= 0) return 0;
+  if (service.priceOnTheDay) return depositPence;
   return Math.min(depositPence, pricePence);
 }
 

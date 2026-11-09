@@ -78,6 +78,7 @@ async function BookingLoader({
                   priceLabel: s.priceLabel,
                   depositNote: s.depositNote,
                   depositRequired: s.depositRequired,
+                  priceOnTheDay: s.priceOnTheDay,
                   options: s.options,
                   optionsSelectionMode: s.optionsSelectionMode,
                   optionsRequired: s.optionsRequired,

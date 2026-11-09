@@ -17,8 +17,8 @@ import {
 // The one layout every email uses. Email clients can't read the site's CSS
 // variables, so the brand colours are repeated here as hex (they mirror the
 // role tokens in app/globals.css).
-const BRAND = "#6E1A2C";
-const INK = "#4A0F1D";
+const BRAND = "#4B0F1F";
+const INK = "#320914";
 const MUTED = "#75505A";
 const LINE = "#ECDFE2";
 const SURFACE = "#F8F1F3";

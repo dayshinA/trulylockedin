@@ -75,6 +75,7 @@ export default async function NewBookingPage() {
             options: s.options,
             optionsSelectionMode: s.optionsSelectionMode,
             optionsRequired: s.optionsRequired,
+            priceOnTheDay: s.priceOnTheDay,
           }))}
           today={todayLocal(new Date(), settings.timezone)}
           premiumFrom={settings.premiumFrom}

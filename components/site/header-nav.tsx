@@ -26,7 +26,7 @@ export function NavItems({ pathname }: { pathname: string | null }) {
 }
 
 // usePathname suspends while prerendering pages with unknown params (e.g.
-// /work/[slug]), so the header wraps this in Suspense with <NavItems> as the
+// /community/[slug]), so the header wraps this in Suspense with <NavItems> as the
 // fallback.
 export function CurrentNavItems() {
   return <NavItems pathname={usePathname()} />;

@@ -10,6 +10,7 @@ import {
   AboutForm,
   ContactForm,
   HeroForm,
+  HomeForm,
   PoliciesForm,
   PrivacyForm,
   SeoForm,
@@ -32,6 +33,12 @@ const SECTIONS: {
     id: "hero",
     title: "Home page banner",
     where: "The first thing visitors see: the big headline and portrait at the top of the home page.",
+    href: "/",
+  },
+  {
+    id: "home",
+    title: "Home page photos",
+    where: "Photos in fixed spots further down the home page, such as the one beside “Services & prices”.",
     href: "/",
   },
   {
@@ -91,6 +98,7 @@ export default async function ContentPage() {
 
   const forms: Record<SiteSection, React.ReactNode> = {
     hero: <HeroForm hero={content.hero} />,
+    home: <HomeForm home={content.home} />,
     about: <AboutForm about={content.about} />,
     testimonials: <TestimonialsForm testimonials={content.testimonials} />,
     contact: <ContactForm contact={content.contact} />,

@@ -333,6 +333,7 @@ export class FirestoreBookingRepository implements BookingRepository {
           priceFromPence: quote.pricePence,
           options: quote.options.length > 0 ? quote.options : undefined,
           premium: quote.premium ? true : undefined,
+          priceOnTheDay: input.service.priceOnTheDay ? true : undefined,
         },
         date: result.slot.date,
         start: result.slot.start,

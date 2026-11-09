@@ -7,6 +7,7 @@ import {
   aboutSchema,
   contactSchema,
   heroSchema,
+  homeSchema,
   highlightSchema,
   policiesSchema,
   privacySchema,
@@ -113,6 +114,24 @@ export function parseHeroForm(form: Form): Parsed<SiteContent["hero"]> {
           }
         : undefined,
     }),
+  );
+}
+
+// A ContentImageField posted under `name` (empty = no photo).
+function imageField(form: Form, name: string) {
+  return text(form, `${name}PublicId`)
+    ? {
+        publicId: text(form, `${name}PublicId`),
+        width: Number(text(form, `${name}Width`)),
+        height: Number(text(form, `${name}Height`)),
+        alt: text(form, `${name}Alt`),
+      }
+    : undefined;
+}
+
+export function parseHomeForm(form: Form): Parsed<SiteContent["home"]> {
+  return result(
+    homeSchema.safeParse({ servicesImage: imageField(form, "servicesImage") }),
   );
 }
 

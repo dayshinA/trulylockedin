@@ -7,7 +7,7 @@ import { WorkGallery } from "@/components/site/work-gallery";
 import { getPublishedWork } from "@/lib/data/public";
 
 export const metadata: Metadata = {
-  title: "Work",
+  title: "Community",
   description: "Starter locs, retwists, styles and extensions from the chair.",
 };
 
@@ -26,7 +26,7 @@ export default async function WorkPage() {
           ) : (
             <div className="border-t border-line pt-8">
               <p className="font-display text-3xl font-semibold">
-                New work coming soon
+                New looks coming soon
               </p>
               <p className="mt-2 text-muted">
                 In the meantime, see the services or book a consultation.

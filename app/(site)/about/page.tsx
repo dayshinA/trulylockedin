@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { Reveal } from "@/components/motion/reveal";
 import { BookCta } from "@/components/site/book-cta";
+import { InkLogo } from "@/components/site/logo";
 import { PageIntro } from "@/components/site/page-intro";
 import { getSiteContent } from "@/lib/data/public";
 
@@ -19,20 +20,21 @@ export default async function AboutPage() {
 
       <section className="px-4 pb-24 sm:px-6">
         <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[1.2fr_1fr] md:gap-16">
-          {rest.length > 0 && (
-            <Reveal
-              stagger
-              className="flex max-w-prose flex-col gap-5 text-lg text-muted"
-            >
-              {rest.map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-              ))}
-            </Reveal>
-          )}
+          <div className="flex flex-col justify-between gap-12">
+            {rest.length > 0 && (
+              <Reveal
+                stagger
+                className="flex max-w-prose flex-col gap-5 text-lg text-muted"
+              >
+                {rest.map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </Reveal>
+            )}
+            <InkLogo className="w-60 sm:w-80 lg:w-[26rem]" />
+          </div>
           {about.highlights.length > 0 && (
-            <Reveal
-              className={rest.length > 0 ? "" : "md:col-span-2 md:max-w-3xl"}
-            >
+            <Reveal>
               <ol className="border-t border-line">
                 {about.highlights.map((h, i) => (
                   <li

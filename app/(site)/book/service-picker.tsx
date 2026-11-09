@@ -5,8 +5,13 @@ import { useEffect } from "react";
 
 import { OptionPicker } from "@/components/site/option-picker";
 import { depositFor } from "@/lib/booking/deposit-rules";
-import { quoteService } from "@/lib/booking/quote";
-import { formatDuration, formatPrice, formatPriceFrom } from "@/lib/format";
+import { hasPremiumPrice, quoteService } from "@/lib/booking/quote";
+import {
+  formatDuration,
+  formatPrice,
+  formatPriceFrom,
+  formatServicePrice,
+} from "@/lib/format";
 import type { Service } from "@/types/booking";
 
 export type BookableService = Pick<
@@ -19,6 +24,7 @@ export type BookableService = Pick<
   | "priceLabel"
   | "depositNote"
   | "depositRequired"
+  | "priceOnTheDay"
   | "options"
   | "optionsSelectionMode"
   | "optionsRequired"
@@ -48,7 +54,7 @@ export function totalsOf(
     : {
         options: [],
         premium: false,
-        pricePence: service.priceFromPence,
+        pricePence: service.priceOnTheDay ? 0 : service.priceFromPence,
         durationMin: service.durationMin,
       };
 }
@@ -202,7 +208,7 @@ function ServiceItem({
             </span>
           </span>
           <span className="shrink-0 text-sm font-semibold text-accent-ink">
-            {formatPriceFrom(service.priceFromPence)}
+            {formatServicePrice(service)}
           </span>
           <Chevron open={open} small />
         </button>
@@ -215,11 +221,17 @@ function ServiceItem({
           {service.priceLabel && (
             <p className="max-w-prose text-sm text-muted">{service.priceLabel}</p>
           )}
-          {premiumFrom && service.premiumPricePence !== undefined && (
+          {service.priceOnTheDay && (
+            <p className="max-w-prose text-sm text-ink">
+              The price is set at your appointment, once we&apos;ve seen your
+              hair.
+            </p>
+          )}
+          {premiumFrom && hasPremiumPrice(service) && (
             <p className="max-w-prose text-sm text-ink">
               <span className="font-semibold">Premium time</span> (from{" "}
               {premiumFrom}, or after midnight):{" "}
-              {formatPriceFrom(service.premiumPricePence)}
+              {formatPriceFrom(service.premiumPricePence!)}
             </p>
           )}
           {deposit > 0 && (
@@ -240,8 +252,9 @@ function ServiceItem({
                 onChange={onOptionsChange}
               />
               <p className="mt-4 text-sm text-muted" aria-live="polite">
-                Your total: {formatDuration(totals.durationMin)} ·{" "}
-                {formatPriceFrom(totals.pricePence)}
+                Your total: {formatDuration(totals.durationMin)}
+                {!service.priceOnTheDay &&
+                  ` · ${formatPriceFrom(totals.pricePence)}`}
               </p>
             </div>
           )}

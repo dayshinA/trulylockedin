@@ -117,10 +117,12 @@ function appointmentRows(b: Booking): EmailRow[] {
     { label: "Service", value: serviceLines(b) },
     { label: "When", value: when(b) },
     { label: "Length", value: formatDuration(b.service.durationMin) },
-    {
-      label: "Price from",
-      value: `${formatPrice(b.service.priceFromPence)}${b.service.premium ? " (premium time)" : ""}`,
-    },
+    b.service.priceOnTheDay
+      ? { label: "Price", value: "Set at the appointment" }
+      : {
+          label: "Price from",
+          value: `${formatPrice(b.service.priceFromPence)}${b.service.premium ? " (premium time)" : ""}`,
+        },
     ...depositRows(b),
   ];
 }
@@ -137,7 +139,9 @@ function depositRows(b: Booking): EmailRow[] {
       { label: "Deposit paid", value: amount },
       {
         label: "Left to pay",
-        value: `${formatPrice(Math.max(0, b.service.priceFromPence - deposit.amountPence))} from, at the appointment`,
+        value: b.service.priceOnTheDay
+          ? "The rest, at the appointment: the deposit comes off the price set on the day"
+          : `${formatPrice(Math.max(0, b.service.priceFromPence - deposit.amountPence))} from, at the appointment`,
       },
     ];
   }

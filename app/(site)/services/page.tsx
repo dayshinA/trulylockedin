@@ -1,4 +1,5 @@
 import { Moon } from "lucide-react";
+import { hasPremiumPrice } from "@/lib/booking/quote";
 import type { Metadata } from "next";
 
 import { Reveal } from "@/components/motion/reveal";
@@ -20,7 +21,7 @@ export default async function ServicesPage() {
   ]);
   const hasPremium =
     premiumFrom !== null &&
-    groups.some((g) => g.services.some((s) => s.premiumPricePence !== undefined));
+    groups.some((g) => g.services.some(hasPremiumPrice));
 
   return (
     <main className="flex flex-col">

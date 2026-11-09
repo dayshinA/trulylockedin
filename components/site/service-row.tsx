@@ -7,7 +7,9 @@ import {
   formatOptionPrice,
   formatPrice,
   formatPriceFrom,
+  formatServicePrice,
 } from "@/lib/format";
+import { hasPremiumPrice } from "@/lib/booking/quote";
 import type { Service } from "@/types/booking";
 
 // One entry of the full price list on /services.
@@ -47,17 +49,23 @@ export function ServiceRow({
             {service.name}
           </h3>
           <p className="shrink-0 font-semibold text-accent-ink">
-            {formatPriceFrom(service.priceFromPence)}
+            {formatServicePrice(service)}
           </p>
         </div>
         <p className="mt-1 text-sm text-muted">
           {formatDuration(service.durationMin)}
           {service.priceLabel && ` · ${service.priceLabel}`}
         </p>
-        {premiumFrom && service.premiumPricePence !== undefined && (
+        {service.priceOnTheDay && (
+          <p className="mt-1 text-sm text-ink">
+            The price is set at your appointment, once we&apos;ve seen your
+            hair.
+          </p>
+        )}
+        {premiumFrom && hasPremiumPrice(service) && (
           <p className="mt-1 text-sm text-ink">
             <span className="font-semibold">Premium time</span> (from{" "}
-            {premiumFrom}): {formatPriceFrom(service.premiumPricePence)}
+            {premiumFrom}): {formatPriceFrom(service.premiumPricePence!)}
           </p>
         )}
         {service.description && (
@@ -66,6 +74,7 @@ export function ServiceRow({
         {deposit > 0 && (
           <p className="mt-2 text-sm text-ink">
             {formatPrice(deposit)} deposit to book online
+            {service.priceOnTheDay && ", taken off the final price"}
           </p>
         )}
         {service.depositNote && (
@@ -80,7 +89,10 @@ export function ServiceRow({
               >
                 <span className="text-ink">{option.name}</span>
                 <span className="shrink-0 text-muted">
-                  {formatOptionPrice(option.pricePence)}
+                  {service.priceOnTheDay
+                    ? option.durationMin !== null &&
+                      `+${formatDuration(option.durationMin)}`
+                    : formatOptionPrice(option.pricePence)}
                 </span>
               </li>
             ))}

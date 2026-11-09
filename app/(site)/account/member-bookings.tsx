@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { STATUS_LABELS } from "@/lib/booking/labels";
 import type { MemberBooking } from "@/lib/booking/member-bookings";
-import { formatLocalDate, formatPrice } from "@/lib/format";
+import { formatLocalDate, formatPrice, PRICED_ON_THE_DAY } from "@/lib/format";
 import { CancelButton } from "./cancel-button";
 
 export function BookingRow({
@@ -27,10 +27,16 @@ export function BookingRow({
             ` · ${booking.optionNames.join(", ")}`}
         </p>
         <p className="text-sm">
-          From{" "}
-          <span className="text-accent-ink">
-            {formatPrice(booking.pricePence)}
-          </span>
+          {booking.priceOnTheDay ? (
+            <span className="text-accent-ink">{PRICED_ON_THE_DAY}</span>
+          ) : (
+            <>
+              From{" "}
+              <span className="text-accent-ink">
+                {formatPrice(booking.pricePence)}
+              </span>
+            </>
+          )}
           {booking.premium && " (premium time)"}{" "}
           {booking.depositPaidPence &&
             ` · ${formatPrice(booking.depositPaidPence)} deposit paid`}{" "}

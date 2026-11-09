@@ -12,7 +12,7 @@ import {
 } from "react";
 
 import { depositFor } from "@/lib/booking/deposit-rules";
-import { quoteService } from "@/lib/booking/quote";
+import { hasPremiumPrice, quoteService } from "@/lib/booking/quote";
 import { addDays } from "@/lib/booking/time";
 import { Field, FormAlert, inputClass } from "@/components/site/form-field";
 import { useErrorFocus } from "@/lib/use-error-focus";
@@ -24,6 +24,7 @@ import {
   formatLocalDate,
   formatPrice,
   formatPriceFrom,
+  PRICED_ON_THE_DAY,
 } from "@/lib/format";
 import type { Slot } from "@/types/booking";
 import type { MemberProfile } from "@/types/member";
@@ -438,7 +439,7 @@ export function BookingFlow({
                   ) : (
                     <div className="flex flex-col gap-6">
                       {premiumFrom &&
-                        service.premiumPricePence !== undefined &&
+                        hasPremiumPrice(service) &&
                         slots?.some((s) => s.premium) && (
                           <PremiumNotice
                             variant="explain"
@@ -464,14 +465,14 @@ export function BookingFlow({
                                 }}
                                 className={`group flex min-h-12 flex-col items-center justify-center rounded-sm border border-field py-1 text-ink transition-colors hover:border-brand hover:bg-brand hover:text-on-brand ${
                                   s.premium &&
-                                  service.premiumPricePence !== undefined
+                                  hasPremiumPrice(service)
                                     ? "surface-warm"
                                     : ""
                                 }`}
                               >
                                 {s.start}
                                 {s.premium &&
-                                  service.premiumPricePence !== undefined && (
+                                  hasPremiumPrice(service) && (
                                     <>
                                       <span className="text-[0.625rem] leading-tight font-semibold tracking-wide text-accent-ink uppercase group-hover:text-on-brand">
                                         Premium
@@ -610,7 +611,9 @@ export function BookingFlow({
                   </span>{" "}
                   on our secure payment page (card, Apple Pay or Google Pay).
                   Paying it confirms your booking, and it comes off the price
-                  on the day. It&rsquo;s non-refundable if you cancel or
+                  {service?.priceOnTheDay
+                    ? " we set at your appointment."
+                    : " on the day."} It&rsquo;s non-refundable if you cancel or
                   don&rsquo;t come, but we&rsquo;ll refund it if we have to
                   cancel.
                 </p>
@@ -781,7 +784,9 @@ function Summary({
           <SummaryRow label="Price" onChange={null}>
             <span className="block text-ink">
               <span className="font-semibold">
-                {formatPriceFrom(totals.pricePence)}
+                {service.priceOnTheDay
+                  ? PRICED_ON_THE_DAY
+                  : formatPriceFrom(totals.pricePence)}
               </span>
               {totals.premium && usual && (
                 <>
@@ -800,6 +805,7 @@ function Summary({
             {deposit > 0 && (
               <span className="block text-muted">
                 {formatPrice(deposit)} deposit to book
+                {service.priceOnTheDay && ", taken off the final price"}
               </span>
             )}
           </SummaryRow>

@@ -32,6 +32,8 @@ export type BookingSummary = {
   pricePence: number;
   // Booked at a premium time at the premium price.
   premium: boolean;
+  // The price is set at the appointment; pricePence is 0.
+  priceOnTheDay: boolean;
   notes?: string;
   deposit?: { amountPence: number; status: DepositStatus };
   canCancel: boolean;
@@ -114,6 +116,7 @@ export async function findManagedBooking(
       clientName: booking.client.name,
       pricePence: booking.service.priceFromPence,
       premium: booking.service.premium === true,
+      priceOnTheDay: booking.service.priceOnTheDay === true,
       notes: booking.client.notes,
       deposit: booking.deposit && {
         amountPence: booking.deposit.amountPence,

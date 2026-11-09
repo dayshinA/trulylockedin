@@ -18,6 +18,8 @@ export type MemberBooking = {
   optionNames: string[];
   pricePence: number;
   premium: boolean;
+  // The price is set at the appointment; pricePence is 0.
+  priceOnTheDay: boolean;
   date: LocalDate;
   start: LocalTime;
   end: LocalTime;
@@ -71,6 +73,7 @@ export async function loadMemberBookings(
       optionNames: (booking.service.options ?? []).map((o) => o.name),
       pricePence: booking.service.priceFromPence,
       premium: booking.service.premium === true,
+      priceOnTheDay: booking.service.priceOnTheDay === true,
       date: booking.date,
       start: booking.start,
       end: booking.end,

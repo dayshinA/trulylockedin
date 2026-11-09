@@ -3,7 +3,12 @@ import Link from "next/link";
 
 import { verifyAdmin } from "@/lib/auth/dal";
 import { bookingRepository } from "@/lib/booking/server";
-import { formatDuration, formatPriceFrom } from "@/lib/format";
+import { hasPremiumPrice } from "@/lib/booking/quote";
+import {
+  formatDuration,
+  formatPriceFrom,
+  formatServicePrice,
+} from "@/lib/format";
 import {
   Badge,
   outlineButton,
@@ -105,9 +110,9 @@ export default async function ServicesPage() {
                           <span className={rowTitle}>{service.name}</span>
                           <span className="block text-sm text-muted">
                             {formatDuration(service.durationMin)} ·{" "}
-                            {formatPriceFrom(service.priceFromPence)}
-                            {service.premiumPricePence !== undefined &&
-                              ` · premium ${formatPriceFrom(service.premiumPricePence).toLowerCase()}`}
+                            {formatServicePrice(service)}
+                            {hasPremiumPrice(service) &&
+                              ` · premium ${formatPriceFrom(service.premiumPricePence!).toLowerCase()}`}
                             {service.options.length > 0 &&
                               ` · ${service.options.length} option${service.options.length === 1 ? "" : "s"}`}
                           </span>

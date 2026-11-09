@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Reveal } from "@/components/motion/reveal";
+import { ChannelIcon } from "@/components/site/channel-icon";
 import { contactChannels, publicContact } from "@/components/site/contact-links";
 import { PageIntro } from "@/components/site/page-intro";
 import { summarizeWeeklyHours } from "@/lib/booking/hours-summary";
@@ -36,7 +37,7 @@ export default async function ContactPage() {
             </h2>
             {channels.length > 0 ? (
               <ul className="mt-6 border-t border-line">
-                {channels.map(({ label, value, href }) => {
+                {channels.map(({ channel, label, value, href }) => {
                   const external = href.startsWith("http");
                   return (
                     <li key={label} className="border-b border-line">
@@ -45,12 +46,16 @@ export default async function ContactPage() {
                         {...(external
                           ? { target: "_blank", rel: "noopener noreferrer" }
                           : {})}
-                        className="group flex min-h-11 items-baseline gap-4 py-5"
+                        className="group flex min-h-11 items-center gap-4 py-5"
                       >
-                        <span className="w-24 shrink-0 text-sm text-muted">
-                          {label}
+                        <span className="flex shrink-0 items-center gap-3 text-sm text-muted sm:w-36">
+                          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent/15 text-accent-ink transition-colors group-hover:bg-accent group-hover:text-on-accent">
+                            <ChannelIcon channel={channel} className="size-5" />
+                          </span>
+                          <span className="hidden sm:inline">{label}</span>
+                          <span className="sr-only sm:hidden">{label}</span>
                         </span>
-                        <span className="min-w-0 flex-1 font-display [overflow-wrap:anywhere] text-2xl font-semibold text-ink transition-colors group-hover:text-brand-hover sm:text-3xl">
+                        <span className="min-w-0 flex-1 font-display [overflow-wrap:anywhere] text-2xl font-semibold text-accent-ink transition-colors group-hover:text-brand-hover sm:text-3xl">
                           {value}
                         </span>
                         {external && (
@@ -83,7 +88,7 @@ export default async function ContactPage() {
               <h2 className="font-display text-3xl font-semibold">Studio</h2>
               <div className="mt-6 border-t border-line pt-5">
                 {contact.addressLines.length > 0 ? (
-                  <address className="text-lg not-italic">
+                  <address className="text-lg text-accent-ink not-italic">
                     {contact.addressLines.map((line) => (
                       <span key={line} className="block">
                         {line}
@@ -91,7 +96,7 @@ export default async function ContactPage() {
                     ))}
                   </address>
                 ) : (
-                  <p className="text-lg">
+                  <p className="text-lg text-accent-ink">
                     {contact.area}
                     <span className="mt-1 block text-base text-muted">
                       The full address is shared when you book.
@@ -123,7 +128,13 @@ export default async function ContactPage() {
                       className="flex justify-between gap-6 border-b border-line py-3"
                     >
                       <dt className="text-muted">{days}</dt>
-                      <dd className={hours === "Closed" ? "text-muted" : ""}>
+                      <dd
+                        className={
+                          hours === "Closed"
+                            ? "text-muted"
+                            : "font-semibold text-accent-ink"
+                        }
+                      >
                         {hours}
                       </dd>
                     </div>

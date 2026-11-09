@@ -15,7 +15,7 @@ export const contentType = "image/png";
 // Read at module level (as in the Next docs): an async file read inside the
 // handler stops it being prerendered under Cache Components.
 const logo = await readFile(
-  join(process.cwd(), "public/brand/logo-white.png"),
+  join(process.cwd(), "public/brand/logo-final.png"),
   "base64",
 );
 
@@ -30,14 +30,14 @@ export default function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#6E1A2C",
-          border: "18px solid #4A0F1D",
+          background: "#4B0F1F",
+          border: "18px solid #320914",
         }}
       >
         <img
           src={`data:image/png;base64,${logo}`}
           width={560}
-          height={211}
+          height={256}
           alt=""
         />
         <div

@@ -66,6 +66,19 @@ export function formatPriceFrom(pence: number) {
   return pence === 0 ? "Free" : `From ${formatPrice(pence)}`;
 }
 
+// A service priced at the appointment (Service.priceOnTheDay) has no price
+// online; this replaces "From £X" for it, and the price on its bookings.
+export const PRICED_ON_THE_DAY = "Priced on the day";
+
+export function formatServicePrice(service: {
+  priceFromPence: number;
+  priceOnTheDay?: boolean;
+}) {
+  return service.priceOnTheDay
+    ? PRICED_ON_THE_DAY
+    : formatPriceFrom(service.priceFromPence);
+}
+
 // What an option adds to the base price.
 export function formatOptionPrice(pence: number) {
   return pence === 0 ? "No extra cost" : `+${formatPrice(pence)}`;

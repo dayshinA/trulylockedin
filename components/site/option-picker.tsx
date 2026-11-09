@@ -3,6 +3,7 @@ import type { Service } from "@/types/booking";
 
 // Radios or tick boxes for a service's options, used by the public booking flow
 // and the owner's manual booking form. `owner` may leave a required choice empty.
+// A service priced on the day shows only what each option adds to the time.
 export function OptionPicker({
   service,
   selected,
@@ -15,7 +16,7 @@ export function OptionPicker({
   service: Pick<
     Service,
     "options" | "optionsSelectionMode" | "optionsRequired"
-  >;
+  > & { priceOnTheDay?: boolean };
   selected: string[];
   onChange: (optionIds: string[]) => void;
   owner?: boolean;
@@ -74,7 +75,7 @@ export function OptionPicker({
               />
               <span className="min-w-0 flex-1 text-ink">{option.name}</span>
               <span className="shrink-0 text-right text-muted">
-                {formatOptionPrice(option.pricePence)}
+                {!service.priceOnTheDay && formatOptionPrice(option.pricePence)}
                 {option.durationMin !== null && (
                   <span className="block text-xs">
                     +{formatDuration(option.durationMin)}

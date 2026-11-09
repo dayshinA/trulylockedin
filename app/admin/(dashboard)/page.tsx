@@ -67,7 +67,7 @@ export default async function AdminOverviewPage() {
           <li>
             Use the menu to change your <strong>opening hours</strong>{" "}
             (Availability), <strong>prices</strong> (Services), your{" "}
-            <strong>photos</strong> (Portfolio) and the{" "}
+            <strong>photos</strong> (Community) and the{" "}
             <strong>words on the website</strong> (Content). Each page has its
             own help box like this one.
           </li>

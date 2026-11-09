@@ -28,6 +28,20 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The "Work" gallery was renamed "Community" (2026-11-09); old links and
+  // shared posts keep working.
+  async redirects() {
+    return [
+      { source: "/work", destination: "/community", permanent: true },
+      { source: "/work/:slug", destination: "/community/:slug", permanent: true },
+      { source: "/admin/portfolio", destination: "/admin/community", permanent: true },
+      {
+        source: "/admin/portfolio/:path*",
+        destination: "/admin/community/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

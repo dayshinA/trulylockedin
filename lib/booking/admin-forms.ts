@@ -213,6 +213,7 @@ export function parseServiceForm(
     active: checked(form, "active"),
     onlineBooking: checked(form, "onlineBooking"),
     depositRequired: checked(form, "depositRequired"),
+    priceOnTheDay: checked(form, "priceOnTheDay"),
     optionsSelectionMode:
       text(form, "optionsSelectionMode") === "single" ? "single" : "multiple",
     optionsRequired,

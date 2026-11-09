@@ -11,10 +11,10 @@ export default function SiteNotFound() {
     <StatusPage
       code="404"
       title="This page isn't here"
-      text="It may have been taken down or moved. Have a look at the latest work, or book your next appointment."
+      text="It may have been taken down or moved. Have a look at our community, or book your next appointment."
       actions={[
         { label: "Book an appointment", href: "/book" },
-        { label: "See the work", href: "/work" },
+        { label: "See the community", href: "/community" },
         { label: "Shop", href: "/shop" },
       ]}
     />
