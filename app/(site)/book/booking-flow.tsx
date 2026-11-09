@@ -11,7 +11,11 @@ import {
   useTransition,
 } from "react";
 
-import { depositFor } from "@/lib/booking/deposit-rules";
+import {
+  CASH_NOTE,
+  depositFor,
+  owesOnTheDay,
+} from "@/lib/booking/deposit-rules";
 import { hasPremiumPrice, quoteService } from "@/lib/booking/quote";
 import { addDays } from "@/lib/booking/time";
 import { Field, FormAlert, inputClass } from "@/components/site/form-field";
@@ -618,6 +622,20 @@ export function BookingFlow({
                   cancel.
                 </p>
               )}
+
+              {service &&
+                owesOnTheDay(
+                  {
+                    priceOnTheDay: service.priceOnTheDay,
+                    pricePence: totalsOf(service, optionIds, !!slot?.premium)
+                      .pricePence,
+                  },
+                  deposit,
+                ) && (
+                  <p className="max-w-prose text-sm font-semibold text-ink">
+                    {CASH_NOTE}
+                  </p>
+                )}
 
               <button
                 type="submit"

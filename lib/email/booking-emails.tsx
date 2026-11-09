@@ -2,12 +2,15 @@ import "server-only";
 
 import { after } from "next/server";
 
+import { CASH_NOTE, owesOnTheDay } from "@/lib/booking/deposit-rules";
 import { STATUS_LABELS } from "@/lib/booking/labels";
 import { bookingRepository } from "@/lib/booking/server";
 import { getSiteContent } from "@/lib/data/public";
 import { formatDuration, formatLocalDate, formatPrice } from "@/lib/format";
+import { SITE_NAME } from "@/lib/site";
 import type { Booking } from "@/types/booking";
 import type { SiteContent } from "@/types/cms";
+import { inviteAttachment, inviteFor } from "./calendar-invite";
 import { MessageEmail, type EmailRow } from "./message-email";
 import { emailConfig, sendEmail, type EmailConfig } from "./send";
 
@@ -58,21 +61,23 @@ async function sendBookingEmails(event: BookingEmailEvent) {
 
   switch (event.kind) {
     case "created":
-      if (booking.source !== "admin") await toOwner(config, booking, "new");
+      if (booking.source !== "admin") {
+        await toOwner(config, booking, "new", content);
+      }
       await toClient(config, booking, content, {
         href: `${config.siteUrl}/book/${booking.ref}#t=${event.cancelToken}`,
         label: "Manage my booking",
       });
       return;
     case "deposit_paid":
-      await toOwner(config, booking, "new");
+      await toOwner(config, booking, "new", content);
       await toClient(config, booking, content, {
         href: `${config.siteUrl}/book/find`,
         label: "View my booking",
       });
       return;
     case "late_payment_refunded":
-      await toOwner(config, booking, "late_payment");
+      await toOwner(config, booking, "late_payment", content);
       await toClient(
         config,
         booking,
@@ -82,7 +87,7 @@ async function sendBookingEmails(event: BookingEmailEvent) {
       );
       return;
     case "client_cancelled":
-      await toOwner(config, booking, "cancelled");
+      await toOwner(config, booking, "cancelled", content);
       await toClient(
         config,
         booking,
@@ -93,6 +98,8 @@ async function sendBookingEmails(event: BookingEmailEvent) {
       return;
     case "status_changed":
       if (booking.status === "cancelled") {
+        // Takes it out of the owner's own calendar too.
+        await toOwner(config, booking, "cancelled_by_salon", content);
         await toClient(config, booking, content, {
           href: `${config.siteUrl}/book/find`,
           label: "View my booking",
@@ -172,10 +179,15 @@ function refundParagraph(b: Booking): string[] {
   return [];
 }
 
+// The salon's address on the calendar event, when one is set.
+const locationOf = (content: SiteContent | null) =>
+  content?.contact.addressLines.join(", ") || undefined;
+
 async function toOwner(
   config: EmailConfig,
   b: Booking,
-  what: "new" | "cancelled" | "late_payment",
+  what: "new" | "cancelled" | "cancelled_by_salon" | "late_payment",
+  content: SiteContent | null,
 ) {
   if (!config.ownerTo) return;
   const first = b.client.name.split(" ")[0];
@@ -205,6 +217,15 @@ async function toOwner(
           ],
           button: "Open in the admin",
         }
+      : what === "cancelled_by_salon"
+      ? {
+          subject: `Removed from your calendar: ${b.client.name}, ${shortWhen(b)}`,
+          heading: "Booking cancelled",
+          paragraphs: [
+            `You cancelled ${b.client.name}'s appointment. It's been taken out of your calendar and they've been emailed.`,
+          ],
+          button: "Open in the admin",
+        }
       : what === "cancelled"
       ? {
           subject: `Cancelled: ${b.client.name}, ${shortWhen(b)}`,
@@ -230,10 +251,33 @@ async function toOwner(
           button: "Open in the admin",
         };
 
+  // New bookings go into the owner's calendar; cancellations take them out.
+  const invite =
+    what === "late_payment"
+      ? null
+      : inviteFor(b, "salon", {
+          method: what === "new" ? "REQUEST" : "CANCEL",
+          title: `${b.client.name}: ${b.service.name}`,
+          description: [
+            serviceLines(b).join(" · "),
+            b.client.phone && `Phone: ${b.client.phone}`,
+            b.client.email && `Email: ${b.client.email}`,
+            b.client.notes && `Notes: ${b.client.notes}`,
+            `Reference: ${b.ref}`,
+            `${config.siteUrl}/admin/bookings/${b.id}`,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+          location: locationOf(content),
+          attendee: { name: SITE_NAME, email: config.ownerTo },
+          organizer: config.from,
+        });
+
   await sendEmail(config, {
     to: config.ownerTo,
     subject: copy.subject,
     replyTo: b.client.email,
+    attachments: invite ? [inviteAttachment(b, invite)] : undefined,
     react: (
       <MessageEmail
         preview={`${b.service.name} · ${when(b)}`}
@@ -306,6 +350,15 @@ async function toClient(
                   `Thank you for your ${formatPrice(b.deposit.amountPence)} deposit. It comes off the price on the day. It's non-refundable if you cancel or miss the appointment, but we'll refund it if we have to cancel.`,
                 ]
               : []),
+            ...(owesOnTheDay(
+              {
+                priceOnTheDay: b.service.priceOnTheDay,
+                pricePence: b.service.priceFromPence,
+              },
+              b.deposit?.status === "paid" ? b.deposit.amountPence : 0,
+            )
+              ? [CASH_NOTE]
+              : []),
           ],
           button: link,
         };
@@ -320,10 +373,29 @@ async function toClient(
   const policies =
     b.status === "cancelled" ? [] : (content?.policies.booking ?? []);
 
+  // Confirmed: add it to the client's calendar. Cancelled: take it out (a
+  // late payment was never added, so it sends nothing).
+  const invite =
+    latePayment || (b.status !== "confirmed" && b.status !== "cancelled")
+      ? null
+      : inviteFor(b, "client", {
+          method: b.status === "cancelled" ? "CANCEL" : "REQUEST",
+          title: `${SITE_NAME}: ${b.service.name}`,
+          description: [
+            serviceLines(b).join(" · "),
+            `Reference: ${b.ref}`,
+            `Manage your booking: ${config.siteUrl}/book/find`,
+          ].join("\n"),
+          location: locationOf(content),
+          attendee: { name: b.client.name, email: b.client.email },
+          organizer: config.from,
+        });
+
   await sendEmail(config, {
     to: b.client.email,
     subject: copy.subject,
     replyTo: config.ownerTo ?? contact?.email,
+    attachments: invite ? [inviteAttachment(b, invite)] : undefined,
     react: (
       <MessageEmail
         preview={`${b.service.name} · ${when(b)}`}

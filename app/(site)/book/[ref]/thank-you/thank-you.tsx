@@ -1,5 +1,6 @@
 "use client";
 
+import { CASH_NOTE, owesOnTheDay } from "@/lib/booking/deposit-rules";
 import { ArrowRight, ArrowUpRight, CalendarPlus, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -479,7 +480,15 @@ function NextSteps({
     },
     {
       title: "On the day",
-      body: <Where contact={contact} />,
+      body: (
+        <>
+          <Where contact={contact} />
+          {owesOnTheDay(
+            booking,
+            booking.deposit?.status === "paid" ? booking.deposit.amountPence : 0,
+          ) && <p className="mt-3 font-semibold text-ink">{CASH_NOTE}</p>}
+        </>
+      ),
     },
   ];
 
