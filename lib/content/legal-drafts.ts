@@ -32,6 +32,7 @@ We use trusted companies to run the website. They handle your information only o
 - Stripe: takes deposits and payments.
 - Resend: sends our emails.
 - Sentry: error reports (stored in the EU).
+- TikTok: if you open one of our TikTok videos on this website, it plays in TikTok's own player, and TikTok's privacy policy applies to it.
 - The company that hosts the website.
 
 Some of these companies are based in, or can access information from, the United States. Where information leaves the UK, it is protected by UK adequacy regulations or the UK's approved data transfer agreements.

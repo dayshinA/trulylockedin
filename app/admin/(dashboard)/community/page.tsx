@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { CldImage } from "@/components/media/cld";
 import { verifyAdmin } from "@/lib/auth/dal";
@@ -15,14 +16,21 @@ import {
 } from "../_components/admin-ui";
 import { PageGuide } from "../_components/help";
 import { StorageCleanup } from "./storage-cleanup";
+import { TikTokCard } from "./tiktok-card";
 
 export const metadata: Metadata = {
   title: "Community",
 };
 
-export default async function PortfolioAdminPage() {
+export default async function PortfolioAdminPage({
+  searchParams,
+}: PageProps<"/admin/community">) {
   await verifyAdmin();
-  const items = await portfolioRepository().list();
+  const [items, query] = await Promise.all([
+    portfolioRepository().list(),
+    searchParams,
+  ]);
+  const tiktokResult = typeof query.tiktok === "string" ? query.tiktok : undefined;
 
   return (
     <div className="flex max-w-3xl flex-col gap-8">
@@ -59,6 +67,11 @@ export default async function PortfolioAdminPage() {
           </li>
           <li>
             Always ask your client before posting their photos.
+          </li>
+          <li>
+            Connect your <strong>TikTok</strong> further down this page and
+            your latest public TikTok videos also show on the Community page,
+            updating by themselves.
           </li>
       </PageGuide>
 
@@ -110,6 +123,14 @@ export default async function PortfolioAdminPage() {
           })}
         </ul>
       )}
+
+      <div id="tiktok" className="scroll-mt-24 border-t border-line pt-8">
+        <Suspense
+          fallback={<p className="text-sm text-muted">Checking TikTok…</p>}
+        >
+          <TikTokCard result={tiktokResult} />
+        </Suspense>
+      </div>
 
       <StorageCleanup />
     </div>

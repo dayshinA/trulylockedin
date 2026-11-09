@@ -3,8 +3,13 @@ import Link from "next/link";
 
 import { BookCta } from "@/components/site/book-cta";
 import { PageIntro } from "@/components/site/page-intro";
+import { TikTokSection } from "@/components/site/tiktok-section";
 import { WorkGallery } from "@/components/site/work-gallery";
-import { getPublishedWork } from "@/lib/data/public";
+import {
+  getPublishedWork,
+  getSiteContent,
+  getTikTokVideos,
+} from "@/lib/data/public";
 
 export const metadata: Metadata = {
   title: "Community",
@@ -12,7 +17,11 @@ export const metadata: Metadata = {
 };
 
 export default async function WorkPage() {
-  const items = await getPublishedWork();
+  const [items, videos, content] = await Promise.all([
+    getPublishedWork(),
+    getTikTokVideos(),
+    getSiteContent(),
+  ]);
 
   return (
     <main className="flex flex-col">
@@ -23,7 +32,7 @@ export default async function WorkPage() {
         <div className="mx-auto max-w-6xl">
           {items.length > 0 ? (
             <WorkGallery items={items} />
-          ) : (
+          ) : videos.length > 0 ? null : (
             <div className="border-t border-line pt-8">
               <p className="font-display text-3xl font-semibold">
                 New looks coming soon
@@ -41,6 +50,7 @@ export default async function WorkPage() {
           )}
         </div>
       </section>
+      <TikTokSection videos={videos} handle={content.contact.tiktok} />
       <BookCta />
     </main>
   );
