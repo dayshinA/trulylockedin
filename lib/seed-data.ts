@@ -65,7 +65,6 @@ export const SEED_SITE_CONTENT: SiteContent = {
   },
   policies: {
     booking: [
-      "Please arrive with clean, detangled hair unless your appointment includes a wash.",
       "Running late? Let us know as soon as you can — late arrivals may need to be shortened or rebooked.",
       "You can cancel online up to 24 hours before your appointment using the link in your booking confirmation.",
     ],

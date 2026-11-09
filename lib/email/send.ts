@@ -53,6 +53,7 @@ export async function sendEmail(
     subject: string;
     react: ReactElement;
     replyTo?: string;
+    attachments?: { filename: string; content: Buffer; contentType: string }[];
   },
 ): Promise<void> {
   try {
@@ -64,6 +65,7 @@ export async function sendEmail(
       html,
       text: toPlainText(html),
       replyTo: message.replyTo,
+      attachments: message.attachments,
     });
     if (error) console.error("Email not sent:", message.subject, error);
   } catch (error) {

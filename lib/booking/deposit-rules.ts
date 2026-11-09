@@ -32,3 +32,16 @@ export function holdTimes(now: Date) {
     ).toISOString(),
   };
 }
+
+// Shown wherever a client sees what's left to pay (the booking form, the
+// thank-you page and the confirmation email).
+export const CASH_NOTE =
+  "If you can, please bring cash to pay the rest on the day.";
+
+// Whether anything is still owed at the appointment, after a deposit.
+export function owesOnTheDay(
+  price: { priceOnTheDay?: boolean; pricePence: number },
+  depositPence: number,
+): boolean {
+  return price.priceOnTheDay === true || price.pricePence - depositPence > 0;
+}
