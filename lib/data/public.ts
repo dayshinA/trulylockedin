@@ -21,6 +21,9 @@ import type { PortfolioItem } from "@/types/portfolio";
 import { portfolioRepository } from "@/lib/portfolio/server";
 import { productRepository } from "@/lib/shop/server";
 import type { Product } from "@/types/shop";
+import { fetchVideos, tiktokCredentials } from "@/lib/tiktok/api";
+import { withAccessToken } from "@/lib/tiktok/store";
+import type { TikTokVideo } from "@/types/tiktok";
 
 // Cached reads for the public pages. Admin saves expire these tags with
 // updateTag (see PUBLIC_TAGS); live booking data never goes through here.
@@ -32,6 +35,7 @@ export const PUBLIC_TAGS = {
   portfolio: "portfolio",
   products: "products",
   bookingSettings: "booking-settings",
+  tiktok: "tiktok",
 } as const;
 
 // Sections the owner has saved replace the placeholder section as a whole
@@ -147,5 +151,23 @@ export async function getProduct(id: string): Promise<Product | null> {
     return product?.published ? product : null;
   } catch {
     return null;
+  }
+}
+
+// The studio's latest public TikTok videos for /community. TikTok's cover
+// image links stop working after 6 hours, so this refreshes in the background
+// every hour and is never served more than 4 hours old. Empty when TikTok
+// isn't connected or the request fails (the section is then hidden).
+export async function getTikTokVideos(): Promise<TikTokVideo[]> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 60 * 60, expire: 4 * 60 * 60 });
+  cacheTag(PUBLIC_TAGS.tiktok);
+  if (!tiktokCredentials()) return [];
+  try {
+    return (await withAccessToken(adminDb(), (token) => fetchVideos(token))) ?? [];
+  } catch (error) {
+    // Sentry alert: the owner may need to reconnect TikTok in the admin.
+    console.error("TikTok videos unavailable", error);
+    return [];
   }
 }
